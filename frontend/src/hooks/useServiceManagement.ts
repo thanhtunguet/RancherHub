@@ -154,92 +154,6 @@ export function useServiceManagement() {
     setSelectedServices([]); // Clear selected services when changing app instance filter
   };
 
-  const handleTestApi = async () => {
-    if (!selectedAppInstanceId || selectedAppInstanceId === "all") {
-      message.warning("Please select an app instance to test API");
-      return;
-    }
-
-    const appInstance = appInstances?.find(
-      (a) => a.id === selectedAppInstanceId
-    );
-    if (!appInstance) {
-      message.warning("Selected app instance not found");
-      return;
-    }
-
-    try {
-      message.loading("Testing Rancher API endpoints...", 0);
-      const result = await servicesApi.testApiEndpoints(
-        appInstance.rancherSiteId
-      );
-      message.destroy();
-
-      if (result.success) {
-        message.success(`API test successful! ${result.message}`);
-      } else {
-        message.error(`API test failed: ${result.message}`);
-      }
-    } catch (error) {
-      message.destroy();
-      message.error(
-        `API test failed: ${(error as any)?.message || "Unknown error"}`
-      );
-    }
-  };
-
-  const handleDebugAppInstances = async () => {
-    if (!effectiveEnvironmentId) {
-      message.warning("Please select an environment to debug");
-      return;
-    }
-
-    try {
-      message.loading("Fetching app instances debug info...", 0);
-      const result = await servicesApi.debugAppInstances(
-        effectiveEnvironmentId
-      );
-      message.destroy();
-
-      message.success("Debug info fetched successfully");
-      console.log("App Instances Debug Info:", result);
-    } catch (error) {
-      message.destroy();
-      message.error(
-        `Debug failed: ${(error as any)?.message || "Unknown error"}`
-      );
-    }
-  };
-
-  const handleDebugClusters = async () => {
-    if (!selectedAppInstanceId || selectedAppInstanceId === "all") {
-      message.warning("Please select an app instance to debug clusters");
-      return;
-    }
-
-    const appInstance = appInstances?.find(
-      (a) => a.id === selectedAppInstanceId
-    );
-    if (!appInstance) {
-      message.warning("Selected app instance not found");
-      return;
-    }
-
-    try {
-      message.loading("Fetching clusters debug info...", 0);
-      const result = await servicesApi.debugClusters(appInstance.rancherSiteId);
-      message.destroy();
-
-      message.success("Clusters debug info fetched successfully");
-      console.log("Clusters Debug Info:", result);
-    } catch (error) {
-      message.destroy();
-      message.error(
-        `Debug failed: ${(error as any)?.message || "Unknown error"}`
-      );
-    }
-  };
-
   const selectedEnv = environments?.find(
     (e) => e.id === effectiveEnvironmentId
   );
@@ -283,8 +197,5 @@ export function useServiceManagement() {
     handleRefresh,
     handleEnvironmentChange,
     handleAppInstanceChange,
-    handleTestApi,
-    handleDebugAppInstances,
-    handleDebugClusters,
   };
 }

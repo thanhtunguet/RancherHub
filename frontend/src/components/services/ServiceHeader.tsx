@@ -1,31 +1,22 @@
 import { Button, Space, Typography } from "antd";
 import { HistoryOutlined, SyncOutlined } from "@ant-design/icons";
 import { RefreshCwIcon } from "lucide-react";
-import type { Service } from "../../types";
 
 const { Title, Text } = Typography;
 
 interface ServiceHeaderProps {
   selectedServicesCount: number;
   effectiveEnvironmentId: string;
-  selectedAppInstanceId: string;
   onShowHistory: () => void;
   onRefresh: () => void;
-  onTestApi: () => void;
-  onDebugAppInstances: () => void;
-  onDebugClusters: () => void;
   onSync: () => void;
 }
 
 export function ServiceHeader({
   selectedServicesCount,
   effectiveEnvironmentId,
-  selectedAppInstanceId,
   onShowHistory,
   onRefresh,
-  onTestApi,
-  onDebugAppInstances,
-  onDebugClusters,
   onSync,
 }: ServiceHeaderProps) {
   return (
@@ -53,24 +44,6 @@ export function ServiceHeader({
           disabled={!effectiveEnvironmentId}
         >
           Refresh
-        </Button>
-        <Button
-          onClick={onTestApi}
-          disabled={!effectiveEnvironmentId || selectedAppInstanceId === "all"}
-        >
-          Test API
-        </Button>
-        <Button
-          onClick={onDebugAppInstances}
-          disabled={!effectiveEnvironmentId}
-        >
-          Debug
-        </Button>
-        <Button
-          onClick={onDebugClusters}
-          disabled={!effectiveEnvironmentId || selectedAppInstanceId === "all"}
-        >
-          Debug Clusters
         </Button>
         <Button
           type="primary"

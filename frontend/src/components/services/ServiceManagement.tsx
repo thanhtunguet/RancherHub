@@ -2,8 +2,6 @@ import { Alert, Button, Spin } from "antd";
 import { RefreshCwIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
-import { EnvironmentSelector } from "./EnvironmentSelector";
-import { AppInstanceFilter } from "./AppInstanceFilter";
 import { ServiceFilters } from "./ServiceFilters";
 import { ServiceStats } from "./ServiceStats";
 import { ServiceTable } from "./ServiceTable";
@@ -48,9 +46,6 @@ export function ServiceManagement() {
     handleRefresh,
     handleEnvironmentChange,
     handleAppInstanceChange,
-    handleTestApi,
-    handleDebugAppInstances,
-    handleDebugClusters,
   } = useServiceManagement();
 
   if (!environments || environments.length === 0) {
@@ -105,21 +100,9 @@ export function ServiceManagement() {
         <ServiceHeader
           selectedServicesCount={selectedServices.length}
           effectiveEnvironmentId={effectiveEnvironmentId}
-          selectedAppInstanceId={selectedAppInstanceId}
           onShowHistory={() => setShowHistory(true)}
           onRefresh={handleRefresh}
-          onTestApi={handleTestApi}
-          onDebugAppInstances={handleDebugAppInstances}
-          onDebugClusters={handleDebugClusters}
           onSync={handleSync}
-        />
-
-        {/* Environment Selector */}
-        <EnvironmentSelector
-          environments={environments}
-          effectiveEnvironmentId={effectiveEnvironmentId}
-          selectedEnvironmentId={effectiveEnvironmentId}
-          onEnvironmentChange={handleEnvironmentChange}
         />
 
         {!effectiveEnvironmentId ? (
@@ -131,22 +114,25 @@ export function ServiceManagement() {
           />
         ) : (
           <>
-            {/* App Instance Filter */}
-            <AppInstanceFilter
+            {/* Combined Filters */}
+            <ServiceFilters
+              // Environment filter
+              environments={environments}
+              effectiveEnvironmentId={effectiveEnvironmentId}
+              onEnvironmentChange={handleEnvironmentChange}
+              // App Instance filter
               appInstances={appInstances || []}
               selectedAppInstanceId={selectedAppInstanceId}
               onAppInstanceChange={handleAppInstanceChange}
-            />
-
-            {/* Filters */}
-            <ServiceFilters
+              // Search and status filters
               searchTerm={searchTerm}
               statusFilter={statusFilter}
               availableStatuses={availableStatuses}
-              filteredServicesCount={filteredServices.length}
-              selectedServicesCount={selectedServices.length}
               onSearchChange={setSearchTerm}
               onStatusFilterChange={setStatusFilter}
+              // Select all functionality
+              filteredServicesCount={filteredServices.length}
+              selectedServicesCount={selectedServices.length}
               onSelectAll={handleSelectAll}
             />
 

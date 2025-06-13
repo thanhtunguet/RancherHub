@@ -5,7 +5,7 @@ import {
   ExclamationCircleTwoTone,
   SyncOutlined as SyncIcon,
 } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Service } from "../../types";
 
 const { Option } = Select;
@@ -20,6 +20,13 @@ interface ServiceTableProps {
   ) => void;
 }
 
+type SortOrder = "ascend" | "descend" | null;
+
+interface SortState {
+  field: string;
+  order: SortOrder;
+}
+
 export function ServiceTable({
   filteredServices,
   selectedServices,
@@ -27,13 +34,79 @@ export function ServiceTable({
 }: ServiceTableProps) {
   const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortState, setSortState] = useState<SortState>({
+    field: "name",
+    order: "ascend",
+  });
+
+  // Sort services based on current sort state
+  const sortedServices = useMemo(() => {
+    if (!sortState.field || !sortState.order) {
+      return filteredServices;
+    }
+
+    return [...filteredServices].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortState.field) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "status":
+          aValue = a.status.toLowerCase();
+          bValue = b.status.toLowerCase();
+          break;
+        case "workloadType":
+          aValue = a.workloadType.toLowerCase();
+          bValue = b.workloadType.toLowerCase();
+          break;
+        case "replicas":
+          aValue = a.availableReplicas;
+          bValue = b.availableReplicas;
+          break;
+        case "imageTag":
+          aValue = a.imageTag?.toLowerCase() || "";
+          bValue = b.imageTag?.toLowerCase() || "";
+          break;
+        default:
+          aValue = a[sortState.field as keyof Service];
+          bValue = b[sortState.field as keyof Service];
+      }
+
+      if (aValue < bValue) {
+        return sortState.order === "ascend" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortState.order === "ascend" ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredServices, sortState]);
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    setSortState({
+      field: sorter.field || "name",
+      order: sorter.order || "ascend",
+    });
+    setCurrentPage(1);
+  };
 
   const columns = [
-    { title: "Name", dataIndex: "name", key: "name" },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: true,
+      sortOrder: sortState.field === "name" ? sortState.order : null,
+    },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      sorter: true,
+      sortOrder: sortState.field === "status" ? sortState.order : null,
       render: (status: string) => {
         let color = "default";
         let icon = null;
@@ -62,10 +135,18 @@ export function ServiceTable({
         );
       },
     },
-    { title: "Type", dataIndex: "workloadType", key: "workloadType" },
+    {
+      title: "Type",
+      dataIndex: "workloadType",
+      key: "workloadType",
+      sorter: true,
+      sortOrder: sortState.field === "workloadType" ? sortState.order : null,
+    },
     {
       title: "Replicas",
       key: "replicas",
+      sorter: true,
+      sortOrder: sortState.field === "replicas" ? sortState.order : null,
       render: (_: any, record: Service) =>
         `${record.availableReplicas}/${record.replicas}`,
     },
@@ -74,6 +155,8 @@ export function ServiceTable({
       dataIndex: "imageTag",
       key: "imageTag",
       width: 220,
+      sorter: true,
+      sortOrder: sortState.field === "imageTag" ? sortState.order : null,
       render: (imageTag: string) => {
         if (!imageTag) return "";
         const parts = imageTag.split(":");
@@ -99,7 +182,7 @@ export function ServiceTable({
   };
 
   const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, filteredServices.length);
+  const endIndex = Math.min(currentPage * pageSize, sortedServices.length);
 
   return (
     <div>
@@ -117,31 +200,35 @@ export function ServiceTable({
             <Option value="100">100</Option>
           </Select>
           <Text className="text-gray-500">
-            Showing {startIndex}-{endIndex} of {filteredServices.length}{" "}
-            services
+            Showing {startIndex}-{endIndex} of {sortedServices.length} services
           </Text>
+          {sortState.field && sortState.order && (
+            <Text className="text-blue-600">
+              Sorted by: {sortState.field} ({sortState.order})
+            </Text>
+          )}
         </Space>
       </div>
 
       <Table
-        dataSource={filteredServices}
+        dataSource={sortedServices}
         rowKey="id"
         rowSelection={{
           selectedRowKeys: selectedServices.map((s) => s.id),
           onChange: onServiceSelectionChange,
         }}
         columns={columns}
+        onChange={handleTableChange}
         pagination={{
           current: currentPage,
           pageSize: pageSize,
-          total: filteredServices.length,
+          total: sortedServices.length,
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: (total: number, range: [number, number]) =>
             `${range[0]}-${range[1]} of ${total} services`,
           pageSizeOptions: ["10", "20", "50", "100"],
-          onShowSizeChange: (current: number, size: number) =>
-            handlePageSizeChange(size),
+          onShowSizeChange: (size: number) => handlePageSizeChange(size),
           onChange: (page: number) => setCurrentPage(page),
         }}
       />
