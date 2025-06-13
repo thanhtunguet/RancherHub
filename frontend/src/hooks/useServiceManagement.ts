@@ -68,10 +68,6 @@ export function useServiceManagement() {
       : isLoadingByAppInstance;
   const error =
     selectedAppInstanceId === "all" ? errorByEnvironment : errorByAppInstance;
-  const refetch =
-    selectedAppInstanceId === "all"
-      ? refetchByEnvironment
-      : refetchByAppInstance;
 
   // Force refetch when environment changes
   React.useEffect(() => {
@@ -111,7 +107,7 @@ export function useServiceManagement() {
   }, [services]);
 
   const handleServiceSelectionChange = (
-    selectedRowKeys: React.Key[],
+    _selectedRowKeys: React.Key[],
     selectedRows: Service[]
   ) => {
     setSelectedServices(selectedRows);

@@ -765,64 +765,98 @@ export class RancherApiService {
 
   async updateWorkloadImage(
     site: RancherSite,
-    workloadId: string,
+    clusterId: string,
+    namespace: string,
+    workloadName: string,
+    workloadType: string,
     newImageTag: string,
   ): Promise<any> {
     try {
       this.logger.log(
-        `Updating workload image for ${workloadId} to ${newImageTag}`,
+        `Updating ${workloadType} ${workloadName} in ${clusterId}/${namespace} to image ${newImageTag}`,
       );
-      const client = this.getClient(site);
 
-      const getResponse: AxiosResponse = await client.get(
-        `/project/${workloadId}`,
-      );
+      // Use Kubernetes API to update the workload directly
+      const k8sClient = axios.create({
+        baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+        headers: {
+          Authorization: `Bearer ${site.token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      });
+
+      // Determine the correct API endpoint based on workload type
+      let apiPath: string;
+      let apiVersion = 'apps/v1';
+      
+      switch (workloadType.toLowerCase()) {
+        case 'deployment':
+          apiPath = `apis/${apiVersion}/namespaces/${namespace}/deployments/${workloadName}`;
+          break;
+        case 'daemonset':
+          apiPath = `apis/${apiVersion}/namespaces/${namespace}/daemonsets/${workloadName}`;
+          break;
+        case 'statefulset':
+          apiPath = `apis/${apiVersion}/namespaces/${namespace}/statefulsets/${workloadName}`;
+          break;
+        case 'replicaset':
+          apiPath = `apis/${apiVersion}/namespaces/${namespace}/replicasets/${workloadName}`;
+          break;
+        default:
+          // Fallback to deployment if type is unknown
+          apiPath = `apis/${apiVersion}/namespaces/${namespace}/deployments/${workloadName}`;
+          this.logger.warn(
+            `Unknown workload type ${workloadType}, defaulting to deployment`,
+          );
+      }
+
+      this.logger.debug(`Fetching workload from: ${apiPath}`);
+
+      // Get the current workload
+      const getResponse: AxiosResponse = await k8sClient.get(apiPath);
       const workload = getResponse.data;
+      
       this.logger.log(
-        `Retrieved workload: ${workload.metadata?.name || workload.name}`,
+        `Retrieved ${workloadType} ${workload.metadata?.name} (current image: ${workload.spec?.template?.spec?.containers?.[0]?.image})`,
       );
 
-      // Update image in the correct Kubernetes path
+      // Update the image in the workload spec
       if (
         workload.spec?.template?.spec?.containers &&
         workload.spec.template.spec.containers.length > 0
       ) {
-        // For Deployments, StatefulSets, etc.
         const oldImage = workload.spec.template.spec.containers[0].image;
         workload.spec.template.spec.containers[0].image = newImageTag;
+        
         this.logger.log(
-          `Updated deployment image from ${oldImage} to ${newImageTag}`,
+          `Updating image from ${oldImage} to ${newImageTag}`,
         );
-      } else if (
-        workload.spec?.containers &&
-        workload.spec.containers.length > 0
-      ) {
-        // For DaemonSets, CronJobs, etc.
-        const oldImage = workload.spec.containers[0].image;
-        workload.spec.containers[0].image = newImageTag;
+
+        // Update the workload
+        const updateResponse: AxiosResponse = await k8sClient.put(
+          apiPath,
+          workload,
+        );
+
         this.logger.log(
-          `Updated daemonset/cronjob image from ${oldImage} to ${newImageTag}`,
+          `Successfully updated ${workloadType} ${workloadName} to ${newImageTag}`,
         );
-      } else if (workload.containers && workload.containers.length > 0) {
-        // Fallback for other workload types
-        const oldImage = workload.containers[0].image;
-        workload.containers[0].image = newImageTag;
-        this.logger.log(
-          `Updated fallback image from ${oldImage} to ${newImageTag}`,
-        );
+        return updateResponse.data;
       } else {
-        throw new Error('No containers found in workload');
+        throw new Error(
+          `No containers found in ${workloadType} ${workloadName}`,
+        );
       }
-
-      const updateResponse: AxiosResponse = await client.put(
-        `/project/${workloadId}`,
-        workload,
-      );
-
-      this.logger.log(`Successfully updated workload ${workloadId}`);
-      return updateResponse.data;
     } catch (error) {
-      this.logger.error(`Failed to update workload image: ${error.message}`);
+      this.logger.error(
+        `Failed to update ${workloadType} ${workloadName}: ${error.message}`,
+      );
+      if (error.response) {
+        this.logger.error(
+          `Response status: ${error.response.status}, data: ${JSON.stringify(error.response.data)}`,
+        );
+      }
       throw error;
     }
   }

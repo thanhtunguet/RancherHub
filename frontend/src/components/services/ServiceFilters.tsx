@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button, Input, Select, Typography } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import type { Environment, AppInstance } from "../../types";
@@ -52,6 +53,29 @@ export function ServiceFilters({
   selectedServicesCount,
   onSelectAll,
 }: ServiceFiltersProps) {
+  // Local state for search input to prevent triggering search on every keystroke
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  // Sync local search term when parent search term changes (e.g., when cleared externally)
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  // Handle search input change without triggering API call
+  const handleSearchInputChange = (value: string) => {
+    setLocalSearchTerm(value);
+  };
+
+  // Handle Enter key press to trigger actual search
+  const handleSearchSubmit = () => {
+    onSearchChange(localSearchTerm);
+  };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setLocalSearchTerm('');
+    onSearchChange('');
+  };
   return (
     <div className="flex items-end gap-6 mb-4">
       {/* Environment Filter */}
@@ -106,11 +130,14 @@ export function ServiceFilters({
       <div className="flex flex-col gap-1">
         <Text strong>Search</Text>
         <Input
-          placeholder="Search services..."
+          placeholder="Search services... (Press Enter)"
           prefix={<SearchOutlined />}
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="w-48"
+          value={localSearchTerm}
+          onChange={(e) => handleSearchInputChange(e.target.value)}
+          onPressEnter={handleSearchSubmit}
+          onClear={handleClearSearch}
+          allowClear
+          className="w-56"
         />
       </div>
 

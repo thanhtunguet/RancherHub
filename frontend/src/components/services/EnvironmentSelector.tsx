@@ -14,7 +14,7 @@ interface EnvironmentSelectorProps {
 export function EnvironmentSelector({
   environments,
   effectiveEnvironmentId,
-  selectedEnvironmentId,
+  selectedEnvironmentId: _selectedEnvironmentId,
   onEnvironmentChange,
 }: EnvironmentSelectorProps) {
   const selectedEnv = environments?.find(

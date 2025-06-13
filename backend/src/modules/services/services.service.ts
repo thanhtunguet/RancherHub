@@ -314,25 +314,36 @@ export class ServicesService {
 
     const previousImageTag = targetService?.imageTag || '';
 
-    // Update workload in target Rancher instance
-    const workloadId = `${targetAppInstance.cluster}:${targetAppInstance.namespace}:${sourceService.name}-${sourceService.workloadType.toLowerCase()}`;
-
     this.logger.log(
       `Syncing service ${sourceService.name} from ${sourceService.appInstance.cluster}/${sourceService.appInstance.namespace} to ${targetAppInstance.cluster}/${targetAppInstance.namespace}`,
     );
     this.logger.log(
-      `Source image: ${sourceService.imageTag}, Target workload ID: ${workloadId}`,
+      `Source image: ${sourceService.imageTag}`,
     );
 
-    await this.rancherApiService.updateWorkloadImage(
-      targetAppInstance.rancherSite,
-      workloadId,
-      sourceService.imageTag,
-    );
+    // Normalize workload type (remove plurals if present)
+    const normalizedWorkloadType = sourceService.workloadType?.toLowerCase().replace(/s$/, '') || 'deployment';
+    
+    try {
+      await this.rancherApiService.updateWorkloadImage(
+        targetAppInstance.rancherSite,
+        targetAppInstance.cluster,
+        targetAppInstance.namespace,
+        sourceService.name,
+        normalizedWorkloadType,
+        sourceService.imageTag,
+      );
+      this.logger.log(`Successfully updated workload ${sourceService.name} in Rancher`);
+    } catch (rancherError) {
+      this.logger.error(`Failed to update workload in Rancher: ${rancherError.message}`);
+      throw new Error(`Rancher API update failed: ${rancherError.message}`);
+    }
 
     // Update or create target service in database
     if (targetService) {
       targetService.imageTag = sourceService.imageTag;
+      targetService.workloadType = normalizedWorkloadType;
+      targetService.status = 'synced';
       targetService.lastSynced = new Date();
       targetService.updatedAt = new Date();
     } else {
@@ -340,11 +351,11 @@ export class ServicesService {
         id: targetServiceId,
         name: sourceService.name,
         appInstanceId: targetAppInstanceId,
-        status: 'syncing',
+        status: 'synced',
         replicas: sourceService.replicas,
         availableReplicas: 0, // Will be updated on next fetch
         imageTag: sourceService.imageTag,
-        workloadType: sourceService.workloadType,
+        workloadType: normalizedWorkloadType,
         lastSynced: new Date(),
       });
     }

@@ -45,6 +45,10 @@ export function SyncModal({
     Record<string, string>
   >({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [closeTimeoutId, setCloseTimeoutId] = useState<NodeJS.Timeout | null>(
+    null
+  );
 
   const { data: targetAppInstances } =
     useAppInstancesByEnvironment(targetEnvironmentId);
@@ -59,6 +63,11 @@ export function SyncModal({
     setTargetEnvironmentId("");
     setServiceAppInstanceMap({});
     setShowConfirmModal(false);
+    setIsSyncing(false);
+    if (closeTimeoutId) {
+      clearTimeout(closeTimeoutId);
+      setCloseTimeoutId(null);
+    }
   };
 
   const handleClose = () => {
@@ -95,6 +104,7 @@ export function SyncModal({
   };
 
   const handleConfirmSync = async () => {
+    setIsSyncing(true);
     try {
       const syncRequest: SyncServicesRequest = {
         sourceEnvironmentId: sourceEnvironment.id,
@@ -115,9 +125,20 @@ export function SyncModal({
         message.error("Synchronization failed");
       }
 
+      setIsSyncing(false);
       setShowConfirmModal(false);
-      onSuccess();
+
+      // Close the main modal after a short delay to let user see the message
+      const timeoutId = setTimeout(() => {
+        onSuccess();
+        handleClose();
+      }, 1500);
+
+      setCloseTimeoutId(timeoutId);
     } catch (error: any) {
+      setIsSyncing(false);
+      setShowConfirmModal(false);
+
       message.error(
         error.response?.data?.message || "Failed to synchronize services"
       );
@@ -376,7 +397,7 @@ export function SyncModal({
             <Button
               type="primary"
               danger
-              loading={syncMutation.isPending}
+              loading={isSyncing}
               onClick={handleSync}
             >
               Synchronize Services
@@ -389,17 +410,23 @@ export function SyncModal({
         <Modal
           title="Confirm Synchronization"
           open={showConfirmModal}
-          onCancel={() => setShowConfirmModal(false)}
+          onCancel={() => !isSyncing && setShowConfirmModal(false)}
           width={500}
+          closable={!isSyncing}
+          maskClosable={!isSyncing}
           footer={[
-            <Button key="cancel" onClick={() => setShowConfirmModal(false)}>
+            <Button
+              key="cancel"
+              onClick={() => setShowConfirmModal(false)}
+              disabled={isSyncing}
+            >
               Cancel
             </Button>,
             <Button
               key="confirm"
               type="primary"
               danger
-              loading={syncMutation.isPending}
+              loading={isSyncing}
               onClick={handleConfirmSync}
             >
               Synchronize Services
