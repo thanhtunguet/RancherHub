@@ -13,6 +13,8 @@ COPY package.json yarn.lock* ./
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Copy source code
 COPY . .
 
