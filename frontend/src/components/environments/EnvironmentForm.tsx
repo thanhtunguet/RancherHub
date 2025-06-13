@@ -1,4 +1,5 @@
 import { Form, Input, Button, Space, ColorPicker } from 'antd';
+import type { Color } from 'antd/es/color-picker';
 import { CreateEnvironmentRequest } from '../../types';
 
 interface EnvironmentFormProps {
@@ -62,6 +63,13 @@ export function EnvironmentForm({ initialValues, onSubmit, onCancel, loading }: 
         label="Color"
         name="color"
         help="Choose a color to visually identify this environment"
+        getValueFromEvent={(color: Color | string) => {
+          // Convert Color object to hex string
+          if (color && typeof color === 'object' && 'toHexString' in color) {
+            return color.toHexString();
+          }
+          return color;
+        }}
       >
         <ColorPicker
           presets={[
