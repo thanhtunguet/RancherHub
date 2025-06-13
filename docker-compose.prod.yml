@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    image: thanhtunguet/rancher-hub-backend:latest
+    container_name: rancher-hub-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/app/data/rancher-hub.db
+    volumes:
+      - backend_data:/app/data
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rancher-hub-network
+
+  frontend:
+    image: thanhtunguet/rancher-hub-frontend:latest
+    container_name: rancher-hub-frontend
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:3000
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rancher-hub-network
+
+volumes:
+  backend_data:
+    driver: local
+
+networks:
+  rancher-hub-network:
+    driver: bridge
