@@ -72,7 +72,9 @@ export class RancherApiService {
     return this.clients.get(site.id);
   }
 
-  async testConnection(site: RancherSite): Promise<{ success: boolean; message: string; data?: any }> {
+  async testConnection(
+    site: RancherSite,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
       const client = this.getClient(site);
       const response = await client.get('/');
@@ -87,7 +89,7 @@ export class RancherApiService {
       };
     } catch (error) {
       let message = 'Connection failed';
-      
+
       if (error.code === 'ECONNREFUSED') {
         message = 'Connection refused - server may be down';
       } else if (error.code === 'ENOTFOUND') {
@@ -104,11 +106,95 @@ export class RancherApiService {
     }
   }
 
+  async testApiEndpoints(
+    site: RancherSite,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      this.logger.debug(`Testing API endpoints for site: ${site.name}`);
+
+      // Test different base URLs
+      const baseUrls = [
+        `${site.url}/v3`,
+        `${site.url}/v1`,
+        `${site.url}/api`,
+        `${site.url}`,
+      ];
+
+      for (const baseUrl of baseUrls) {
+        try {
+          this.logger.debug(`Testing base URL: ${baseUrl}`);
+          const testClient = axios.create({
+            baseURL: baseUrl,
+            headers: {
+              Authorization: `Bearer ${site.token}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          });
+
+          const response = await testClient.get('/');
+          this.logger.debug(
+            `Base URL ${baseUrl} works! Response keys: ${Object.keys(response.data || {}).join(', ')}`,
+          );
+
+          // Test some common endpoints to see what's available
+          const availableEndpoints = [];
+
+          // Test clusters endpoint
+          try {
+            const clustersResponse = await testClient.get('/clusters');
+            availableEndpoints.push('clusters');
+          } catch (e) {
+            this.logger.debug(`Clusters endpoint not available: ${e.message}`);
+          }
+
+          // Test workloads endpoint
+          try {
+            const workloadsResponse = await testClient.get('/workloads');
+            availableEndpoints.push('workloads');
+          } catch (e) {
+            this.logger.debug(`Workloads endpoint not available: ${e.message}`);
+          }
+
+          // Test projects endpoint
+          try {
+            const projectsResponse = await testClient.get('/projects');
+            availableEndpoints.push('projects');
+          } catch (e) {
+            this.logger.debug(`Projects endpoint not available: ${e.message}`);
+          }
+
+          return {
+            success: true,
+            message: `API endpoint found at ${baseUrl}`,
+            data: {
+              workingBaseUrl: baseUrl,
+              responseData: response.data,
+              availableEndpoints,
+            },
+          };
+        } catch (endpointError) {
+          this.logger.debug(
+            `Base URL ${baseUrl} failed: ${endpointError.message}`,
+          );
+          continue;
+        }
+      }
+
+      return { success: false, message: 'No working API endpoints found' };
+    } catch (error) {
+      return {
+        success: false,
+        message: `API endpoint test failed: ${error.message}`,
+      };
+    }
+  }
+
   async getClusters(site: RancherSite): Promise<RancherCluster[]> {
     try {
       const client = this.getClient(site);
       const response: AxiosResponse = await client.get('/clusters');
-      
+
       return response.data.data.map((cluster: any) => ({
         id: cluster.id,
         name: cluster.name,
@@ -117,7 +203,7 @@ export class RancherApiService {
       }));
     } catch (error) {
       this.logger.error(`Failed to fetch clusters: ${error.message}`);
-      
+
       // For development/demo purposes, return some mock clusters if API fails
       if (process.env.NODE_ENV === 'development') {
         this.logger.warn('Returning mock clusters for development');
@@ -142,22 +228,25 @@ export class RancherApiService {
           },
         ];
       }
-      
+
       throw error;
     }
   }
 
-  async getProjects(site: RancherSite, clusterId?: string): Promise<RancherProject[]> {
+  async getProjects(
+    site: RancherSite,
+    clusterId?: string,
+  ): Promise<RancherProject[]> {
     try {
       const client = this.getClient(site);
       let url = '/projects';
-      
+
       if (clusterId) {
         url += `?clusterId=${clusterId}`;
       }
-      
+
       const response: AxiosResponse = await client.get(url);
-      
+
       return response.data.data.map((project: any) => ({
         id: project.id,
         name: project.name,
@@ -170,10 +259,13 @@ export class RancherApiService {
     }
   }
 
-  async getNamespaces(site: RancherSite, clusterId?: string): Promise<RancherNamespace[]> {
+  async getNamespaces(
+    site: RancherSite,
+    clusterId?: string,
+  ): Promise<RancherNamespace[]> {
     try {
       const client = this.getClient(site);
-      
+
       // If clusterId is provided, first get projects for that cluster, then get namespaces
       if (clusterId) {
         // Method 1: Try different possible endpoints for namespaces
@@ -189,9 +281,9 @@ export class RancherApiService {
           try {
             this.logger.debug(`Trying namespace endpoint: ${endpoint}`);
             const response = await client.get(endpoint);
-            
+
             let namespaces = [];
-            
+
             // Handle different response formats
             if (response.data) {
               if (response.data.data) {
@@ -204,54 +296,81 @@ export class RancherApiService {
                 // Direct array format
                 namespaces = response.data;
               }
-              
+
               if (namespaces.length >= 0) {
-                this.logger.debug(`Successfully fetched ${namespaces.length} namespaces from endpoint: ${endpoint}`);
+                this.logger.debug(
+                  `Successfully fetched ${namespaces.length} namespaces from endpoint: ${endpoint}`,
+                );
                 return namespaces.map((namespace: any) => ({
-                  id: namespace.id || namespace.metadata?.name || namespace.name,
+                  id:
+                    namespace.id || namespace.metadata?.name || namespace.name,
                   name: namespace.name || namespace.metadata?.name,
-                  projectId: namespace.projectId || namespace.metadata?.labels?.['field.cattle.io/projectId'] || '',
-                  clusterId: namespace.clusterId || namespace.metadata?.labels?.['field.cattle.io/clusterId'] || clusterId,
+                  projectId:
+                    namespace.projectId ||
+                    namespace.metadata?.labels?.['field.cattle.io/projectId'] ||
+                    '',
+                  clusterId:
+                    namespace.clusterId ||
+                    namespace.metadata?.labels?.['field.cattle.io/clusterId'] ||
+                    clusterId,
                 }));
               }
             }
           } catch (endpointError) {
-            this.logger.debug(`Endpoint ${endpoint} failed: ${endpointError.message}`);
+            this.logger.debug(
+              `Endpoint ${endpoint} failed: ${endpointError.message}`,
+            );
             continue;
           }
         }
 
         // Method 2: If direct filtering fails, get projects first, then namespaces from each project
-        this.logger.debug(`All direct endpoints failed, trying via projects for cluster: ${clusterId}`);
+        this.logger.debug(
+          `All direct endpoints failed, trying via projects for cluster: ${clusterId}`,
+        );
         try {
           const projects = await this.getProjects(site, clusterId);
-          this.logger.debug(`Found ${projects.length} projects for cluster ${clusterId}`);
-          
+          this.logger.debug(
+            `Found ${projects.length} projects for cluster ${clusterId}`,
+          );
+
           const allNamespaces: RancherNamespace[] = [];
-          
+
           for (const project of projects) {
             try {
-              this.logger.debug(`Fetching namespaces for project: ${project.id}`);
-              const projectNamespaces = await client.get(`/namespaces?projectId=${project.id}`);
+              this.logger.debug(
+                `Fetching namespaces for project: ${project.id}`,
+              );
+              const projectNamespaces = await client.get(
+                `/namespaces?projectId=${project.id}`,
+              );
               if (projectNamespaces.data && projectNamespaces.data.data) {
-                const namespaces = projectNamespaces.data.data.map((namespace: any) => ({
-                  id: namespace.id,
-                  name: namespace.name,
-                  projectId: namespace.projectId || project.id,
-                  clusterId: namespace.clusterId || clusterId,
-                }));
-                this.logger.debug(`Found ${namespaces.length} namespaces in project ${project.id}`);
+                const namespaces = projectNamespaces.data.data.map(
+                  (namespace: any) => ({
+                    id: namespace.id,
+                    name: namespace.name,
+                    projectId: namespace.projectId || project.id,
+                    clusterId: namespace.clusterId || clusterId,
+                  }),
+                );
+                this.logger.debug(
+                  `Found ${namespaces.length} namespaces in project ${project.id}`,
+                );
                 allNamespaces.push(...namespaces);
               }
             } catch (projectError) {
-              this.logger.warn(`Failed to fetch namespaces for project ${project.id}: ${projectError.message}`);
+              this.logger.warn(
+                `Failed to fetch namespaces for project ${project.id}: ${projectError.message}`,
+              );
             }
           }
-          
+
           this.logger.debug(`Total namespaces found: ${allNamespaces.length}`);
           return allNamespaces;
         } catch (projectError) {
-          this.logger.error(`Failed to fetch namespaces via projects: ${projectError.message}`);
+          this.logger.error(
+            `Failed to fetch namespaces via projects: ${projectError.message}`,
+          );
           throw projectError;
         }
       } else {
@@ -266,7 +385,7 @@ export class RancherApiService {
       }
     } catch (error) {
       this.logger.error(`Failed to fetch namespaces: ${error.message}`);
-      
+
       // For development/demo purposes, return some mock namespaces if all methods fail
       if (process.env.NODE_ENV === 'development') {
         this.logger.warn('Returning mock namespaces for development');
@@ -291,33 +410,312 @@ export class RancherApiService {
           },
         ];
       }
-      
+
       throw error;
     }
   }
 
-  async getWorkloads(site: RancherSite, clusterId: string, namespaceId: string): Promise<RancherWorkload[]> {
+  async getWorkloads(
+    site: RancherSite,
+    clusterId: string,
+    namespaceId: string,
+  ): Promise<RancherWorkload[]> {
     try {
       const client = this.getClient(site);
-      const response: AxiosResponse = await client.get(
-        `/project/${clusterId}/workloads?namespaceId=${namespaceId}`,
+
+      this.logger.debug(
+        `Fetching workloads for site: ${site.name}, cluster: ${clusterId}, namespace: ${namespaceId}`,
       );
-      
-      return response.data.data.map((workload: any) => ({
-        id: workload.id,
-        name: workload.name,
-        type: workload.type,
-        namespaceId: workload.namespaceId,
-        state: workload.state,
-        image: this.extractImageTag(workload),
-        scale: workload.scale || 1,
-        availableReplicas: workload.status?.availableReplicas || 0,
-        containers: workload.containers,
-      }));
+      this.logger.debug(`Base URL: ${site.url}/v3`);
+
+      // Fetch different workload types separately for better accuracy
+      const workloadTypes = ['deployments', 'daemonsets', 'statefulsets', 'replicasets'];
+      let allWorkloads: RancherWorkload[] = [];
+
+      // First try specific workload type endpoints
+      for (const workloadType of workloadTypes) {
+        try {
+          const endpoints = [
+            // Kubernetes API endpoints
+            `/k8s/clusters/${clusterId}/v1/namespaces/${namespaceId}/${workloadType}`,
+            `/k8s/clusters/${clusterId}/apis/apps/v1/namespaces/${namespaceId}/${workloadType}`,
+            
+            // Rancher v3 API endpoints
+            `/workloads/${workloadType}?clusterId=${clusterId}&namespaceId=${namespaceId}`,
+            `/project/${clusterId}:${namespaceId}/${workloadType}`,
+          ];
+
+          for (const endpoint of endpoints) {
+            try {
+              this.logger.debug(`Trying ${workloadType} endpoint: ${endpoint}`);
+              const response: AxiosResponse = await client.get(endpoint);
+
+              let workloads = [];
+              if (response.data?.items) {
+                workloads = response.data.items;
+              } else if (response.data?.data) {
+                workloads = response.data.data;
+              } else if (Array.isArray(response.data)) {
+                workloads = response.data;
+              }
+
+              if (workloads.length > 0) {
+                this.logger.debug(
+                  `Found ${workloads.length} ${workloadType} from endpoint: ${endpoint}`,
+                );
+
+                const mappedWorkloads = workloads.map((workload: any) => 
+                  this.mapWorkloadData(workload, workloadType.slice(0, -1), clusterId, namespaceId)
+                );
+
+                allWorkloads.push(...mappedWorkloads);
+                break; // Success, move to next workload type
+              }
+            } catch (endpointError) {
+              this.logger.debug(`${workloadType} endpoint ${endpoint} failed: ${endpointError.message}`);
+              continue;
+            }
+          }
+        } catch (typeError) {
+          this.logger.debug(`Failed to fetch ${workloadType}: ${typeError.message}`);
+        }
+      }
+
+      // If specific endpoints didn't work, try generic workloads endpoint
+      if (allWorkloads.length === 0) {
+        const genericEndpoints = [
+          `/workloads?clusterId=${clusterId}&namespaceId=${namespaceId}`,
+          `/workloads?clusterId=${clusterId}&namespace=${namespaceId}`,
+          `/project/${clusterId}:${namespaceId}/workloads`,
+          `/clusters/${clusterId}/workloads?namespaceId=${namespaceId}`,
+        ];
+
+        for (const endpoint of genericEndpoints) {
+          try {
+            this.logger.debug(`Trying generic workload endpoint: ${endpoint}`);
+            const response: AxiosResponse = await client.get(endpoint);
+
+            let workloads = [];
+            if (response.data?.data) {
+              workloads = response.data.data;
+            } else if (response.data?.items) {
+              workloads = response.data.items;
+            } else if (Array.isArray(response.data)) {
+              workloads = response.data;
+            }
+
+            if (workloads.length > 0) {
+              this.logger.debug(
+                `Found ${workloads.length} workloads from generic endpoint: ${endpoint}`,
+              );
+
+              const mappedWorkloads = workloads.map((workload: any) => 
+                this.mapWorkloadData(workload, null, clusterId, namespaceId)
+              );
+
+              allWorkloads.push(...mappedWorkloads);
+              break;
+            }
+          } catch (endpointError) {
+            this.logger.debug(`Generic endpoint ${endpoint} failed: ${endpointError.message}`);
+            continue;
+          }
+        }
+      }
+
+      // Remove duplicates based on name and type
+      const uniqueWorkloads = allWorkloads.filter(
+        (workload, index, self) =>
+          index === self.findIndex((w) => w.name === workload.name && w.type === workload.type),
+      );
+
+      this.logger.debug(
+        `Total unique workloads found: ${uniqueWorkloads.length}`,
+      );
+      return uniqueWorkloads;
     } catch (error) {
       this.logger.error(`Failed to fetch workloads: ${error.message}`);
+
+      // For development/demo purposes, return mock workloads if API fails
+      if (process.env.NODE_ENV === 'development') {
+        this.logger.warn('Returning mock workloads for development');
+        return [
+          {
+            id: `${clusterId}:${namespaceId}:frontend-deployment`,
+            name: 'frontend',
+            type: 'deployment',
+            namespaceId: namespaceId,
+            state: 'active',
+            image: 'nginx:1.21.0',
+            scale: 2,
+            availableReplicas: 2,
+            containers: [{ name: 'frontend', image: 'nginx:1.21.0' }],
+          },
+          {
+            id: `${clusterId}:${namespaceId}:backend-deployment`,
+            name: 'backend',
+            type: 'deployment',
+            namespaceId: namespaceId,
+            state: 'active',
+            image: 'node:16-alpine',
+            scale: 3,
+            availableReplicas: 3,
+            containers: [{ name: 'backend', image: 'node:16-alpine' }],
+          },
+          {
+            id: `${clusterId}:${namespaceId}:logging-daemon`,
+            name: 'logging-daemon',
+            type: 'daemonset',
+            namespaceId: namespaceId,
+            state: 'active',
+            image: 'fluentd:v1.14.0',
+            scale: 3,
+            availableReplicas: 3,
+            containers: [{ name: 'fluentd', image: 'fluentd:v1.14.0' }],
+          },
+          {
+            id: `${clusterId}:${namespaceId}:database-statefulset`,
+            name: 'database',
+            type: 'statefulset',
+            namespaceId: namespaceId,
+            state: 'active',
+            image: 'postgres:13.4',
+            scale: 1,
+            availableReplicas: 1,
+            containers: [{ name: 'postgres', image: 'postgres:13.4' }],
+          },
+        ];
+      }
+
       throw error;
     }
+  }
+
+  /**
+   * Fetch deployments from Rancher Kubernetes API endpoint and map to RancherWorkload[]
+   */
+  async getDeploymentsFromK8sApi(site: RancherSite, clusterId: string, namespace: string): Promise<RancherWorkload[]> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+    const endpoint = `/v1/apps.deployments?exclude=metadata.managedFields&namespace=${namespace}`;
+    this.logger.debug(`Fetching deployments from: ${site.url}/k8s/clusters/${clusterId}${endpoint}`);
+    const response = await client.get(endpoint);
+    this.logger.debug(`Raw deployments response: ${JSON.stringify(response.data).slice(0, 1000)}`);
+    let items: any[] = [];
+    if (Array.isArray(response.data.items)) {
+      items = response.data.items;
+    } else if (Array.isArray(response.data.data)) {
+      items = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      items = response.data;
+    }
+    // Filter by namespace in case Rancher returns all deployments
+    items = items.filter((dep: any) => dep.metadata?.namespace === namespace);
+    this.logger.debug(`Found ${items.length} deployments in response for namespace: ${namespace}`);
+    return items.map((dep: any) => ({
+      id: dep.metadata?.uid || dep.metadata?.name,
+      name: dep.metadata?.name,
+      type: 'deployment',
+      namespaceId: dep.metadata?.namespace || namespace,
+      state: dep.status?.conditions?.find((c: any) => c.type === 'Available')?.status === 'True' ? 'active' : 'inactive',
+      image: dep.spec?.template?.spec?.containers?.[0]?.image || '',
+      scale: dep.spec?.replicas || 1,
+      availableReplicas: dep.status?.availableReplicas || dep.status?.readyReplicas || 0,
+      containers: dep.spec?.template?.spec?.containers,
+    }));
+  }
+
+  private mapWorkloadData(
+    workload: any, 
+    expectedType: string | null, 
+    clusterId: string, 
+    namespaceId: string
+  ): RancherWorkload {
+    // Determine workload type from various sources
+    let workloadType = expectedType;
+    if (!workloadType) {
+      workloadType = 
+        workload.kind?.toLowerCase() ||
+        workload.type?.toLowerCase() ||
+        workload.metadata?.labels?.['workload.user.cattle.io/workloadselector']?.split('-')[0] ||
+        'deployment';
+    }
+
+    // Normalize type names
+    if (workloadType.endsWith('s')) {
+      workloadType = workloadType.slice(0, -1);
+    }
+
+    const name = workload.metadata?.name || workload.name || 'unknown';
+    const namespace = workload.metadata?.namespace || workload.namespaceId || namespaceId;
+
+    return {
+      id: workload.id || `${clusterId}:${namespace}:${name}-${workloadType}`,
+      name,
+      type: workloadType,
+      namespaceId: namespace,
+      state: this.extractWorkloadState(workload),
+      image: this.extractImageTag(workload),
+      scale: this.extractScale(workload, workloadType),
+      availableReplicas: this.extractAvailableReplicas(workload),
+      containers: this.extractContainers(workload),
+    };
+  }
+
+  private extractWorkloadState(workload: any): string {
+    // Try different ways to get the state
+    if (workload.status?.conditions) {
+      const readyCondition = workload.status.conditions.find(
+        (c: any) => c.type === 'Ready' || c.type === 'Available'
+      );
+      if (readyCondition?.status === 'True') return 'active';
+      if (readyCondition?.status === 'False') return 'inactive';
+    }
+    
+    if (workload.status?.phase) {
+      return workload.status.phase.toLowerCase();
+    }
+    
+    if (workload.state) {
+      return workload.state;
+    }
+
+    // Check if replicas match desired replicas
+    const desired = workload.spec?.replicas || workload.scale || 1;
+    const available = workload.status?.availableReplicas || workload.status?.readyReplicas || 0;
+    
+    return available >= desired ? 'active' : 'updating';
+  }
+
+  private extractScale(workload: any, type: string): number {
+    // DaemonSets don't have replica counts, use node count instead
+    if (type === 'daemonset') {
+      return workload.status?.desiredNumberScheduled || 
+             workload.status?.numberReady || 
+             workload.scale || 1;
+    }
+    
+    return workload.spec?.replicas || workload.scale || 1;
+  }
+
+  private extractAvailableReplicas(workload: any): number {
+    return workload.status?.availableReplicas ||
+           workload.status?.readyReplicas ||
+           workload.status?.numberReady ||
+           0;
+  }
+
+  private extractContainers(workload: any): any[] {
+    return workload.spec?.template?.spec?.containers ||
+           workload.spec?.containers ||
+           workload.containers ||
+           [];
   }
 
   async updateWorkloadImage(
@@ -327,19 +725,21 @@ export class RancherApiService {
   ): Promise<any> {
     try {
       const client = this.getClient(site);
-      
-      const getResponse: AxiosResponse = await client.get(`/project/${workloadId}`);
+
+      const getResponse: AxiosResponse = await client.get(
+        `/project/${workloadId}`,
+      );
       const workload = getResponse.data;
-      
+
       if (workload.containers && workload.containers.length > 0) {
         workload.containers[0].image = newImageTag;
       }
-      
+
       const updateResponse: AxiosResponse = await client.put(
         `/project/${workloadId}`,
         workload,
       );
-      
+
       return updateResponse.data;
     } catch (error) {
       this.logger.error(`Failed to update workload image: ${error.message}`);
@@ -348,6 +748,16 @@ export class RancherApiService {
   }
 
   private extractImageTag(workload: any): string {
+    // Try different possible locations for the image
+    if (
+      workload.spec?.template?.spec?.containers &&
+      workload.spec.template.spec.containers.length > 0
+    ) {
+      return workload.spec.template.spec.containers[0].image || 'unknown';
+    }
+    if (workload.spec?.containers && workload.spec.containers.length > 0) {
+      return workload.spec.containers[0].image || 'unknown';
+    }
     if (workload.containers && workload.containers.length > 0) {
       return workload.containers[0].image || 'unknown';
     }
@@ -356,5 +766,54 @@ export class RancherApiService {
 
   clearClient(siteId: string): void {
     this.clients.delete(siteId);
+  }
+
+  async testApiStructure(
+    site: RancherSite,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      this.logger.debug(`Testing API structure for site: ${site.name}`);
+
+      const client = this.getClient(site);
+
+      // Test the root endpoint to see what's available
+      const rootResponse = await client.get('/');
+      this.logger.debug(
+        `Root response keys: ${Object.keys(rootResponse.data || {}).join(', ')}`,
+      );
+
+      // Test common endpoints
+      const endpoints = ['clusters', 'projects', 'workloads', 'namespaces'];
+      const availableEndpoints = [];
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await client.get(`/${endpoint}`);
+          availableEndpoints.push({
+            endpoint,
+            status: response.status,
+            hasData: !!response.data,
+            dataKeys: response.data ? Object.keys(response.data) : [],
+          });
+          this.logger.debug(`Endpoint /${endpoint} is available`);
+        } catch (error) {
+          this.logger.debug(`Endpoint /${endpoint} failed: ${error.message}`);
+        }
+      }
+
+      return {
+        success: true,
+        message: 'API structure test completed',
+        data: {
+          rootResponse: rootResponse.data,
+          availableEndpoints,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `API structure test failed: ${error.message}`,
+      };
+    }
   }
 }

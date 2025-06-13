@@ -1,7 +1,13 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Service, AppInstance, RancherSite, SyncOperation, SyncHistory } from '../../entities';
+import {
+  Service,
+  AppInstance,
+  RancherSite,
+  SyncOperation,
+  SyncHistory,
+} from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
 import { SyncServicesDto } from './dto/sync-services.dto';
 
@@ -32,73 +38,168 @@ export class ServicesService {
       relations: ['rancherSite', 'services'],
     });
 
+    this.logger.debug(
+      `Found ${appInstances.length} app instances for environment: ${environmentId}`,
+    );
+
     if (appInstances.length === 0) {
-      this.logger.warn(`No app instances found for environment: ${environmentId}`);
+      this.logger.warn(
+        `No app instances found for environment: ${environmentId}`,
+      );
       return [];
     }
 
     const allServices: Service[] = [];
 
     for (const appInstance of appInstances) {
+      this.logger.debug(
+        `Processing app instance: ${appInstance.name} (${appInstance.cluster}/${appInstance.namespace})`,
+      );
       try {
-        // Fetch fresh services from Rancher API
-        const rancherServices = await this.rancherApiService.getWorkloads(
+        // Fetch deployments from Rancher Kubernetes API
+        const deployments = await this.rancherApiService.getDeploymentsFromK8sApi(
           appInstance.rancherSite,
           appInstance.cluster,
           appInstance.namespace,
         );
-
+        this.logger.debug(
+          `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
+        );
         // Update or create services in database
-        for (const rancherService of rancherServices) {
-          const serviceId = `${appInstance.cluster}-${appInstance.namespace}-${rancherService.name}`;
-          
+        for (const dep of deployments) {
+          const serviceId = `${appInstance.cluster}-${appInstance.namespace}-${dep.name}`;
           let service = await this.serviceRepository.findOne({
             where: { id: serviceId, appInstanceId: appInstance.id },
           });
-
           if (service) {
-            // Update existing service
-            service.status = rancherService.state;
-            service.replicas = rancherService.scale;
-            service.availableReplicas = rancherService.availableReplicas;
-            service.imageTag = rancherService.image;
-            service.workloadType = rancherService.type;
+            service.status = dep.state;
+            service.replicas = dep.scale;
+            service.availableReplicas = dep.availableReplicas;
+            service.imageTag = dep.image;
+            service.workloadType = dep.type;
             service.updatedAt = new Date();
           } else {
-            // Create new service
             service = this.serviceRepository.create({
               id: serviceId,
-              name: rancherService.name,
+              name: dep.name,
               appInstanceId: appInstance.id,
-              status: rancherService.state,
-              replicas: rancherService.scale,
-              availableReplicas: rancherService.availableReplicas,
-              imageTag: rancherService.image,
-              workloadType: rancherService.type,
+              status: dep.state,
+              replicas: dep.scale,
+              availableReplicas: dep.availableReplicas,
+              imageTag: dep.image,
+              workloadType: dep.type,
             });
           }
-
           await this.serviceRepository.save(service);
           allServices.push(service);
+          this.logger.debug(
+            `Saved service: ${service.name} (${service.imageTag})`,
+          );
         }
       } catch (error) {
         this.logger.error(
           `Failed to fetch services from app instance ${appInstance.name}: ${error.message}`,
         );
-        
         // If API fails, return cached services from database
         const cachedServices = await this.serviceRepository.find({
           where: { appInstanceId: appInstance.id },
         });
+        this.logger.debug(
+          `Returning ${cachedServices.length} cached services for ${appInstance.name}`,
+        );
         allServices.push(...cachedServices);
       }
     }
-
+    this.logger.debug(
+      `Total services returned for environment ${environmentId}: ${allServices.length}`,
+    );
     return allServices;
   }
 
+  async getServicesByAppInstance(appInstanceId: string): Promise<Service[]> {
+    this.logger.debug(`Fetching services for app instance: ${appInstanceId}`);
+
+    // Get the app instance
+    const appInstance = await this.appInstanceRepository.findOne({
+      where: { id: appInstanceId },
+      relations: ['rancherSite'],
+    });
+
+    if (!appInstance) {
+      throw new NotFoundException(
+        `App instance with ID ${appInstanceId} not found`,
+      );
+    }
+
+    this.logger.debug(
+      `Found app instance: ${appInstance.name} (${appInstance.cluster}/${appInstance.namespace})`,
+    );
+
+    try {
+      // Fetch deployments from Rancher Kubernetes API
+      const deployments = await this.rancherApiService.getDeploymentsFromK8sApi(
+        appInstance.rancherSite,
+        appInstance.cluster,
+        appInstance.namespace,
+      );
+      this.logger.debug(
+        `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
+      );
+      const services: Service[] = [];
+      // Update or create services in database
+      for (const dep of deployments) {
+        const serviceId = `${appInstance.cluster}-${appInstance.namespace}-${dep.name}`;
+        let service = await this.serviceRepository.findOne({
+          where: { id: serviceId, appInstanceId: appInstance.id },
+        });
+        if (service) {
+          service.status = dep.state;
+          service.replicas = dep.scale;
+          service.availableReplicas = dep.availableReplicas;
+          service.imageTag = dep.image;
+          service.workloadType = dep.type;
+          service.updatedAt = new Date();
+        } else {
+          service = this.serviceRepository.create({
+            id: serviceId,
+            name: dep.name,
+            appInstanceId: appInstance.id,
+            status: dep.state,
+            replicas: dep.scale,
+            availableReplicas: dep.availableReplicas,
+            imageTag: dep.image,
+            workloadType: dep.type,
+          });
+        }
+        await this.serviceRepository.save(service);
+        services.push(service);
+        this.logger.debug(
+          `Saved service: ${service.name} (${service.imageTag})`,
+        );
+      }
+      this.logger.debug(
+        `Total services returned for app instance ${appInstanceId}: ${services.length}`,
+      );
+      return services;
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch services from app instance ${appInstance.name}: ${error.message}`,
+      );
+      // If API fails, return cached services from database
+      const cachedServices = await this.serviceRepository.find({
+        where: { appInstanceId: appInstance.id },
+      });
+      this.logger.debug(
+        `Returning ${cachedServices.length} cached services for ${appInstance.name}`,
+      );
+      return cachedServices;
+    }
+  }
+
   async syncServices(syncDto: SyncServicesDto): Promise<any> {
-    this.logger.log(`Starting sync operation from env ${syncDto.sourceEnvironmentId} to ${syncDto.targetEnvironmentId}`);
+    this.logger.log(
+      `Starting sync operation from env ${syncDto.sourceEnvironmentId} to ${syncDto.targetEnvironmentId}`,
+    );
 
     // Create sync operation record
     const syncOperation = this.syncOperationRepository.create({
@@ -128,9 +229,11 @@ export class ServicesService {
           );
           syncResults.push(result);
         } catch (error) {
-          this.logger.error(`Failed to sync service ${serviceId}: ${error.message}`);
+          this.logger.error(
+            `Failed to sync service ${serviceId}: ${error.message}`,
+          );
           hasErrors = true;
-          
+
           const errorResult = {
             serviceId,
             targetAppInstanceId,
@@ -166,7 +269,6 @@ export class ServicesService {
         endTime: syncOperation.endTime,
         results: syncResults,
       };
-
     } catch (error) {
       // Mark entire operation as failed
       syncOperation.status = 'failed';
@@ -198,7 +300,9 @@ export class ServicesService {
     });
 
     if (!targetAppInstance) {
-      throw new NotFoundException(`Target app instance not found: ${targetAppInstanceId}`);
+      throw new NotFoundException(
+        `Target app instance not found: ${targetAppInstanceId}`,
+      );
     }
 
     // Find or create target service
@@ -211,7 +315,7 @@ export class ServicesService {
 
     // Update workload in target Rancher instance
     const workloadId = `${targetAppInstance.cluster}:${targetAppInstance.namespace}:${sourceService.name}`;
-    
+
     await this.rancherApiService.updateWorkloadImage(
       targetAppInstance.rancherSite,
       workloadId,
@@ -269,7 +373,7 @@ export class ServicesService {
     if (environmentId) {
       queryBuilder.where(
         'operation.sourceEnvironmentId = :envId OR operation.targetEnvironmentId = :envId',
-        { envId: environmentId }
+        { envId: environmentId },
       );
     }
 
