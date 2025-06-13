@@ -133,7 +133,12 @@ export function AppInstanceForm({
         >
           {activeSites.map((site) => (
             <Option key={site.id} value={site.id}>
-              {site.name}
+              <div className="flex items-center justify-between">
+                <span className="font-medium truncate">{site.name}</span>
+                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                  {site.url}
+                </span>
+              </div>
             </Option>
           ))}
         </Select>
@@ -209,8 +214,11 @@ export function AppInstanceForm({
         >
           {namespaces?.map((namespace) => (
             <Option key={namespace.id} value={namespace.name}>
-              <div>
-                <div className="font-medium">{namespace.name}</div>
+              <div className="flex items-center justify-between">
+                <span className="font-medium truncate">{namespace.name}</span>
+                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                  {namespace.id}
+                </span>
               </div>
             </Option>
           ))}

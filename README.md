@@ -10,6 +10,10 @@ A comprehensive tool for managing and synchronizing services across different en
 - **Visual Dashboard**: Clean UI for managing all your Rancher resources
 - **Sync History**: Track and review synchronization operations
 
+## Screenshot
+
+![screenshot](assets/RancherHub-screenshot.png)
+
 ## Quick Start
 
 ### Prerequisites

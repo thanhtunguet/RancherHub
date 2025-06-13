@@ -85,9 +85,7 @@ export function EnvironmentCard({
               e.stopPropagation();
               onSelect(environment);
             }}
-          >
-            {isSelected ? "Selected" : "Select"}
-          </Button>,
+          />,
           <Button
             key="edit"
             type="text"
@@ -96,10 +94,12 @@ export function EnvironmentCard({
               e.stopPropagation();
               onEdit(environment);
             }}
+          />,
+          <Dropdown
+            menu={{ items: menuItems }}
+            trigger={["click"]}
+            className="mx-0"
           >
-            Edit
-          </Button>,
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
             <Button
               type="text"
               icon={<MoreOutlined />}

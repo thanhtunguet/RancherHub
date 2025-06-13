@@ -32,8 +32,6 @@ export function ServiceTable({
   selectedServices,
   onServiceSelectionChange,
 }: ServiceTableProps) {
-  const [pageSize, setPageSize] = useState(20);
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortState, setSortState] = useState<SortState>({
     field: "name",
     order: "ascend",
@@ -90,7 +88,6 @@ export function ServiceTable({
       field: sorter.field || "name",
       order: sorter.order || "ascend",
     });
-    setCurrentPage(1);
   };
 
   const columns = [
@@ -141,6 +138,13 @@ export function ServiceTable({
       key: "workloadType",
       sorter: true,
       sortOrder: sortState.field === "workloadType" ? sortState.order : null,
+      render: (workloadType: string) => {
+        return (
+          <span className="capitalize">
+            {workloadType === "deployment" ? "Deployment" : "DaemonSets"}
+          </span>
+        );
+      },
     },
     {
       title: "Replicas",
@@ -148,13 +152,12 @@ export function ServiceTable({
       sorter: true,
       sortOrder: sortState.field === "replicas" ? sortState.order : null,
       render: (_: any, record: Service) =>
-        `${record.availableReplicas}/${record.replicas}`,
+        `${record.availableReplicas} / ${record.replicas}`,
     },
     {
       title: "Tag",
       dataIndex: "imageTag",
       key: "imageTag",
-      width: 220,
       sorter: true,
       sortOrder: sortState.field === "imageTag" ? sortState.order : null,
       render: (imageTag: string) => {
@@ -176,31 +179,12 @@ export function ServiceTable({
     },
   ];
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize);
-    setCurrentPage(1);
-  };
-
-  const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, sortedServices.length);
-
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
         <Space>
-          <Text>Items per page:</Text>
-          <Select
-            value={pageSize.toString()}
-            onChange={(value) => handlePageSizeChange(Number(value))}
-            style={{ width: 80 }}
-          >
-            <Option value="10">10</Option>
-            <Option value="20">20</Option>
-            <Option value="50">50</Option>
-            <Option value="100">100</Option>
-          </Select>
           <Text className="text-gray-500">
-            Showing {startIndex}-{endIndex} of {sortedServices.length} services
+            Showing {sortedServices.length} services
           </Text>
           {sortState.field && sortState.order && (
             <Text className="text-blue-600">
@@ -219,18 +203,7 @@ export function ServiceTable({
         }}
         columns={columns}
         onChange={handleTableChange}
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: sortedServices.length,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total: number, range: [number, number]) =>
-            `${range[0]}-${range[1]} of ${total} services`,
-          pageSizeOptions: ["10", "20", "50", "100"],
-          onShowSizeChange: (size: number) => handlePageSizeChange(size),
-          onChange: (page: number) => setCurrentPage(page),
-        }}
+        pagination={false}
       />
     </div>
   );
