@@ -1,56 +1,49 @@
-# Multi-stage build for React frontend production
-
-# Stage 1: Build stage
+# Build stage
 FROM node:18-alpine AS builder
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy package files and yarn.lock
-COPY package*.json yarn.lock ./
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build the application for production
-RUN yarn build
+# Build the application
+RUN npm run build
 
-# Stage 2: Production stage with nginx
+# Production stage
 FROM nginx:alpine AS production
 
-# Install curl for health checks
-RUN apk --no-cache add curl
-
-# Copy custom nginx config
+# Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy environment script for runtime configuration
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Create a non-root user
+RUN addgroup -g 1001 -S nginx
+RUN adduser -S nginx -u 1001 -G nginx
 
-# Create nginx user and set permissions
+# Change ownership of the nginx directory
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/nginx.conf
+    chown -R nginx:nginx /etc/nginx/conf.d
 
 # Switch to non-root user
 USER nginx
 
-# Expose port
+# Expose port 80
 EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80 || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
 
-# Start nginx with custom entrypoint
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 

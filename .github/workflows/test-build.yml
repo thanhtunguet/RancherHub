@@ -1,0 +1,56 @@
+name: Test Docker Builds
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+env:
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: ${{ env.BACKEND_IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ${{ env.FRONTEND_IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test backend image
+        run: |
+          docker run --rm -d --name test-backend -p 3000:3000 ${{ env.BACKEND_IMAGE_NAME }}:test
+          sleep 10
+          curl -f http://localhost:3000/health || exit 1
+          docker stop test-backend
+
+      - name: Test frontend image
+        run: |
+          docker run --rm -d --name test-frontend -p 8080:80 ${{ env.FRONTEND_IMAGE_NAME }}:test
+          sleep 5
+          curl -f http://localhost:8080/ || exit 1
+          docker stop test-frontend

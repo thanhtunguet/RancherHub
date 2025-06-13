@@ -1,54 +1,52 @@
-# Multi-stage build for NestJS backend production
-
-# Stage 1: Build stage
+# Use the official Node.js runtime as the base image
 FROM node:18-alpine AS builder
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy package files and yarn.lock
-COPY package*.json yarn.lock ./
+# Copy package files
+COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
-RUN yarn install --frozen-lockfile
+# Install dependencies
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN npm run build
 
-# Stage 2: Production stage
+# Production stage
 FROM node:18-alpine AS production
 
-# Create app user for security
+# Create app user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nestjs -u 1001
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy package files and yarn.lock
-COPY package*.json yarn.lock ./
+# Copy package files
+COPY package*.json ./
 
 # Install only production dependencies
-RUN yarn install --frozen-lockfile --production && yarn cache clean
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data && chown nestjs:nodejs /app/data
+# Change ownership of the app directory
+RUN chown -R nestjs:nodejs /app
 
 # Switch to non-root user
 USER nestjs
 
-# Expose port
+# Expose the port the app runs on
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD node healthcheck.js
 
 # Start the application
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main"] 
