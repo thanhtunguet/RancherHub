@@ -143,10 +143,11 @@ export function useServiceManagement() {
   }, [services]);
 
   // Handlers
-  const handleServiceSelectionChange = (serviceIds: string[]) => {
-    const selected =
-      services?.filter((service) => serviceIds.includes(service.id)) || [];
-    setSelectedServices(selected);
+  const handleServiceSelectionChange = (
+    _: React.Key[],
+    selectedRows: Service[]
+  ) => {
+    setSelectedServices(selectedRows);
   };
 
   const handleSelectAll = () => {

@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { message } from "antd";
 import { environmentsApi } from "../services/api";
-import type { CreateEnvironmentRequest, Environment } from "../types";
+import type { CreateEnvironmentRequest } from "../types";
 
 export const useEnvironments = () => {
   return useQuery({
@@ -75,7 +75,7 @@ export const useDeleteEnvironment = () => {
 
   return useMutation({
     mutationFn: environmentsApi.delete,
-    onSuccess: (_, deletedId) => {
+    onSuccess: (_, _deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["environments"] });
       message.success("Environment deleted successfully");
     },
