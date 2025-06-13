@@ -4,20 +4,26 @@ FROM node:18-alpine AS builder
 # Set the working directory
 WORKDIR /app
 
+# Install yarn if not available
+RUN apk add --no-cache yarn
+
 # Copy package files
-COPY package*.json ./
+COPY package.json yarn.lock* ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN yarn install --frozen-lockfile --production
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Production stage
 FROM node:18-alpine AS production
+
+# Install yarn if not available
+RUN apk add --no-cache yarn
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs
@@ -27,10 +33,10 @@ RUN adduser -S nestjs -u 1001
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json yarn.lock* ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN yarn install --frozen-lockfile --production && yarn cache clean
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist

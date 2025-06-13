@@ -4,17 +4,20 @@ FROM node:18-alpine AS builder
 # Set the working directory
 WORKDIR /app
 
+# Install yarn if not available
+RUN apk add --no-cache yarn
+
 # Copy package files
-COPY package*.json ./
+COPY package.json yarn.lock* ./
 
 # Install dependencies
-RUN npm ci
+RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Production stage
 FROM nginx:alpine AS production
