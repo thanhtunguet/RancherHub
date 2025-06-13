@@ -1,12 +1,8 @@
-import React, { useMemo, useState } from "react";
-import { useAppStore } from "../stores/useAppStore";
+import React, { useMemo, useState, useEffect } from "react";
 import type { Service } from "../types";
 import { useAppInstancesByEnvironment } from "./useAppInstances";
 import { useEnvironments } from "./useEnvironments";
-import {
-  useServices,
-  useServicesByAppInstance,
-} from "./useServices";
+import { useServices, useServicesByAppInstance } from "./useServices";
 
 export function useServiceManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,17 +15,43 @@ export function useServiceManagement() {
   const [selectedEnvironmentId, setSelectedEnvironmentId] =
     useState<string>("");
 
-  const { selectedEnvironment } = useAppStore();
   const { data: environments } = useEnvironments();
 
-  // Use the selected environment from global state as default, or allow manual selection
-  const effectiveEnvironmentId =
-    selectedEnvironmentId || selectedEnvironment?.id || "";
+  // Auto-select first environment if not set
+  useEffect(() => {
+    if (!selectedEnvironmentId && environments && environments.length > 0) {
+      setSelectedEnvironmentId(environments[0].id);
+    }
+  }, [selectedEnvironmentId, environments]);
+
+  // Use the selected environment from local state
+  const effectiveEnvironmentId = selectedEnvironmentId;
+
+  // Debug logging
+  console.log("useServiceManagement Debug:", {
+    selectedEnvironmentId,
+    effectiveEnvironmentId,
+    selectedAppInstanceId,
+    searchTerm,
+    statusFilter,
+  });
 
   // Prepare filters for API calls - only include non-default values
   const apiFilters = {
     ...(searchTerm && { search: searchTerm }),
   };
+
+  // Fetch app instances for the selected environment
+  const { data: appInstances } = useAppInstancesByEnvironment(
+    effectiveEnvironmentId
+  );
+
+  // Debug logging for app instances
+  console.log("App Instances Debug:", {
+    effectiveEnvironmentId,
+    appInstancesCount: appInstances?.length || 0,
+    appInstances: appInstances?.map((ai) => ({ id: ai.id, name: ai.name })),
+  });
 
   // Use different hooks based on whether we're filtering by app instance or not
   const {
@@ -49,9 +71,15 @@ export function useServiceManagement() {
     apiFilters
   );
 
-  const { data: appInstances } = useAppInstancesByEnvironment(
-    effectiveEnvironmentId
-  );
+  // Debug logging for services
+  console.log("Services Debug:", {
+    effectiveEnvironmentId,
+    selectedAppInstanceId,
+    servicesByEnvironmentCount: servicesByEnvironment?.length || 0,
+    servicesByAppInstanceCount: servicesByAppInstance?.length || 0,
+    isLoadingByEnvironment,
+    isLoadingByAppInstance,
+  });
 
   // Determine which data and loading states to use
   const services =
@@ -67,6 +95,11 @@ export function useServiceManagement() {
 
   // Force refetch when environment changes
   React.useEffect(() => {
+    console.log("useEffect: Environment or app instance changed", {
+      effectiveEnvironmentId,
+      selectedAppInstanceId,
+    });
+
     if (effectiveEnvironmentId) {
       if (selectedAppInstanceId === "all") {
         refetchByEnvironment();
@@ -81,47 +114,53 @@ export function useServiceManagement() {
     refetchByAppInstance,
   ]);
 
-  // Filter services based on status only (search is handled by backend)
+  // Filter services by status
   const filteredServices = useMemo(() => {
     if (!services) return [];
+    if (statusFilter === "all") return services;
 
     return services.filter((service) => {
-      const matchesStatus =
-        statusFilter === "all" ||
-        service.status.toLowerCase() === statusFilter.toLowerCase();
-
-      return matchesStatus;
+      switch (statusFilter) {
+        case "running":
+          return service.status === "running";
+        case "stopped":
+          return service.status === "stopped";
+        case "error":
+          return service.status === "error";
+        case "pending":
+          return service.status === "pending";
+        default:
+          return true;
+      }
     });
   }, [services, statusFilter]);
 
-  // Get unique statuses for filter
+  // Get available statuses for filter
   const availableStatuses = useMemo(() => {
     if (!services) return [];
-
-    const statuses = [...new Set(services.map((s) => s.status))];
-    return statuses.sort();
+    const statuses = new Set(services.map((service) => service.status));
+    return Array.from(statuses).sort();
   }, [services]);
 
-  const handleServiceSelectionChange = (
-    _selectedRowKeys: React.Key[],
-    selectedRows: Service[]
-  ) => {
-    setSelectedServices(selectedRows);
+  // Handlers
+  const handleServiceSelectionChange = (serviceIds: string[]) => {
+    const selected =
+      services?.filter((service) => serviceIds.includes(service.id)) || [];
+    setSelectedServices(selected);
   };
 
   const handleSelectAll = () => {
     if (selectedServices.length === filteredServices.length) {
       setSelectedServices([]);
     } else {
-      setSelectedServices([...filteredServices]);
+      setSelectedServices(filteredServices);
     }
   };
 
   const handleSync = () => {
-    if (selectedServices.length === 0) {
-      return;
+    if (selectedServices.length > 0) {
+      setShowSyncModal(true);
     }
-    setShowSyncModal(true);
   };
 
   const handleRefresh = () => {
@@ -133,12 +172,14 @@ export function useServiceManagement() {
   };
 
   const handleEnvironmentChange = (environmentId: string) => {
+    console.log("Environment changed:", environmentId);
     setSelectedEnvironmentId(environmentId);
-    setSelectedAppInstanceId("all"); // Reset app instance filter
+    setSelectedAppInstanceId("all"); // Reset app instance filter when environment changes
     setSelectedServices([]); // Clear selected services when changing environment
   };
 
   const handleAppInstanceChange = (appInstanceId: string) => {
+    console.log("App instance changed:", appInstanceId);
     setSelectedAppInstanceId(appInstanceId);
     setSelectedServices([]); // Clear selected services when changing app instance filter
   };

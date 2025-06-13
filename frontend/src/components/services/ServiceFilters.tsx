@@ -73,9 +73,10 @@ export function ServiceFilters({
 
   // Clear search
   const handleClearSearch = () => {
-    setLocalSearchTerm('');
-    onSearchChange('');
+    setLocalSearchTerm("");
+    onSearchChange("");
   };
+
   return (
     <div className="flex items-end gap-6 mb-4">
       {/* Environment Filter */}
@@ -101,8 +102,8 @@ export function ServiceFilters({
         </Select>
       </div>
 
-      {/* App Instance Filter */}
-      {appInstances && appInstances.length > 0 && (
+      {/* App Instance Filter - Only show when environment is selected */}
+      {effectiveEnvironmentId && (
         <div className="flex flex-col gap-1">
           <Text strong>App Instance</Text>
           <Select
@@ -110,9 +111,10 @@ export function ServiceFilters({
             value={selectedAppInstanceId}
             onChange={onAppInstanceChange}
             className="w-64"
+            disabled={!appInstances || appInstances.length === 0}
           >
             <Option value="all">All App Instances</Option>
-            {appInstances.map((appInstance) => (
+            {appInstances?.map((appInstance) => (
               <Option key={appInstance.id} value={appInstance.id}>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{appInstance.name}</span>

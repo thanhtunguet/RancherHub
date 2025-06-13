@@ -6,6 +6,7 @@ interface ServiceEmptyStateProps {
   statusFilter: string;
   selectedAppInstanceId: string;
   selectedAppInstanceName?: string;
+  selectedEnvironmentName?: string;
 }
 
 export function ServiceEmptyState({
@@ -13,6 +14,7 @@ export function ServiceEmptyState({
   statusFilter,
   selectedAppInstanceId,
   selectedAppInstanceName,
+  selectedEnvironmentName,
 }: ServiceEmptyStateProps) {
   return (
     <Empty
@@ -24,7 +26,7 @@ export function ServiceEmptyState({
               ? "No services match your filters"
               : selectedAppInstanceId !== "all"
                 ? `No services found in ${selectedAppInstanceName || "selected app instance"}`
-                : "No services found in this environment"}
+                : `No services found in ${selectedEnvironmentName || "selected environment"}`}
           </p>
           <p className="text-gray-400 text-sm">
             {!searchTerm &&

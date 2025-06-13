@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,6 +27,8 @@ import { Repository } from 'typeorm';
 @ApiTags('services')
 @Controller('api/services')
 export class ServicesController {
+  private readonly logger = new Logger(ServicesController.name);
+
   constructor(
     private readonly servicesService: ServicesService,
     private readonly rancherApiService: RancherApiService,
@@ -34,7 +37,9 @@ export class ServicesController {
   ) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get services by environment with optional filtering' })
+  @ApiOperation({
+    summary: 'Get services by environment with optional filtering',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of services in the environment',
@@ -60,26 +65,46 @@ export class ServicesController {
     @Query('type') workloadType?: string,
     @Query('search') searchTerm?: string,
   ) {
-    const services = await this.servicesService.getServicesByEnvironment(environmentId);
-    
+    this.logger.debug(`getServicesByEnvironment called with:`, {
+      environmentId,
+      workloadType,
+      searchTerm,
+    });
+
+    const services =
+      await this.servicesService.getServicesByEnvironment(environmentId);
+
+    this.logger.debug(
+      `Retrieved ${services.length} services for environment ${environmentId}`,
+    );
+
     let filteredServices = services;
-    
+
     // Filter by workload type
     if (workloadType) {
-      filteredServices = filteredServices.filter(service => 
-        service.workloadType?.toLowerCase() === workloadType.toLowerCase()
+      filteredServices = filteredServices.filter(
+        (service) =>
+          service.workloadType?.toLowerCase() === workloadType.toLowerCase(),
+      );
+      this.logger.debug(
+        `After workload type filter: ${filteredServices.length} services`,
       );
     }
-    
+
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filteredServices = filteredServices.filter(service =>
-        service.name.toLowerCase().includes(searchLower) ||
-        service.imageTag?.toLowerCase().includes(searchLower)
+      filteredServices = filteredServices.filter(
+        (service) =>
+          service.name.toLowerCase().includes(searchLower) ||
+          service.imageTag?.toLowerCase().includes(searchLower),
+      );
+      this.logger.debug(
+        `After search filter: ${filteredServices.length} services`,
       );
     }
-    
+
+    this.logger.debug(`Returning ${filteredServices.length} filtered services`);
     return filteredServices;
   }
 
@@ -94,10 +119,10 @@ export class ServicesController {
         types: {
           type: 'array',
           items: { type: 'string' },
-          example: ['deployment', 'daemonset', 'statefulset']
-        }
-      }
-    }
+          example: ['deployment', 'daemonset', 'statefulset'],
+        },
+      },
+    },
   })
   @ApiQuery({
     name: 'env',
@@ -105,13 +130,26 @@ export class ServicesController {
     description: 'Environment ID to get workload types for',
   })
   async getWorkloadTypes(@Query('env') environmentId: string) {
-    const services = await this.servicesService.getServicesByEnvironment(environmentId);
-    const types = [...new Set(services.map(service => service.workloadType).filter(Boolean))];
+    this.logger.debug(
+      `getWorkloadTypes called for environment: ${environmentId}`,
+    );
+
+    const services =
+      await this.servicesService.getServicesByEnvironment(environmentId);
+    const types = [
+      ...new Set(
+        services.map((service) => service.workloadType).filter(Boolean),
+      ),
+    ];
+
+    this.logger.debug(`Found workload types: ${types.join(', ')}`);
     return { types: types.sort() };
   }
 
   @Get('by-app-instance/:appInstanceId')
-  @ApiOperation({ summary: 'Get services by app instance with optional filtering' })
+  @ApiOperation({
+    summary: 'Get services by app instance with optional filtering',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of services in the app instance',
@@ -133,26 +171,46 @@ export class ServicesController {
     @Query('type') workloadType?: string,
     @Query('search') searchTerm?: string,
   ) {
-    const services = await this.servicesService.getServicesByAppInstance(appInstanceId);
-    
+    this.logger.debug(`getServicesByAppInstance called with:`, {
+      appInstanceId,
+      workloadType,
+      searchTerm,
+    });
+
+    const services =
+      await this.servicesService.getServicesByAppInstance(appInstanceId);
+
+    this.logger.debug(
+      `Retrieved ${services.length} services for app instance ${appInstanceId}`,
+    );
+
     let filteredServices = services;
-    
+
     // Filter by workload type
     if (workloadType) {
-      filteredServices = filteredServices.filter(service => 
-        service.workloadType?.toLowerCase() === workloadType.toLowerCase()
+      filteredServices = filteredServices.filter(
+        (service) =>
+          service.workloadType?.toLowerCase() === workloadType.toLowerCase(),
+      );
+      this.logger.debug(
+        `After workload type filter: ${filteredServices.length} services`,
       );
     }
-    
+
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filteredServices = filteredServices.filter(service =>
-        service.name.toLowerCase().includes(searchLower) ||
-        service.imageTag?.toLowerCase().includes(searchLower)
+      filteredServices = filteredServices.filter(
+        (service) =>
+          service.name.toLowerCase().includes(searchLower) ||
+          service.imageTag?.toLowerCase().includes(searchLower),
+      );
+      this.logger.debug(
+        `After search filter: ${filteredServices.length} services`,
       );
     }
-    
+
+    this.logger.debug(`Returning ${filteredServices.length} filtered services`);
     return filteredServices;
   }
 
@@ -199,40 +257,20 @@ export class ServicesController {
   @ApiOperation({ summary: 'Synchronize services between environments' })
   @ApiResponse({
     status: 200,
-    description: 'Synchronization completed',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', description: 'Sync operation ID' },
-        status: { type: 'string', description: 'Sync status' },
-        startTime: { type: 'string', format: 'date-time' },
-        endTime: { type: 'string', format: 'date-time' },
-        results: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              serviceId: { type: 'string' },
-              targetAppInstanceId: { type: 'string' },
-              previousImageTag: { type: 'string' },
-              newImageTag: { type: 'string' },
-              status: { type: 'string' },
-            },
-          },
-        },
-      },
-    },
+    description: 'Services synchronized successfully',
   })
-  @ApiResponse({ status: 400, description: 'Invalid synchronization data' })
-  @ApiResponse({ status: 404, description: 'Service or environment not found' })
+  @ApiResponse({ status: 400, description: 'Invalid sync request' })
   @ApiBody({ type: SyncServicesDto })
   async syncServices(@Body() syncDto: SyncServicesDto) {
     return this.servicesService.syncServices(syncDto);
   }
 
   @Get('sync/history')
-  @ApiOperation({ summary: 'Get synchronization history' })
-  @ApiResponse({ status: 200, description: 'List of sync operations' })
+  @ApiOperation({ summary: 'Get sync history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sync history retrieved successfully',
+  })
   @ApiQuery({
     name: 'env',
     required: false,
@@ -243,33 +281,10 @@ export class ServicesController {
   }
 
   @Get('sync/history/detailed')
-  @ApiOperation({ summary: 'Get detailed synchronization history with full sync details' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Detailed sync history records',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          serviceName: { type: 'string' },
-          workloadType: { type: 'string' },
-          sourceEnvironmentName: { type: 'string' },
-          sourceCluster: { type: 'string' },
-          sourceNamespace: { type: 'string' },
-          targetEnvironmentName: { type: 'string' },
-          targetCluster: { type: 'string' },
-          targetNamespace: { type: 'string' },
-          previousImageTag: { type: 'string' },
-          newImageTag: { type: 'string' },
-          status: { type: 'string' },
-          durationMs: { type: 'number' },
-          timestamp: { type: 'string', format: 'date-time' },
-          error: { type: 'string', nullable: true },
-        }
-      }
-    }
+  @ApiOperation({ summary: 'Get detailed sync history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detailed sync history retrieved successfully',
   })
   @ApiQuery({
     name: 'env',
@@ -281,46 +296,55 @@ export class ServicesController {
   }
 
   @Get('debug/app-instances/:environmentId')
-  @ApiOperation({ summary: 'Debug app instances for environment' })
+  @ApiOperation({ summary: 'Debug app instances for an environment' })
   @ApiResponse({
     status: 200,
-    description: 'App instances debug info',
+    description: 'Debug information for app instances',
   })
   @ApiParam({ name: 'environmentId', description: 'Environment ID' })
   async debugAppInstances(@Param('environmentId') environmentId: string) {
+    this.logger.debug(
+      `debugAppInstances called for environment: ${environmentId}`,
+    );
+
+    // Get all app instances for this environment
     const appInstances = await this.servicesService[
       'appInstanceRepository'
     ].find({
       where: { environmentId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'environment'],
     });
+
+    this.logger.debug(
+      `Found ${appInstances.length} app instances for environment ${environmentId}`,
+    );
 
     return {
       environmentId,
-      appInstances: appInstances.map((instance) => ({
-        id: instance.id,
-        name: instance.name,
-        cluster: instance.cluster,
-        namespace: instance.namespace,
-        rancherSiteId: instance.rancherSiteId,
-        rancherSite: {
-          id: instance.rancherSite.id,
-          name: instance.rancherSite.name,
-          url: instance.rancherSite.url,
-          active: instance.rancherSite.active,
-        },
+      appInstancesCount: appInstances.length,
+      appInstances: appInstances.map((ai) => ({
+        id: ai.id,
+        name: ai.name,
+        cluster: ai.cluster,
+        namespace: ai.namespace,
+        rancherSiteId: ai.rancherSiteId,
+        environmentId: ai.environmentId,
+        createdAt: ai.createdAt,
+        updatedAt: ai.updatedAt,
       })),
     };
   }
 
   @Get('debug/clusters/:siteId')
-  @ApiOperation({ summary: 'Debug clusters for site' })
+  @ApiOperation({ summary: 'Debug clusters for a site' })
   @ApiResponse({
     status: 200,
-    description: 'Clusters debug info',
+    description: 'Debug information for clusters',
   })
-  @ApiParam({ name: 'siteId', description: 'Rancher site ID' })
+  @ApiParam({ name: 'siteId', description: 'Site ID' })
   async debugClusters(@Param('siteId') siteId: string) {
+    this.logger.debug(`debugClusters called for site: ${siteId}`);
+
     const site = await this.rancherSiteRepository.findOne({
       where: { id: siteId },
     });
@@ -331,22 +355,23 @@ export class ServicesController {
 
     try {
       const clusters = await this.rancherApiService.getClusters(site);
+      this.logger.debug(`Found ${clusters.length} clusters for site ${siteId}`);
+
       return {
         siteId,
         siteName: site.name,
-        siteUrl: site.url,
+        clustersCount: clusters.length,
         clusters: clusters.map((cluster) => ({
           id: cluster.id,
           name: cluster.name,
           state: cluster.state,
-          description: cluster.description,
         })),
       };
     } catch (error) {
+      this.logger.error(`Error fetching clusters for site ${siteId}:`, error);
       return {
         siteId,
         siteName: site.name,
-        siteUrl: site.url,
         error: error.message,
       };
     }

@@ -28,9 +28,8 @@ export function AppInstanceForm({
   sites,
 }: AppInstanceFormProps) {
   const [form] = Form.useForm();
-  const [selectedSiteId, setSelectedSiteId] = useState<string>(
-    initialValues?.rancherSiteId || ""
-  );
+
+  const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [selectedClusterId, setSelectedClusterId] = useState<string>("");
 
   // Fetch clusters when site is selected
@@ -51,12 +50,18 @@ export function AppInstanceForm({
     enabled: !!selectedSiteId && !!selectedClusterId,
   });
 
+  // Reset form and state when initialValues change (create vs edit mode)
   useEffect(() => {
     if (initialValues) {
+      // Set the form values and state
       form.setFieldsValue(initialValues);
       setSelectedSiteId(initialValues.rancherSiteId || "");
-      // For edit mode, we'll need to parse cluster from the existing data
       setSelectedClusterId(initialValues.cluster || "");
+    } else {
+      // Reset everything to default values
+      form.resetFields();
+      setSelectedSiteId("");
+      setSelectedClusterId("");
     }
   }, [initialValues, form]);
 
@@ -81,15 +86,18 @@ export function AppInstanceForm({
     onSubmit(values as CreateAppInstanceRequest);
   };
 
+  const handleCancel = () => {
+    // Reset form and state before closing
+    form.resetFields();
+    setSelectedSiteId("");
+    setSelectedClusterId("");
+    onCancel();
+  };
+
   const activeSites = sites.filter((site) => site.active);
 
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      onFinish={handleSubmit}
-      initialValues={initialValues}
-    >
+    <Form form={form} layout="vertical" onFinish={handleSubmit}>
       <Form.Item
         label="Name"
         name="name"
@@ -257,7 +265,7 @@ export function AppInstanceForm({
 
       <Form.Item className="mb-0">
         <Space className="w-full justify-end">
-          <Button onClick={onCancel}>Cancel</Button>
+          <Button onClick={handleCancel}>Cancel</Button>
           <Button
             type="primary"
             htmlType="submit"

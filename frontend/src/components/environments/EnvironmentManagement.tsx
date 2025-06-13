@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Button, Row, Col, Modal, Empty, Spin, Alert } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { LayersIcon } from 'lucide-react';
-import { EnvironmentCard } from './EnvironmentCard';
-import { EnvironmentForm } from './EnvironmentForm';
-import { useEnvironments, useCreateEnvironment, useUpdateEnvironment, useDeleteEnvironment } from '../../hooks/useEnvironments';
-import { useAppStore } from '../../stores/useAppStore';
-import type { Environment, CreateEnvironmentRequest } from '../../types';
+import { useState, useEffect } from "react";
+import { Button, Row, Col, Modal, Empty, Spin, Alert } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { LayersIcon } from "lucide-react";
+import { EnvironmentCard } from "./EnvironmentCard";
+import { EnvironmentForm } from "./EnvironmentForm";
+import {
+  useEnvironments,
+  useCreateEnvironment,
+  useUpdateEnvironment,
+  useDeleteEnvironment,
+} from "../../hooks/useEnvironments";
+import type { Environment, CreateEnvironmentRequest } from "../../types";
 
 export function EnvironmentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEnvironment, setEditingEnvironment] = useState<Environment | null>(null);
+  const [editingEnvironment, setEditingEnvironment] =
+    useState<Environment | null>(null);
+  const [selectedEnvironment, setSelectedEnvironment] =
+    useState<Environment | null>(null);
 
-  const { selectedEnvironment, setSelectedEnvironment } = useAppStore();
   const { data: environments, isLoading, error } = useEnvironments();
   const createEnvironmentMutation = useCreateEnvironment();
   const updateEnvironmentMutation = useUpdateEnvironment();
@@ -23,7 +29,7 @@ export function EnvironmentManagement() {
     if (!selectedEnvironment && environments && environments.length > 0) {
       setSelectedEnvironment(environments[0]);
     }
-  }, [environments, selectedEnvironment, setSelectedEnvironment]);
+  }, [environments, selectedEnvironment]);
 
   const handleOpenModal = () => {
     setEditingEnvironment(null);
@@ -99,7 +105,7 @@ export function EnvironmentManagement() {
       {selectedEnvironment && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: selectedEnvironment.color }}
             />
@@ -136,28 +142,40 @@ export function EnvironmentManagement() {
             </div>
           }
         >
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenModal}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenModal}
+          >
             Create Your First Environment
           </Button>
         </Empty>
       )}
 
       <Modal
-        title={editingEnvironment ? 'Edit Environment' : 'Add New Environment'}
+        title={editingEnvironment ? "Edit Environment" : "Add New Environment"}
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={null}
         width={500}
+        destroyOnClose
       >
         <EnvironmentForm
-          initialValues={editingEnvironment ? {
-            name: editingEnvironment.name,
-            description: editingEnvironment.description || '',
-            color: editingEnvironment.color,
-          } : undefined}
+          initialValues={
+            editingEnvironment
+              ? {
+                  name: editingEnvironment.name,
+                  description: editingEnvironment.description || "",
+                  color: editingEnvironment.color,
+                }
+              : undefined
+          }
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
-          loading={createEnvironmentMutation.isPending || updateEnvironmentMutation.isPending}
+          loading={
+            createEnvironmentMutation.isPending ||
+            updateEnvironmentMutation.isPending
+          }
         />
       </Modal>
     </div>

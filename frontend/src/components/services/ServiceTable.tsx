@@ -1,14 +1,13 @@
-import { Badge, Table, Select, Space, Typography } from "antd";
 import {
   CheckCircleTwoTone,
   CloseCircleTwoTone,
   ExclamationCircleTwoTone,
   SyncOutlined as SyncIcon,
 } from "@ant-design/icons";
-import { useState, useMemo } from "react";
+import { Badge, Space, Table, Typography } from "antd";
+import { useMemo, useState } from "react";
 import type { Service } from "../../types";
 
-const { Option } = Select;
 const { Text } = Typography;
 
 interface ServiceTableProps {

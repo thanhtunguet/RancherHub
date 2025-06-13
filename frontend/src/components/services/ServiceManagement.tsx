@@ -158,6 +158,7 @@ export function ServiceManagement() {
           statusFilter={statusFilter}
           selectedAppInstanceId={selectedAppInstanceId}
           selectedAppInstanceName={selectedAppInstance?.name}
+          selectedEnvironmentName={selectedEnv?.name}
         />
       )}
 
