@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Form, Input, Select, Button, Space, Alert, Spin } from 'antd';
-import { useQuery } from '@tanstack/react-query';
-import { sitesApi } from '../../services/api';
-import type { CreateAppInstanceRequest, RancherSite, Environment } from '../../types';
+import { useState, useEffect } from "react";
+import { Form, Input, Select, Button, Space, Alert, Spin } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { sitesApi } from "../../services/api";
+import type {
+  CreateAppInstanceRequest,
+  RancherSite,
+  Environment,
+} from "../../types";
 
 const { Option } = Select;
 
@@ -24,19 +28,25 @@ export function AppInstanceForm({
   sites,
 }: AppInstanceFormProps) {
   const [form] = Form.useForm();
-  const [selectedSiteId, setSelectedSiteId] = useState<string>(initialValues?.rancherSiteId || '');
-  const [selectedClusterId, setSelectedClusterId] = useState<string>('');
+  const [selectedSiteId, setSelectedSiteId] = useState<string>(
+    initialValues?.rancherSiteId || ""
+  );
+  const [selectedClusterId, setSelectedClusterId] = useState<string>("");
 
   // Fetch clusters when site is selected
   const { data: clusters, isLoading: clustersLoading } = useQuery({
-    queryKey: ['clusters', selectedSiteId],
+    queryKey: ["clusters", selectedSiteId],
     queryFn: () => sitesApi.getClusters(selectedSiteId),
     enabled: !!selectedSiteId,
   });
 
   // Fetch namespaces when cluster is selected
-  const { data: namespaces, isLoading: namespacesLoading, error: namespacesError } = useQuery({
-    queryKey: ['namespaces', selectedSiteId, selectedClusterId],
+  const {
+    data: namespaces,
+    isLoading: namespacesLoading,
+    error: namespacesError,
+  } = useQuery({
+    queryKey: ["namespaces", selectedSiteId, selectedClusterId],
     queryFn: () => sitesApi.getNamespaces(selectedSiteId, selectedClusterId),
     enabled: !!selectedSiteId && !!selectedClusterId,
   });
@@ -44,26 +54,26 @@ export function AppInstanceForm({
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
-      setSelectedSiteId(initialValues.rancherSiteId || '');
+      setSelectedSiteId(initialValues.rancherSiteId || "");
       // For edit mode, we'll need to parse cluster from the existing data
-      setSelectedClusterId(initialValues.cluster || '');
+      setSelectedClusterId(initialValues.cluster || "");
     }
   }, [initialValues, form]);
 
   const handleSiteChange = (siteId: string) => {
     setSelectedSiteId(siteId);
-    setSelectedClusterId('');
-    form.setFieldsValue({ 
-      cluster: undefined, 
-      namespace: undefined 
+    setSelectedClusterId("");
+    form.setFieldsValue({
+      cluster: undefined,
+      namespace: undefined,
     });
   };
 
   const handleClusterChange = (clusterId: string) => {
     setSelectedClusterId(clusterId);
-    form.setFieldsValue({ 
+    form.setFieldsValue({
       cluster: clusterId,
-      namespace: undefined 
+      namespace: undefined,
     });
   };
 
@@ -71,7 +81,7 @@ export function AppInstanceForm({
     onSubmit(values as CreateAppInstanceRequest);
   };
 
-  const activeSites = sites.filter(site => site.active);
+  const activeSites = sites.filter((site) => site.active);
 
   return (
     <Form
@@ -84,8 +94,8 @@ export function AppInstanceForm({
         label="Name"
         name="name"
         rules={[
-          { required: true, message: 'Please enter app instance name' },
-          { min: 2, message: 'Name must be at least 2 characters' },
+          { required: true, message: "Please enter app instance name" },
+          { min: 2, message: "Name must be at least 2 characters" },
         ]}
       >
         <Input placeholder="e.g., Web Frontend Dev" />
@@ -94,13 +104,13 @@ export function AppInstanceForm({
       <Form.Item
         label="Environment"
         name="environmentId"
-        rules={[{ required: true, message: 'Please select an environment' }]}
+        rules={[{ required: true, message: "Please select an environment" }]}
       >
         <Select placeholder="Select environment">
           {environments.map((env) => (
             <Option key={env.id} value={env.id}>
               <div className="flex items-center gap-2">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: env.color }}
                 />
@@ -114,9 +124,9 @@ export function AppInstanceForm({
       <Form.Item
         label="Rancher Site"
         name="rancherSiteId"
-        rules={[{ required: true, message: 'Please select a Rancher site' }]}
+        rules={[{ required: true, message: "Please select a Rancher site" }]}
       >
-        <Select 
+        <Select
           placeholder="Select Rancher site"
           onChange={handleSiteChange}
           value={selectedSiteId}
@@ -142,14 +152,14 @@ export function AppInstanceForm({
       <Form.Item
         label="Cluster"
         name="cluster"
-        rules={[{ required: true, message: 'Please select a cluster' }]}
+        rules={[{ required: true, message: "Please select a cluster" }]}
       >
-        <Select 
+        <Select
           placeholder={
-            !selectedSiteId 
-              ? "Select a site first" 
-              : clustersLoading 
-                ? "Loading clusters..." 
+            !selectedSiteId
+              ? "Select a site first"
+              : clustersLoading
+                ? "Loading clusters..."
                 : "Select cluster"
           }
           disabled={!selectedSiteId}
@@ -163,7 +173,9 @@ export function AppInstanceForm({
             <Option key={cluster.id} value={cluster.id}>
               <div className="flex items-center justify-between">
                 <span className="font-medium truncate">{cluster.name}</span>
-                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{cluster.state}</span>
+                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                  {cluster.state}
+                </span>
               </div>
             </Option>
           ))}
@@ -173,14 +185,14 @@ export function AppInstanceForm({
       <Form.Item
         label="Namespace"
         name="namespace"
-        rules={[{ required: true, message: 'Please select a namespace' }]}
+        rules={[{ required: true, message: "Please select a namespace" }]}
       >
-        <Select 
+        <Select
           placeholder={
-            !selectedClusterId 
-              ? "Select a cluster first" 
-              : namespacesLoading 
-                ? "Loading namespaces..." 
+            !selectedClusterId
+              ? "Select a cluster first"
+              : namespacesLoading
+                ? "Loading namespaces..."
                 : "Select namespace"
           }
           disabled={!selectedClusterId}
@@ -190,14 +202,15 @@ export function AppInstanceForm({
           }
           showSearch
           filterOption={(input, option) =>
-            String(option?.children || '').toLowerCase().includes(input.toLowerCase())
+            String(option?.children || "")
+              .toLowerCase()
+              .includes(input.toLowerCase())
           }
         >
           {namespaces?.map((namespace) => (
             <Option key={namespace.id} value={namespace.name}>
               <div>
                 <div className="font-medium">{namespace.name}</div>
-                <div className="text-sm text-gray-500">ID: {namespace.id}</div>
               </div>
             </Option>
           ))}
@@ -227,7 +240,7 @@ export function AppInstanceForm({
       {namespacesError ? (
         <Alert
           message="Error Loading Namespaces"
-          description={`Failed to load namespaces: ${(namespacesError as any)?.response?.data?.message || 'Unknown error'}`}
+          description={`Failed to load namespaces: ${(namespacesError as any)?.response?.data?.message || "Unknown error"}`}
           type="error"
           showIcon
           className="mb-4"
@@ -236,16 +249,14 @@ export function AppInstanceForm({
 
       <Form.Item className="mb-0">
         <Space className="w-full justify-end">
-          <Button onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
+          <Button onClick={onCancel}>Cancel</Button>
+          <Button
+            type="primary"
+            htmlType="submit"
             loading={loading}
             disabled={activeSites.length === 0}
           >
-            {initialValues ? 'Update' : 'Create'} App Instance
+            {initialValues ? "Update" : "Create"} App Instance
           </Button>
         </Space>
       </Form.Item>

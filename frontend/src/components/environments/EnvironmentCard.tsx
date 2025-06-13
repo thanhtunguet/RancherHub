@@ -1,7 +1,12 @@
-import { Card, Button, Tag, Dropdown, Modal, Badge } from 'antd';
-import { MoreOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-import { Environment } from '../../types';
+import { Card, Button, Tag, Dropdown, Modal, Badge } from "antd";
+import {
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  AppstoreOutlined,
+} from "@ant-design/icons";
+import type { MenuProps } from "antd";
+import { Environment } from "../../types";
 
 interface EnvironmentCardProps {
   environment: Environment;
@@ -11,36 +16,36 @@ interface EnvironmentCardProps {
   isSelected?: boolean;
 }
 
-export function EnvironmentCard({ 
-  environment, 
-  onEdit, 
-  onDelete, 
+export function EnvironmentCard({
+  environment,
+  onEdit,
+  onDelete,
   onSelect,
-  isSelected 
+  isSelected,
 }: EnvironmentCardProps) {
   const handleDelete = () => {
     Modal.confirm({
-      title: 'Delete Environment',
+      title: "Delete Environment",
       content: `Are you sure you want to delete "${environment.name}"? This will also delete all associated app instances.`,
-      okText: 'Delete',
-      okType: 'danger',
+      okText: "Delete",
+      okType: "danger",
       onOk: () => onDelete(environment.id),
     });
   };
 
-  const menuItems: MenuProps['items'] = [
+  const menuItems: MenuProps["items"] = [
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <EditOutlined />,
       onClick: () => onEdit(environment),
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'delete',
-      label: 'Delete',
+      key: "delete",
+      label: "Delete",
       icon: <DeleteOutlined />,
       danger: true,
       onClick: handleDelete,
@@ -52,22 +57,23 @@ export function EnvironmentCard({
   return (
     <Card
       className={`transition-all duration-200 cursor-pointer ${
-        isSelected 
-          ? 'border-blue-500 shadow-md bg-blue-50' 
-          : 'border-gray-200 hover:shadow-sm hover:border-gray-300'
+        isSelected
+          ? "border-blue-500 shadow-md bg-blue-50"
+          : "border-gray-200 hover:shadow-sm hover:border-gray-300"
       }`}
       onClick={() => onSelect(environment)}
       actions={[
         <Button
           key="select"
-          type={isSelected ? 'primary' : 'default'}
+          type={isSelected ? "primary" : "default"}
           icon={<AppstoreOutlined />}
+          className="ml-2"
           onClick={(e) => {
             e.stopPropagation();
             onSelect(environment);
           }}
         >
-          {isSelected ? 'Selected' : 'Select'}
+          {isSelected ? "Selected" : "Select"}
         </Button>,
         <Button
           key="edit"
@@ -80,17 +86,18 @@ export function EnvironmentCard({
         >
           Edit
         </Button>,
-        <Dropdown 
-          menu={{ items: menuItems }} 
-          trigger={['click']}
-        >
-          <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.stopPropagation()} />
+        <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+          <Button
+            type="text"
+            icon={<MoreOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
         </Dropdown>,
       ]}
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: environment.color }}
           />
@@ -100,21 +107,21 @@ export function EnvironmentCard({
         </div>
         {isSelected && <Tag color="blue">Active</Tag>}
       </div>
-      
+
       {environment.description && (
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {environment.description}
         </p>
       )}
-      
+
       <div className="flex justify-between items-center text-xs text-gray-500">
         <div>
           Created: {new Date(environment.createdAt).toLocaleDateString()}
         </div>
-        <Badge 
-          count={appInstanceCount} 
+        <Badge
+          count={appInstanceCount}
           style={{ backgroundColor: environment.color }}
-          title={`${appInstanceCount} app instance${appInstanceCount !== 1 ? 's' : ''}`}
+          title={`${appInstanceCount} app instance${appInstanceCount !== 1 ? "s" : ""}`}
         />
       </div>
     </Card>
