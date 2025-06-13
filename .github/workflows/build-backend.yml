@@ -42,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: backend
-          file: Dockerfile
+          file: backend/Dockerfile
           platforms: linux/arm64,linux/amd64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/rancher-hub-backend:latest
