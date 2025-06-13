@@ -8,15 +8,16 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY yarn.lock ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci --only=production=false
+RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Stage 2: Production stage
 FROM node:18-alpine AS production
@@ -30,9 +31,10 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY yarn.lock ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN yarn install --frozen-lockfile --production && yarn cache clean
 
 # Copy built application from builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist

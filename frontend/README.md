@@ -30,6 +30,7 @@ docker run -d \
 ## Architecture
 
 - **Framework**: React 18 with TypeScript
+- **Package Manager**: Yarn for dependency management
 - **Build Tool**: Vite for fast development and optimized builds
 - **UI Library**: Ant Design with Tailwind CSS
 - **State Management**: Zustand for global state

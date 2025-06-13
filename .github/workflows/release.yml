@@ -20,6 +20,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Generate yarn.lock files if not exist
+        run: |
+          # Generate backend yarn.lock
+          if [ ! -f backend/yarn.lock ]; then
+            echo "Generating backend yarn.lock from package.json..."
+            cd backend && (yarn install --frozen-lockfile || yarn install) && cd ..
+          fi
+          # Generate frontend yarn.lock
+          if [ ! -f frontend/yarn.lock ]; then
+            echo "Generating frontend yarn.lock from package.json..."
+            cd frontend && (yarn install --frozen-lockfile || yarn install) && cd ..
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

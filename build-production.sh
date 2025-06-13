@@ -41,6 +41,12 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
+# Check if yarn is available
+if ! command -v yarn &> /dev/null; then
+    print_error "yarn is not installed. Please install it and try again."
+    exit 1
+fi
+
 print_status "Starting production build process..."
 
 # Clean up existing containers and images
@@ -50,6 +56,18 @@ docker-compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || t
 # Remove old images if they exist
 docker rmi rancher-hub-backend:latest 2>/dev/null || true
 docker rmi rancher-hub-frontend:latest 2>/dev/null || true
+
+# Generate yarn.lock files if they don't exist
+print_status "Checking and generating yarn.lock files..."
+if [ ! -f backend/yarn.lock ]; then
+    print_status "Generating backend yarn.lock..."
+    cd backend && yarn install && cd ..
+fi
+
+if [ ! -f frontend/yarn.lock ]; then
+    print_status "Generating frontend yarn.lock..."
+    cd frontend && yarn install && cd ..
+fi
 
 # Build backend
 print_status "Building backend container..."

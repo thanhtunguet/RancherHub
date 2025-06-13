@@ -7,6 +7,7 @@ This guide explains how to set up GitHub Actions for automated Docker image buil
 1. **Docker Hub Account**: You need a Docker Hub account (username: `thanhtunguet`)
 2. **GitHub Repository**: Your code should be in a GitHub repository
 3. **Docker Hub Access Token**: Required for GitHub Actions to push images
+4. **Yarn Package Manager**: Project uses Yarn for dependency management
 
 ## Step 1: Create Docker Hub Access Token
 
@@ -118,14 +119,16 @@ Images are built for multiple architectures:
 ## Features
 
 ### Multi-stage Builds
-- Optimized for production
+- Optimized for production with Yarn
 - Smaller final image sizes
 - Security-focused (non-root users)
+- Yarn lockfile-based dependency management
 
 ### Caching
 - GitHub Actions cache for faster builds
 - Layer caching between builds
-- Dependency caching
+- Yarn dependency caching
+- Automatic yarn.lock generation if missing
 
 ### Security
 - Vulnerability scanning with Trivy

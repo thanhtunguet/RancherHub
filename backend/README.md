@@ -49,6 +49,7 @@ http://localhost:3000/api/docs
 ## Architecture
 
 - **Framework**: NestJS with TypeScript
+- **Package Manager**: Yarn for dependency management
 - **Database**: SQLite with TypeORM
 - **API**: RESTful API with OpenAPI/Swagger documentation
 - **Security**: Non-root container execution, input validation

@@ -5,8 +5,8 @@ This guide covers deploying Rancher Hub in production using Docker containers.
 ## Overview
 
 The production setup includes:
-- **Backend**: NestJS API with optimized build and minimal runtime dependencies
-- **Frontend**: React SPA served by Nginx with reverse proxy and caching
+- **Backend**: NestJS API with Yarn package management and optimized build
+- **Frontend**: React SPA built with Yarn, served by Nginx with reverse proxy and caching
 - **Database**: SQLite with persistent volume mounting
 - **Security**: Non-root users, health checks, and security headers
 
