@@ -429,7 +429,12 @@ export class RancherApiService {
       this.logger.debug(`Base URL: ${site.url}/v3`);
 
       // Fetch different workload types separately for better accuracy
-      const workloadTypes = ['deployments', 'daemonsets', 'statefulsets', 'replicasets'];
+      const workloadTypes = [
+        'deployments',
+        'daemonsets',
+        'statefulsets',
+        'replicasets',
+      ];
       let allWorkloads: RancherWorkload[] = [];
 
       // First try specific workload type endpoints
@@ -439,7 +444,7 @@ export class RancherApiService {
             // Kubernetes API endpoints
             `/k8s/clusters/${clusterId}/v1/namespaces/${namespaceId}/${workloadType}`,
             `/k8s/clusters/${clusterId}/apis/apps/v1/namespaces/${namespaceId}/${workloadType}`,
-            
+
             // Rancher v3 API endpoints
             `/workloads/${workloadType}?clusterId=${clusterId}&namespaceId=${namespaceId}`,
             `/project/${clusterId}:${namespaceId}/${workloadType}`,
@@ -464,20 +469,29 @@ export class RancherApiService {
                   `Found ${workloads.length} ${workloadType} from endpoint: ${endpoint}`,
                 );
 
-                const mappedWorkloads = workloads.map((workload: any) => 
-                  this.mapWorkloadData(workload, workloadType.slice(0, -1), clusterId, namespaceId)
+                const mappedWorkloads = workloads.map((workload: any) =>
+                  this.mapWorkloadData(
+                    workload,
+                    workloadType.slice(0, -1),
+                    clusterId,
+                    namespaceId,
+                  ),
                 );
 
                 allWorkloads.push(...mappedWorkloads);
                 break; // Success, move to next workload type
               }
             } catch (endpointError) {
-              this.logger.debug(`${workloadType} endpoint ${endpoint} failed: ${endpointError.message}`);
+              this.logger.debug(
+                `${workloadType} endpoint ${endpoint} failed: ${endpointError.message}`,
+              );
               continue;
             }
           }
         } catch (typeError) {
-          this.logger.debug(`Failed to fetch ${workloadType}: ${typeError.message}`);
+          this.logger.debug(
+            `Failed to fetch ${workloadType}: ${typeError.message}`,
+          );
         }
       }
 
@@ -509,15 +523,17 @@ export class RancherApiService {
                 `Found ${workloads.length} workloads from generic endpoint: ${endpoint}`,
               );
 
-              const mappedWorkloads = workloads.map((workload: any) => 
-                this.mapWorkloadData(workload, null, clusterId, namespaceId)
+              const mappedWorkloads = workloads.map((workload: any) =>
+                this.mapWorkloadData(workload, null, clusterId, namespaceId),
               );
 
               allWorkloads.push(...mappedWorkloads);
               break;
             }
           } catch (endpointError) {
-            this.logger.debug(`Generic endpoint ${endpoint} failed: ${endpointError.message}`);
+            this.logger.debug(
+              `Generic endpoint ${endpoint} failed: ${endpointError.message}`,
+            );
             continue;
           }
         }
@@ -526,7 +542,10 @@ export class RancherApiService {
       // Remove duplicates based on name and type
       const uniqueWorkloads = allWorkloads.filter(
         (workload, index, self) =>
-          index === self.findIndex((w) => w.name === workload.name && w.type === workload.type),
+          index ===
+          self.findIndex(
+            (w) => w.name === workload.name && w.type === workload.type,
+          ),
       );
 
       this.logger.debug(
@@ -594,7 +613,11 @@ export class RancherApiService {
   /**
    * Fetch deployments from Rancher Kubernetes API endpoint and map to RancherWorkload[]
    */
-  async getDeploymentsFromK8sApi(site: RancherSite, clusterId: string, namespace: string): Promise<RancherWorkload[]> {
+  async getDeploymentsFromK8sApi(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+  ): Promise<RancherWorkload[]> {
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -604,9 +627,13 @@ export class RancherApiService {
       timeout: 30000,
     });
     const endpoint = `/v1/apps.deployments?exclude=metadata.managedFields&namespace=${namespace}`;
-    this.logger.debug(`Fetching deployments from: ${site.url}/k8s/clusters/${clusterId}${endpoint}`);
+    this.logger.debug(
+      `Fetching deployments from: ${site.url}/k8s/clusters/${clusterId}${endpoint}`,
+    );
     const response = await client.get(endpoint);
-    this.logger.debug(`Raw deployments response: ${JSON.stringify(response.data).slice(0, 1000)}`);
+    this.logger.debug(
+      `Raw deployments response: ${JSON.stringify(response.data).slice(0, 1000)}`,
+    );
     let items: any[] = [];
     if (Array.isArray(response.data.items)) {
       items = response.data.items;
@@ -617,33 +644,42 @@ export class RancherApiService {
     }
     // Filter by namespace in case Rancher returns all deployments
     items = items.filter((dep: any) => dep.metadata?.namespace === namespace);
-    this.logger.debug(`Found ${items.length} deployments in response for namespace: ${namespace}`);
+    this.logger.debug(
+      `Found ${items.length} deployments in response for namespace: ${namespace}`,
+    );
     return items.map((dep: any) => ({
       id: dep.metadata?.uid || dep.metadata?.name,
       name: dep.metadata?.name,
       type: 'deployment',
       namespaceId: dep.metadata?.namespace || namespace,
-      state: dep.status?.conditions?.find((c: any) => c.type === 'Available')?.status === 'True' ? 'active' : 'inactive',
+      state:
+        dep.status?.conditions?.find((c: any) => c.type === 'Available')
+          ?.status === 'True'
+          ? 'active'
+          : 'inactive',
       image: dep.spec?.template?.spec?.containers?.[0]?.image || '',
       scale: dep.spec?.replicas || 1,
-      availableReplicas: dep.status?.availableReplicas || dep.status?.readyReplicas || 0,
+      availableReplicas:
+        dep.status?.availableReplicas || dep.status?.readyReplicas || 0,
       containers: dep.spec?.template?.spec?.containers,
     }));
   }
 
   private mapWorkloadData(
-    workload: any, 
-    expectedType: string | null, 
-    clusterId: string, 
-    namespaceId: string
+    workload: any,
+    expectedType: string | null,
+    clusterId: string,
+    namespaceId: string,
   ): RancherWorkload {
     // Determine workload type from various sources
     let workloadType = expectedType;
     if (!workloadType) {
-      workloadType = 
+      workloadType =
         workload.kind?.toLowerCase() ||
         workload.type?.toLowerCase() ||
-        workload.metadata?.labels?.['workload.user.cattle.io/workloadselector']?.split('-')[0] ||
+        workload.metadata?.labels?.[
+          'workload.user.cattle.io/workloadselector'
+        ]?.split('-')[0] ||
         'deployment';
     }
 
@@ -653,7 +689,8 @@ export class RancherApiService {
     }
 
     const name = workload.metadata?.name || workload.name || 'unknown';
-    const namespace = workload.metadata?.namespace || workload.namespaceId || namespaceId;
+    const namespace =
+      workload.metadata?.namespace || workload.namespaceId || namespaceId;
 
     return {
       id: workload.id || `${clusterId}:${namespace}:${name}-${workloadType}`,
@@ -672,50 +709,58 @@ export class RancherApiService {
     // Try different ways to get the state
     if (workload.status?.conditions) {
       const readyCondition = workload.status.conditions.find(
-        (c: any) => c.type === 'Ready' || c.type === 'Available'
+        (c: any) => c.type === 'Ready' || c.type === 'Available',
       );
       if (readyCondition?.status === 'True') return 'active';
       if (readyCondition?.status === 'False') return 'inactive';
     }
-    
+
     if (workload.status?.phase) {
       return workload.status.phase.toLowerCase();
     }
-    
+
     if (workload.state) {
       return workload.state;
     }
 
     // Check if replicas match desired replicas
     const desired = workload.spec?.replicas || workload.scale || 1;
-    const available = workload.status?.availableReplicas || workload.status?.readyReplicas || 0;
-    
+    const available =
+      workload.status?.availableReplicas || workload.status?.readyReplicas || 0;
+
     return available >= desired ? 'active' : 'updating';
   }
 
   private extractScale(workload: any, type: string): number {
     // DaemonSets don't have replica counts, use node count instead
     if (type === 'daemonset') {
-      return workload.status?.desiredNumberScheduled || 
-             workload.status?.numberReady || 
-             workload.scale || 1;
+      return (
+        workload.status?.desiredNumberScheduled ||
+        workload.status?.numberReady ||
+        workload.scale ||
+        1
+      );
     }
-    
+
     return workload.spec?.replicas || workload.scale || 1;
   }
 
   private extractAvailableReplicas(workload: any): number {
-    return workload.status?.availableReplicas ||
-           workload.status?.readyReplicas ||
-           workload.status?.numberReady ||
-           0;
+    return (
+      workload.status?.availableReplicas ||
+      workload.status?.readyReplicas ||
+      workload.status?.numberReady ||
+      0
+    );
   }
 
   private extractContainers(workload: any): any[] {
-    return workload.spec?.template?.spec?.containers ||
-           workload.spec?.containers ||
-           workload.containers ||
-           [];
+    return (
+      workload.spec?.template?.spec?.containers ||
+      workload.spec?.containers ||
+      workload.containers ||
+      []
+    );
   }
 
   async updateWorkloadImage(
@@ -724,15 +769,49 @@ export class RancherApiService {
     newImageTag: string,
   ): Promise<any> {
     try {
+      this.logger.log(
+        `Updating workload image for ${workloadId} to ${newImageTag}`,
+      );
       const client = this.getClient(site);
 
       const getResponse: AxiosResponse = await client.get(
         `/project/${workloadId}`,
       );
       const workload = getResponse.data;
+      this.logger.log(
+        `Retrieved workload: ${workload.metadata?.name || workload.name}`,
+      );
 
-      if (workload.containers && workload.containers.length > 0) {
+      // Update image in the correct Kubernetes path
+      if (
+        workload.spec?.template?.spec?.containers &&
+        workload.spec.template.spec.containers.length > 0
+      ) {
+        // For Deployments, StatefulSets, etc.
+        const oldImage = workload.spec.template.spec.containers[0].image;
+        workload.spec.template.spec.containers[0].image = newImageTag;
+        this.logger.log(
+          `Updated deployment image from ${oldImage} to ${newImageTag}`,
+        );
+      } else if (
+        workload.spec?.containers &&
+        workload.spec.containers.length > 0
+      ) {
+        // For DaemonSets, CronJobs, etc.
+        const oldImage = workload.spec.containers[0].image;
+        workload.spec.containers[0].image = newImageTag;
+        this.logger.log(
+          `Updated daemonset/cronjob image from ${oldImage} to ${newImageTag}`,
+        );
+      } else if (workload.containers && workload.containers.length > 0) {
+        // Fallback for other workload types
+        const oldImage = workload.containers[0].image;
         workload.containers[0].image = newImageTag;
+        this.logger.log(
+          `Updated fallback image from ${oldImage} to ${newImageTag}`,
+        );
+      } else {
+        throw new Error('No containers found in workload');
       }
 
       const updateResponse: AxiosResponse = await client.put(
@@ -740,6 +819,7 @@ export class RancherApiService {
         workload,
       );
 
+      this.logger.log(`Successfully updated workload ${workloadId}`);
       return updateResponse.data;
     } catch (error) {
       this.logger.error(`Failed to update workload image: ${error.message}`);

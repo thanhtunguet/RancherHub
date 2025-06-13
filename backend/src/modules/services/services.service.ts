@@ -57,11 +57,12 @@ export class ServicesService {
       );
       try {
         // Fetch deployments from Rancher Kubernetes API
-        const deployments = await this.rancherApiService.getDeploymentsFromK8sApi(
-          appInstance.rancherSite,
-          appInstance.cluster,
-          appInstance.namespace,
-        );
+        const deployments =
+          await this.rancherApiService.getDeploymentsFromK8sApi(
+            appInstance.rancherSite,
+            appInstance.cluster,
+            appInstance.namespace,
+          );
         this.logger.debug(
           `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
         );
@@ -314,7 +315,14 @@ export class ServicesService {
     const previousImageTag = targetService?.imageTag || '';
 
     // Update workload in target Rancher instance
-    const workloadId = `${targetAppInstance.cluster}:${targetAppInstance.namespace}:${sourceService.name}`;
+    const workloadId = `${targetAppInstance.cluster}:${targetAppInstance.namespace}:${sourceService.name}-${sourceService.workloadType.toLowerCase()}`;
+
+    this.logger.log(
+      `Syncing service ${sourceService.name} from ${sourceService.appInstance.cluster}/${sourceService.appInstance.namespace} to ${targetAppInstance.cluster}/${targetAppInstance.namespace}`,
+    );
+    this.logger.log(
+      `Source image: ${sourceService.imageTag}, Target workload ID: ${workloadId}`,
+    );
 
     await this.rancherApiService.updateWorkloadImage(
       targetAppInstance.rancherSite,

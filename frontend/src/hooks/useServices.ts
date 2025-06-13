@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
 import { servicesApi } from "../services/api";
+import type { SyncServicesRequest } from "../types";
 
 export const useServices = (
-  environmentId?: string, 
+  environmentId?: string,
   filters?: { type?: string; search?: string }
 ) => {
   return useQuery({
@@ -50,7 +50,10 @@ export const useWorkloadTypes = (environmentId?: string) => {
   return useQuery({
     queryKey: ["workload-types", environmentId],
     queryFn: () => {
-      console.log("useWorkloadTypes: Fetching workload types for environment:", environmentId);
+      console.log(
+        "useWorkloadTypes: Fetching workload types for environment:",
+        environmentId
+      );
       return servicesApi.getWorkloadTypes(environmentId!);
     },
     enabled: !!environmentId,
@@ -60,30 +63,28 @@ export const useWorkloadTypes = (environmentId?: string) => {
   });
 };
 
-export const useSyncServices = () => {
+export function useSyncServices() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: servicesApi.sync,
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-      queryClient.invalidateQueries({ queryKey: ["sync-history"] });
-
-      if (result.status === "completed") {
-        message.success("Services synchronized successfully!");
-      } else if (result.status === "partial") {
-        message.warning("Synchronization completed with some errors");
-      } else {
-        message.error("Synchronization failed");
-      }
+    mutationFn: async (syncRequest: SyncServicesRequest) => {
+      const response = await servicesApi.sync(syncRequest);
+      return response;
     },
-    onError: (error: any) => {
-      message.error(
-        error.response?.data?.message || "Failed to synchronize services"
-      );
+    onSuccess: (data) => {
+      // Invalidate and refetch services data
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["syncHistory"] });
+
+      // The success/error messages will be handled by the component using this hook
+      return data;
+    },
+    onError: (error) => {
+      // The error will be handled by the component using this hook
+      throw error;
     },
   });
-};
+}
 
 export const useSyncHistory = (environmentId?: string) => {
   return useQuery({

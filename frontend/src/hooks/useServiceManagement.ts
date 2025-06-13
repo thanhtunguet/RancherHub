@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import { message } from "antd";
+import React, { useMemo, useState } from "react";
+import { useAppStore } from "../stores/useAppStore";
+import type { Service } from "../types";
+import { useAppInstancesByEnvironment } from "./useAppInstances";
+import { useEnvironments } from "./useEnvironments";
 import {
   useServices,
   useServicesByAppInstance,
   useSyncHistory,
-  useWorkloadTypes,
 } from "./useServices";
-import { useEnvironments } from "./useEnvironments";
-import { useAppInstancesByEnvironment } from "./useAppInstances";
-import { useAppStore } from "../stores/useAppStore";
-import { servicesApi } from "../services/api";
-import type { Service, Environment, AppInstance } from "../types";
 
 export function useServiceManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -77,7 +74,7 @@ export function useServiceManagement() {
       : refetchByAppInstance;
 
   // Force refetch when environment changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (effectiveEnvironmentId) {
       if (selectedAppInstanceId === "all") {
         refetchByEnvironment();

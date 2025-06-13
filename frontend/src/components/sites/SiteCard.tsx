@@ -1,7 +1,15 @@
-import { Card, Button, Tag, Dropdown, Modal } from 'antd';
-import { MoreOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-import { RancherSite } from '../../types';
+import { useState } from "react";
+import { Card, Button, Tag, Dropdown, Modal } from "antd";
+import {
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  PlayCircleOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
+import type { MenuProps } from "antd";
+import { RancherSite } from "../../types";
 
 interface SiteCardProps {
   site: RancherSite;
@@ -12,43 +20,44 @@ interface SiteCardProps {
   testingConnection?: boolean;
 }
 
-export function SiteCard({ 
-  site, 
-  onEdit, 
-  onDelete, 
-  onTestConnection, 
+export function SiteCard({
+  site,
+  onEdit,
+  onDelete,
+  onTestConnection,
   onActivate,
-  testingConnection 
+  testingConnection,
 }: SiteCardProps) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const handleDelete = () => {
-    Modal.confirm({
-      title: 'Delete Site',
-      content: `Are you sure you want to delete "${site.name}"? This action cannot be undone.`,
-      okText: 'Delete',
-      okType: 'danger',
-      onOk: () => onDelete(site.id),
-    });
+    setShowDeleteModal(true);
   };
 
-  const menuItems: MenuProps['items'] = [
+  const handleConfirmDelete = () => {
+    onDelete(site.id);
+    setShowDeleteModal(false);
+  };
+
+  const menuItems: MenuProps["items"] = [
     {
-      key: 'edit',
-      label: 'Edit',
+      key: "edit",
+      label: "Edit",
       icon: <EditOutlined />,
       onClick: () => onEdit(site),
     },
     {
-      key: 'test',
-      label: 'Test Connection',
+      key: "test",
+      label: "Test Connection",
       icon: <PlayCircleOutlined />,
       onClick: () => onTestConnection(site.id),
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: 'delete',
-      label: 'Delete',
+      key: "delete",
+      label: "Delete",
       icon: <DeleteOutlined />,
       danger: true,
       onClick: handleDelete,
@@ -57,53 +66,85 @@ export function SiteCard({
 
   if (!site.active) {
     menuItems.splice(2, 0, {
-      key: 'activate',
-      label: 'Set as Active',
+      key: "activate",
+      label: "Set as Active",
       icon: <CheckCircleOutlined />,
       onClick: () => onActivate(site.id),
     });
   }
 
   return (
-    <Card
-      className={`transition-all duration-200 ${
-        site.active 
-          ? 'border-blue-500 shadow-md' 
-          : 'border-gray-200 hover:shadow-sm'
-      }`}
-      actions={[
-        <Button
-          key="test"
-          type="text"
-          icon={<PlayCircleOutlined />}
-          loading={testingConnection}
-          onClick={() => onTestConnection(site.id)}
-        >
-          Test
-        </Button>,
-        <Button
-          key="edit"
-          type="text"
-          icon={<EditOutlined />}
-          onClick={() => onEdit(site)}
-        >
-          Edit
-        </Button>,
-        <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>,
-      ]}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{site.name}</h3>
-        {site.active && <Tag color="blue">Active</Tag>}
-      </div>
-      
-      <p className="text-gray-600 text-sm mb-2">{site.url}</p>
-      
-      <div className="text-xs text-gray-500">
-        Created: {new Date(site.createdAt).toLocaleDateString()}
-      </div>
-    </Card>
+    <>
+      <Card
+        className={`transition-all duration-200 ${
+          site.active
+            ? "border-blue-500 shadow-md"
+            : "border-gray-200 hover:shadow-sm"
+        }`}
+        actions={[
+          <Button
+            key="test"
+            type="text"
+            icon={<PlayCircleOutlined />}
+            loading={testingConnection}
+            onClick={() => onTestConnection(site.id)}
+          >
+            Test
+          </Button>,
+          <Button
+            key="edit"
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => onEdit(site)}
+          >
+            Edit
+          </Button>,
+          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>,
+        ]}
+      >
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+            {site.name}
+          </h3>
+          {site.active && <Tag color="blue">Active</Tag>}
+        </div>
+
+        <p className="text-gray-600 text-sm mb-2">{site.url}</p>
+
+        <div className="text-xs text-gray-500">
+          Created: {new Date(site.createdAt).toLocaleDateString()}
+        </div>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="Delete Site"
+        open={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="delete"
+            type="primary"
+            danger
+            onClick={handleConfirmDelete}
+          >
+            Delete
+          </Button>,
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <ExclamationCircleOutlined className="text-red-500" />
+            <span>Are you sure you want to delete "{site.name}"?</span>
+          </div>
+          <p className="text-gray-600">This action cannot be undone.</p>
+        </div>
+      </Modal>
+    </>
   );
 }

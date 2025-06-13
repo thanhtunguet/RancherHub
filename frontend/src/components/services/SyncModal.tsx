@@ -1,26 +1,25 @@
-import { useState } from 'react';
-import { 
-  Modal, 
-  Steps, 
-  Select, 
-  Button, 
-  Alert, 
-  Typography, 
-  Space, 
+import { useState } from "react";
+import {
+  Modal,
+  Steps,
+  Select,
+  Button,
+  Alert,
+  Typography,
+  Space,
   Card,
   Tag,
   Table,
-  message
-} from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { ArrowRightIcon } from 'lucide-react';
-import { useAppInstancesByEnvironment } from '../../hooks/useAppInstances';
-import { useSyncServices } from '../../hooks/useServices';
-import type { Service, Environment, SyncServicesRequest } from '../../types';
+  App,
+} from "antd";
+import { ExclamationCircleOutlined } from "@ant-design/icons";
+import { ArrowRightIcon } from "lucide-react";
+import { useAppInstancesByEnvironment } from "../../hooks/useAppInstances";
+import { useSyncServices } from "../../hooks/useServices";
+import type { Service, Environment, SyncServicesRequest } from "../../types";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { confirm } = Modal;
 
 interface SyncModalProps {
   open: boolean;
@@ -39,19 +38,27 @@ export function SyncModal({
   environments,
   onSuccess,
 }: SyncModalProps) {
+  const { message } = App.useApp();
   const [currentStep, setCurrentStep] = useState(0);
-  const [targetEnvironmentId, setTargetEnvironmentId] = useState<string>('');
-  const [serviceAppInstanceMap, setServiceAppInstanceMap] = useState<Record<string, string>>({});
+  const [targetEnvironmentId, setTargetEnvironmentId] = useState<string>("");
+  const [serviceAppInstanceMap, setServiceAppInstanceMap] = useState<
+    Record<string, string>
+  >({});
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const { data: targetAppInstances } = useAppInstancesByEnvironment(targetEnvironmentId);
+  const { data: targetAppInstances } =
+    useAppInstancesByEnvironment(targetEnvironmentId);
   const syncMutation = useSyncServices();
 
-  const targetEnvironments = environments.filter(env => env.id !== sourceEnvironment.id);
+  const targetEnvironments = environments.filter(
+    (env) => env.id !== sourceEnvironment.id
+  );
 
   const resetModal = () => {
     setCurrentStep(0);
-    setTargetEnvironmentId('');
+    setTargetEnvironmentId("");
     setServiceAppInstanceMap({});
+    setShowConfirmModal(false);
   };
 
   const handleClose = () => {
@@ -62,15 +69,17 @@ export function SyncModal({
   const handleNext = () => {
     if (currentStep === 0) {
       if (!targetEnvironmentId) {
-        message.warning('Please select a target environment');
+        message.warning("Please select a target environment");
         return;
       }
       setCurrentStep(1);
     } else if (currentStep === 1) {
       // Validate app instance mappings
-      const missingMappings = selectedServices.filter(service => !serviceAppInstanceMap[service.id]);
+      const missingMappings = selectedServices.filter(
+        (service) => !serviceAppInstanceMap[service.id]
+      );
       if (missingMappings.length > 0) {
-        message.warning('Please select target app instances for all services');
+        message.warning("Please select target app instances for all services");
         return;
       }
       setCurrentStep(2);
@@ -82,43 +91,44 @@ export function SyncModal({
   };
 
   const handleSync = () => {
-    confirm({
-      title: 'Confirm Synchronization',
-      icon: <ExclamationCircleOutlined />,
-      content: (
-        <div>
-          <p>This will synchronize <strong>{selectedServices.length} services</strong> from:</p>
-          <p><strong>Source:</strong> {sourceEnvironment.name}</p>
-          <p><strong>Target:</strong> {environments.find(e => e.id === targetEnvironmentId)?.name}</p>
-          <br />
-          <Alert
-            message="Warning"
-            description="This action will update image tags in the target environment. Make sure you understand the impact."
-            type="warning"
-            showIcon
-          />
-        </div>
-      ),
-      onOk: async () => {
-        try {
-          const syncRequest: SyncServicesRequest = {
-            sourceEnvironmentId: sourceEnvironment.id,
-            targetEnvironmentId,
-            serviceIds: selectedServices.map(s => s.id),
-            targetAppInstanceIds: selectedServices.map(s => serviceAppInstanceMap[s.id]),
-          };
-
-          await syncMutation.mutateAsync(syncRequest);
-          onSuccess();
-        } catch (error) {
-          // Error is handled by the mutation
-        }
-      },
-    });
+    setShowConfirmModal(true);
   };
 
-  const handleAppInstanceChange = (serviceId: string, appInstanceId: string) => {
-    setServiceAppInstanceMap(prev => ({
+  const handleConfirmSync = async () => {
+    try {
+      const syncRequest: SyncServicesRequest = {
+        sourceEnvironmentId: sourceEnvironment.id,
+        targetEnvironmentId,
+        serviceIds: selectedServices.map((s) => s.id),
+        targetAppInstanceIds: selectedServices.map(
+          (s) => serviceAppInstanceMap[s.id]
+        ),
+      };
+
+      const result = await syncMutation.mutateAsync(syncRequest);
+
+      if (result.status === "completed") {
+        message.success("Services synchronized successfully!");
+      } else if (result.status === "partial") {
+        message.warning("Synchronization completed with some errors");
+      } else {
+        message.error("Synchronization failed");
+      }
+
+      setShowConfirmModal(false);
+      onSuccess();
+    } catch (error: any) {
+      message.error(
+        error.response?.data?.message || "Failed to synchronize services"
+      );
+    }
+  };
+
+  const handleAppInstanceChange = (
+    serviceId: string,
+    appInstanceId: string
+  ) => {
+    setServiceAppInstanceMap((prev) => ({
       ...prev,
       [serviceId]: appInstanceId,
     }));
@@ -126,24 +136,24 @@ export function SyncModal({
 
   const steps = [
     {
-      title: 'Select Target',
-      description: 'Choose target environment',
+      title: "Select Target",
+      description: "Choose target environment",
     },
     {
-      title: 'Map Services',
-      description: 'Map to app instances',
+      title: "Map Services",
+      description: "Map to app instances",
     },
     {
-      title: 'Review & Sync',
-      description: 'Confirm and execute',
+      title: "Review & Sync",
+      description: "Confirm and execute",
     },
   ];
 
   const serviceColumns = [
     {
-      title: 'Service',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Service",
+      dataIndex: "name",
+      key: "name",
       render: (name: string, service: Service) => (
         <div>
           <div className="font-medium">{name}</div>
@@ -152,16 +162,16 @@ export function SyncModal({
       ),
     },
     {
-      title: 'Current Image',
-      dataIndex: 'imageTag',
-      key: 'imageTag',
+      title: "Current Image",
+      dataIndex: "imageTag",
+      key: "imageTag",
       render: (tag: string) => (
         <code className="text-xs bg-gray-100 px-2 py-1 rounded">{tag}</code>
       ),
     },
     {
-      title: 'Target App Instance',
-      key: 'target',
+      title: "Target App Instance",
+      key: "target",
       render: (_: any, service: Service) => (
         <Select
           placeholder="Select app instance"
@@ -197,7 +207,8 @@ export function SyncModal({
           <div>
             <Title level={4}>Select Target Environment</Title>
             <Text className="text-gray-600">
-              Choose the environment where you want to synchronize the selected services.
+              Choose the environment where you want to synchronize the selected
+              services.
             </Text>
           </div>
 
@@ -206,7 +217,7 @@ export function SyncModal({
               <div>
                 <Text strong>Source Environment</Text>
                 <div className="flex items-center gap-2 mt-1">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: sourceEnvironment.color }}
                   />
@@ -218,7 +229,9 @@ export function SyncModal({
           </Card>
 
           <div>
-            <Text strong className="block mb-2">Target Environment</Text>
+            <Text strong className="block mb-2">
+              Target Environment
+            </Text>
             <Select
               placeholder="Select target environment"
               value={targetEnvironmentId}
@@ -229,7 +242,7 @@ export function SyncModal({
               {targetEnvironments.map((env) => (
                 <Option key={env.id} value={env.id}>
                   <div className="flex items-center gap-2">
-                    <div 
+                    <div
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: env.color }}
                     />
@@ -243,7 +256,7 @@ export function SyncModal({
           {targetEnvironmentId && (
             <Alert
               message="Ready to Proceed"
-              description={`You will synchronize ${selectedServices.length} services from ${sourceEnvironment.name} to ${environments.find(e => e.id === targetEnvironmentId)?.name}.`}
+              description={`You will synchronize ${selectedServices.length} services from ${sourceEnvironment.name} to ${environments.find((e) => e.id === targetEnvironmentId)?.name}.`}
               type="success"
               showIcon
             />
@@ -257,7 +270,8 @@ export function SyncModal({
           <div>
             <Title level={4}>Map Services to App Instances</Title>
             <Text className="text-gray-600">
-              Select the target app instance for each service in the destination environment.
+              Select the target app instance for each service in the destination
+              environment.
             </Text>
           </div>
 
@@ -292,36 +306,46 @@ export function SyncModal({
 
           <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded">
             <Card size="small" className="text-center">
-              <div 
+              <div
                 className="w-4 h-4 rounded-full mx-auto mb-2"
                 style={{ backgroundColor: sourceEnvironment.color }}
               />
               <div className="font-medium">{sourceEnvironment.name}</div>
               <div className="text-sm text-gray-600">Source</div>
             </Card>
-            
+
             <ArrowRightIcon size={24} className="text-gray-400" />
-            
+
             <Card size="small" className="text-center">
-              <div 
+              <div
                 className="w-4 h-4 rounded-full mx-auto mb-2"
-                style={{ backgroundColor: environments.find(e => e.id === targetEnvironmentId)?.color }}
+                style={{
+                  backgroundColor: environments.find(
+                    (e) => e.id === targetEnvironmentId
+                  )?.color,
+                }}
               />
               <div className="font-medium">
-                {environments.find(e => e.id === targetEnvironmentId)?.name}
+                {environments.find((e) => e.id === targetEnvironmentId)?.name}
               </div>
               <div className="text-sm text-gray-600">Target</div>
             </Card>
           </div>
 
-          <Card title={`Services to Sync (${selectedServices.length})`} size="small">
+          <Card
+            title={`Services to Sync (${selectedServices.length})`}
+            size="small"
+          >
             <div className="space-y-2">
               {selectedServices.map((service) => {
                 const targetAppInstance = targetAppInstances?.find(
-                  ai => ai.id === serviceAppInstanceMap[service.id]
+                  (ai) => ai.id === serviceAppInstanceMap[service.id]
                 );
                 return (
-                  <div key={service.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div
+                    key={service.id}
+                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                  >
                     <div>
                       <div className="font-medium">{service.name}</div>
                       <div className="text-sm text-gray-600">
@@ -340,17 +364,17 @@ export function SyncModal({
       {/* Footer */}
       <div className="flex justify-between mt-6 pt-4 border-t">
         <Button onClick={currentStep === 0 ? handleClose : handleBack}>
-          {currentStep === 0 ? 'Cancel' : 'Back'}
+          {currentStep === 0 ? "Cancel" : "Back"}
         </Button>
-        
+
         <Space>
           {currentStep < 2 ? (
             <Button type="primary" onClick={handleNext}>
               Next
             </Button>
           ) : (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               danger
               loading={syncMutation.isPending}
               onClick={handleSync}
@@ -360,6 +384,55 @@ export function SyncModal({
           )}
         </Space>
       </div>
+
+      {showConfirmModal && (
+        <Modal
+          title="Confirm Synchronization"
+          open={showConfirmModal}
+          onCancel={() => setShowConfirmModal(false)}
+          width={500}
+          footer={[
+            <Button key="cancel" onClick={() => setShowConfirmModal(false)}>
+              Cancel
+            </Button>,
+            <Button
+              key="confirm"
+              type="primary"
+              danger
+              loading={syncMutation.isPending}
+              onClick={handleConfirmSync}
+            >
+              Synchronize Services
+            </Button>,
+          ]}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <ExclamationCircleOutlined className="text-yellow-500" />
+              <Text strong>Confirm Synchronization</Text>
+            </div>
+            <div>
+              <p>
+                This will synchronize{" "}
+                <strong>{selectedServices.length} services</strong> from:
+              </p>
+              <p>
+                <strong>Source:</strong> {sourceEnvironment.name}
+              </p>
+              <p>
+                <strong>Target:</strong>{" "}
+                {environments.find((e) => e.id === targetEnvironmentId)?.name}
+              </p>
+            </div>
+            <Alert
+              message="Warning"
+              description="This action will update image tags in the target environment. Make sure you understand the impact."
+              type="warning"
+              showIcon
+            />
+          </div>
+        </Modal>
+      )}
     </Modal>
   );
 }

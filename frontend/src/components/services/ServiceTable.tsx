@@ -85,7 +85,7 @@ export function ServiceTable({
     });
   }, [filteredServices, sortState]);
 
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+  const handleTableChange = (_pagination: any, _filters: any, sorter: any) => {
     setSortState({
       field: sorter.field || "name",
       order: sorter.order || "ascend",
