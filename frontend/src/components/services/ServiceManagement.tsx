@@ -29,14 +29,12 @@ export function ServiceManagement() {
     services,
     filteredServices,
     appInstances,
-    syncHistory,
     selectedEnv,
     selectedAppInstance,
     availableStatuses,
 
     // Loading states
     isLoading,
-    historyLoading,
     error,
 
     // Handlers
@@ -179,8 +177,6 @@ export function ServiceManagement() {
       <SyncHistoryModal
         open={showHistory}
         onClose={() => setShowHistory(false)}
-        syncHistory={syncHistory || []}
-        isLoading={historyLoading}
       />
     </div>
   );

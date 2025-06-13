@@ -6,7 +6,6 @@ import { useEnvironments } from "./useEnvironments";
 import {
   useServices,
   useServicesByAppInstance,
-  useSyncHistory,
 } from "./useServices";
 
 export function useServiceManagement() {
@@ -51,9 +50,6 @@ export function useServiceManagement() {
   );
 
   const { data: appInstances } = useAppInstancesByEnvironment(
-    effectiveEnvironmentId
-  );
-  const { data: syncHistory, isLoading: historyLoading } = useSyncHistory(
     effectiveEnvironmentId
   );
 
@@ -173,14 +169,12 @@ export function useServiceManagement() {
     services,
     filteredServices,
     appInstances,
-    syncHistory,
     selectedEnv,
     selectedAppInstance,
     availableStatuses,
 
     // Loading states
     isLoading,
-    historyLoading,
     error,
 
     // Handlers

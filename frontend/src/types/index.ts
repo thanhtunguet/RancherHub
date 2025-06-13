@@ -62,14 +62,26 @@ export interface SyncHistory {
   id: string;
   syncOperationId: string;
   serviceId: string;
+  serviceName?: string;
+  workloadType?: string;
   sourceAppInstanceId: string;
+  sourceEnvironmentName?: string;
+  sourceCluster?: string;
+  sourceNamespace?: string;
   targetAppInstanceId: string;
+  targetEnvironmentName?: string;
+  targetCluster?: string;
+  targetNamespace?: string;
   previousImageTag?: string;
   newImageTag: string;
+  containerName?: string;
+  configChanges?: any;
   status: string;
   error?: string;
+  durationMs?: number;
   timestamp: string;
   createdAt: string;
+  syncOperation?: SyncOperation;
 }
 
 export interface TestConnectionResponse {

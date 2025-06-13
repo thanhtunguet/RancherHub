@@ -247,12 +247,23 @@ export class ServicesService {
           await this.syncHistoryRepository.save({
             syncOperationId: syncOperation.id,
             serviceId,
+            serviceName: null,
+            workloadType: null,
             sourceAppInstanceId: '', // We'll need to fetch this
+            sourceEnvironmentName: null,
+            sourceCluster: null,
+            sourceNamespace: null,
             targetAppInstanceId,
+            targetEnvironmentName: null,
+            targetCluster: null,
+            targetNamespace: null,
             previousImageTag: '',
             newImageTag: '',
+            containerName: null,
+            configChanges: null,
             status: 'failed',
             error: error.message,
+            durationMs: null,
             timestamp: new Date(),
           });
         }
@@ -287,7 +298,7 @@ export class ServicesService {
     // Get source service
     const sourceService = await this.serviceRepository.findOne({
       where: { id: serviceId },
-      relations: ['appInstance', 'appInstance.rancherSite'],
+      relations: ['appInstance', 'appInstance.rancherSite', 'appInstance.environment'],
     });
 
     if (!sourceService) {
@@ -297,7 +308,7 @@ export class ServicesService {
     // Get target app instance
     const targetAppInstance = await this.appInstanceRepository.findOne({
       where: { id: targetAppInstanceId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'environment'],
     });
 
     if (!targetAppInstance) {
@@ -362,15 +373,32 @@ export class ServicesService {
 
     await this.serviceRepository.save(targetService);
 
-    // Record sync in history
+    // Record sync in history with detailed information
+    const startTime = Date.now();
     await this.syncHistoryRepository.save({
       syncOperationId,
       serviceId,
+      serviceName: sourceService.name || null,
+      workloadType: normalizedWorkloadType || null,
       sourceAppInstanceId: sourceService.appInstanceId,
+      sourceEnvironmentName: sourceService.appInstance?.environment?.name || null,
+      sourceCluster: sourceService.appInstance?.cluster || null,
+      sourceNamespace: sourceService.appInstance?.namespace || null,
       targetAppInstanceId,
+      targetEnvironmentName: targetAppInstance.environment?.name || null,
+      targetCluster: targetAppInstance.cluster || null,
+      targetNamespace: targetAppInstance.namespace || null,
       previousImageTag,
       newImageTag: sourceService.imageTag,
+      containerName: sourceService.name || null,
+      configChanges: {
+        imageTag: {
+          from: previousImageTag,
+          to: sourceService.imageTag
+        }
+      },
       status: 'success',
+      durationMs: Date.now() - startTime,
       timestamp: new Date(),
     });
 
@@ -394,6 +422,24 @@ export class ServicesService {
         'operation.sourceEnvironmentId = :envId OR operation.targetEnvironmentId = :envId',
         { envId: environmentId },
       );
+    }
+
+    return queryBuilder.getMany();
+  }
+
+  async getDetailedSyncHistory(environmentId?: string): Promise<SyncHistory[]> {
+    const queryBuilder = this.syncHistoryRepository
+      .createQueryBuilder('history')
+      .leftJoinAndSelect('history.syncOperation', 'operation')
+      .orderBy('history.timestamp', 'DESC');
+
+    if (environmentId) {
+      queryBuilder
+        .leftJoin('history.syncOperation', 'op')
+        .where(
+          'op.sourceEnvironmentId = :envId OR op.targetEnvironmentId = :envId',
+          { envId: environmentId },
+        );
     }
 
     return queryBuilder.getMany();

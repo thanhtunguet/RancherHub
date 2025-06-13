@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Layout, Menu } from 'antd'
-import { ServerIcon, LayersIcon, HomeIcon, GitBranchIcon, DatabaseIcon } from 'lucide-react'
+import { ServerIcon, LayersIcon, HomeIcon, GitBranchIcon, DatabaseIcon, HistoryIcon } from 'lucide-react'
 import { HomePage } from './pages/HomePage'
 import { SiteManagement } from './components/sites/SiteManagement'
 import { EnvironmentManagement } from './components/environments/EnvironmentManagement'
 import { AppInstanceManagement } from './components/app-instances/AppInstanceManagement'
 import { ServiceManagement } from './components/services/ServiceManagement'
+import { SyncHistoryPage } from './pages/SyncHistoryPage'
 import './App.css'
 
 const { Header, Content, Sider } = Layout
@@ -53,6 +54,11 @@ function App() {
                   icon: <GitBranchIcon size={16} />,
                   label: <a href="/services">Services</a>,
                 },
+                {
+                  key: '/sync-history',
+                  icon: <HistoryIcon size={16} />,
+                  label: <a href="/sync-history">Sync History</a>,
+                },
               ]}
             />
           </Sider>
@@ -64,6 +70,7 @@ function App() {
               <Route path="/environments" element={<EnvironmentManagement />} />
               <Route path="/app-instances" element={<AppInstanceManagement />} />
               <Route path="/services" element={<ServiceManagement />} />
+              <Route path="/sync-history" element={<SyncHistoryPage />} />
             </Routes>
           </Content>
         </Layout>

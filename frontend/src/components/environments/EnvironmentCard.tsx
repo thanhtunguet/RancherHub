@@ -7,8 +7,10 @@ import {
   AppstoreOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import { HistoryIcon } from "lucide-react";
 import type { MenuProps } from "antd";
 import { Environment } from "../../types";
+import { SyncHistoryModal } from "../services/SyncHistoryModal";
 
 interface EnvironmentCardProps {
   environment: Environment;
@@ -26,6 +28,7 @@ export function EnvironmentCard({
   isSelected,
 }: EnvironmentCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSyncHistory, setShowSyncHistory] = useState(false);
 
   const handleDelete = () => {
     setShowDeleteModal(true);
@@ -42,6 +45,12 @@ export function EnvironmentCard({
       label: "Edit",
       icon: <EditOutlined />,
       onClick: () => onEdit(environment),
+    },
+    {
+      key: "sync-history",
+      label: "Sync History",
+      icon: <HistoryIcon size={14} />,
+      onClick: () => setShowSyncHistory(true),
     },
     {
       type: "divider",
@@ -129,6 +138,14 @@ export function EnvironmentCard({
           />
         </div>
       </Card>
+
+      {/* Sync History Modal */}
+      <SyncHistoryModal
+        open={showSyncHistory}
+        onClose={() => setShowSyncHistory(false)}
+        environmentId={environment.id}
+        title={`Sync History - ${environment.name}`}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal

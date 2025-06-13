@@ -242,6 +242,44 @@ export class ServicesController {
     return this.servicesService.getSyncHistory(environmentId);
   }
 
+  @Get('sync/history/detailed')
+  @ApiOperation({ summary: 'Get detailed synchronization history with full sync details' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Detailed sync history records',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          serviceName: { type: 'string' },
+          workloadType: { type: 'string' },
+          sourceEnvironmentName: { type: 'string' },
+          sourceCluster: { type: 'string' },
+          sourceNamespace: { type: 'string' },
+          targetEnvironmentName: { type: 'string' },
+          targetCluster: { type: 'string' },
+          targetNamespace: { type: 'string' },
+          previousImageTag: { type: 'string' },
+          newImageTag: { type: 'string' },
+          status: { type: 'string' },
+          durationMs: { type: 'number' },
+          timestamp: { type: 'string', format: 'date-time' },
+          error: { type: 'string', nullable: true },
+        }
+      }
+    }
+  })
+  @ApiQuery({
+    name: 'env',
+    required: false,
+    description: 'Filter by environment ID',
+  })
+  async getDetailedSyncHistory(@Query('env') environmentId?: string) {
+    return this.servicesService.getDetailedSyncHistory(environmentId);
+  }
+
   @Get('debug/app-instances/:environmentId')
   @ApiOperation({ summary: 'Debug app instances for environment' })
   @ApiResponse({
