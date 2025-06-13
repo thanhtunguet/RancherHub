@@ -30,7 +30,40 @@ This guide explains how to set up GitHub Actions for automated Docker image buil
    - **Name**: `DOCKERHUB_TOKEN`
    - **Value**: Paste the Docker Hub access token you copied
 
-## Step 3: Repository Setup
+## Step 3: Generate Yarn Lock Files
+
+The project uses Yarn for dependency management. You need to generate yarn.lock files:
+
+### Option 1: Using the provided script (Recommended)
+```bash
+./generate-yarn-locks.sh
+git add backend/yarn.lock frontend/yarn.lock
+git commit -m "Add yarn.lock files for dependency management"
+git push origin main
+```
+
+### Option 2: Using GitHub Actions
+1. Go to your repository
+2. Click **Actions** → **Generate Yarn Lock Files**
+3. Click **Run workflow**
+4. Set "Commit the generated yarn.lock files" to `true`
+5. Click **Run workflow**
+
+### Option 3: Manual generation
+```bash
+# Backend
+cd backend && yarn install && cd ..
+
+# Frontend  
+cd frontend && yarn install && cd ..
+
+# Commit files
+git add backend/yarn.lock frontend/yarn.lock
+git commit -m "Add yarn.lock files"
+git push origin main
+```
+
+## Step 4: Repository Setup
 
 Your repository should have this structure:
 ```
@@ -38,17 +71,20 @@ RancherHub/
 ├── .github/
 │   └── workflows/
 │       ├── build-and-push.yml
-│       └── release.yml
+│       ├── release.yml
+│       └── generate-yarn-locks.yml
 ├── backend/
 │   ├── Dockerfile
+│   ├── yarn.lock
 │   └── README.md
 ├── frontend/
 │   ├── Dockerfile
+│   ├── yarn.lock
 │   └── README.md
 └── docker-compose.prod.yml
 ```
 
-## Workflow Triggers
+## Step 5: Workflow Triggers
 
 ### Build and Push Workflow (`build-and-push.yml`)
 

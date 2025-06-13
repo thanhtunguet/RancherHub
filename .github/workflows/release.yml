@@ -26,17 +26,23 @@ jobs:
           node-version: '18'
           cache: 'yarn'
 
-      - name: Generate yarn.lock files if not exist
+      - name: Generate yarn.lock files if needed
         run: |
           # Generate backend yarn.lock
           if [ ! -f backend/yarn.lock ]; then
-            echo "Generating backend yarn.lock from package.json..."
+            echo "📦 Generating backend yarn.lock..."
             cd backend && (yarn install --frozen-lockfile || yarn install) && cd ..
+            echo "✅ Generated yarn.lock for backend"
+          else
+            echo "✅ yarn.lock already exists for backend"
           fi
           # Generate frontend yarn.lock
           if [ ! -f frontend/yarn.lock ]; then
-            echo "Generating frontend yarn.lock from package.json..."
+            echo "📦 Generating frontend yarn.lock..."
             cd frontend && (yarn install --frozen-lockfile || yarn install) && cd ..
+            echo "✅ Generated yarn.lock for frontend"
+          else
+            echo "✅ yarn.lock already exists for frontend"
           fi
 
       - name: Set up Docker Buildx
