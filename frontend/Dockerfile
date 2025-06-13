@@ -13,8 +13,6 @@ COPY package.json yarn.lock* ./
 # Install dependencies
 RUN yarn install --frozen-lockfile
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # Copy source code
 COPY . .
 
@@ -23,6 +21,9 @@ RUN yarn build
 
 # Production stage
 FROM nginx:alpine AS production
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
