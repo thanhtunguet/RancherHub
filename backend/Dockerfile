@@ -1,5 +1,5 @@
 # Use the official Node.js runtime as the base image
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -11,7 +11,7 @@ RUN apk add --no-cache yarn
 COPY package.json yarn.lock* ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile --production
+RUN yarn install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -20,7 +20,7 @@ COPY . .
 RUN yarn build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Install yarn if not available
 RUN apk add --no-cache yarn
