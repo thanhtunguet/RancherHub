@@ -3,14 +3,16 @@ import { SyncEnvironmentDetails } from "./SyncEnvironmentDetails";
 import { SyncOperationSummary } from "./SyncOperationSummary";
 import { SyncServicesTable } from "./SyncServicesTable";
 import { SyncWarningAlert } from "./SyncWarningAlert";
+import {
+  getClusterDisplayName,
+  getImageVersion,
+} from "../../utils/displayUtils";
 
 interface SyncReviewContentProps {
   selectedServices: Service[];
   sourceEnvironment: Environment;
   targetEnvironment: Environment;
   selectedTargetInstancesCount: number;
-  getClusterDisplayName: (cluster?: string) => string;
-  getImageVersion: (imageTag?: string) => string;
 }
 
 export function SyncReviewContent({
@@ -18,8 +20,6 @@ export function SyncReviewContent({
   sourceEnvironment,
   targetEnvironment,
   selectedTargetInstancesCount,
-  getClusterDisplayName,
-  getImageVersion,
 }: SyncReviewContentProps) {
   return (
     <div className="space-y-4">
