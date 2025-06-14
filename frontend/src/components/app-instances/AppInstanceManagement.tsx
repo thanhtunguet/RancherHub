@@ -1,15 +1,13 @@
 import { useState, useEffect } from "react";
-import {
-  Button,
-  Row,
-  Col,
-  Modal,
-  Empty,
-  Spin,
-  Alert,
-  Select,
-  Typography,
-} from "antd";
+import Button from "antd/es/button";
+import Row from "antd/es/row";
+import Col from "antd/es/col";
+import Modal from "antd/es/modal";
+import Empty from "antd/es/empty";
+import Spin from "antd/es/spin";
+import Alert from "antd/es/alert";
+import Select from "antd/es/select";
+import Typography from "antd/es/typography";
 import { PlusOutlined } from "@ant-design/icons";
 import { DatabaseIcon } from "lucide-react";
 import { AppInstanceCard } from "./AppInstanceCard";

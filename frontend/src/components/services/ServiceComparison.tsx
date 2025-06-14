@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Card, Select, Button, Table, Tag, Alert, Space, Typography, Divider } from "antd";
+import Card from "antd/es/card";
+import Select from "antd/es/select";
+import Button from "antd/es/button";
+import Table from "antd/es/table";
+import Tag from "antd/es/tag";
+import Alert from "antd/es/alert";
+import Space from "antd/es/space";
+import Typography from "antd/es/typography";
+import Divider from "antd/es/divider";
 import { GitCompareIcon } from "lucide-react";
 import { useEnvironments } from "../../hooks/useEnvironments";
 import { useCompareServices } from "../../hooks/useServices";
@@ -12,16 +20,24 @@ interface ServiceComparisonProps {
   initialTargetEnv?: string;
 }
 
-export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: ServiceComparisonProps) {
-  const [sourceEnvironmentId, setSourceEnvironmentId] = useState<string | undefined>(initialSourceEnv);
-  const [targetEnvironmentId, setTargetEnvironmentId] = useState<string | undefined>(initialTargetEnv);
+export function ServiceComparison({
+  initialSourceEnv,
+  initialTargetEnv,
+}: ServiceComparisonProps) {
+  const [sourceEnvironmentId, setSourceEnvironmentId] = useState<
+    string | undefined
+  >(initialSourceEnv);
+  const [targetEnvironmentId, setTargetEnvironmentId] = useState<
+    string | undefined
+  >(initialTargetEnv);
 
-  const { data: environments, isLoading: isLoadingEnvironments } = useEnvironments();
-  const { 
-    data: comparison, 
-    isLoading: isLoadingComparison, 
+  const { data: environments, isLoading: isLoadingEnvironments } =
+    useEnvironments();
+  const {
+    data: comparison,
+    isLoading: isLoadingComparison,
     error: comparisonError,
-    refetch: refetchComparison 
+    refetch: refetchComparison,
   } = useCompareServices(sourceEnvironmentId, targetEnvironmentId);
 
   const handleCompare = () => {
@@ -32,85 +48,95 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
     // Use the differenceType from backend if available, otherwise fall back to logic
     if (record.differenceType) {
       switch (record.differenceType) {
-        case 'missing_in_source': return 'Missing in Source';
-        case 'missing_in_target': return 'Missing in Target';
-        case 'different': return 'Different';
-        case 'identical': return 'Identical';
-        default: return 'Unknown';
+        case "missing_in_source":
+          return "Missing in Source";
+        case "missing_in_target":
+          return "Missing in Target";
+        case "different":
+          return "Different";
+        case "identical":
+          return "Identical";
+        default:
+          return "Unknown";
       }
     }
-    
+
     // Fallback logic
     if (!record.source && record.target) {
-      return 'Missing in Source';
+      return "Missing in Source";
     }
     if (record.source && !record.target) {
-      return 'Missing in Target';
+      return "Missing in Target";
     }
-    if (record.status === 'different') {
-      return 'Different';
+    if (record.status === "different") {
+      return "Different";
     }
-    return 'Identical';
+    return "Identical";
   };
 
   const getDifferentStatusColor = (status: string) => {
     switch (status) {
-      case 'Missing in Source': return 'red';
-      case 'Missing in Target': return 'orange';
-      case 'Different': return 'blue';
-      case 'Identical': return 'green';
-      default: return 'default';
+      case "Missing in Source":
+        return "red";
+      case "Missing in Target":
+        return "orange";
+      case "Different":
+        return "blue";
+      case "Identical":
+        return "green";
+      default:
+        return "default";
     }
   };
 
   const columns = [
     {
-      title: '#',
-      key: 'index',
+      title: "#",
+      key: "index",
       width: 60,
       render: (_: any, __: any, index: number) => index + 1,
     },
     {
-      title: 'Service Name',
-      dataIndex: 'serviceName',
-      key: 'serviceName',
+      title: "Service Name",
+      dataIndex: "serviceName",
+      key: "serviceName",
       width: 200,
       render: (name: string, record: any) => (
         <Space direction="vertical" size="small">
           <Text strong>{name}</Text>
-          <Text type="secondary" style={{ fontSize: '12px' }}>
+          <Text type="secondary" style={{ fontSize: "12px" }}>
             {record.workloadType}
           </Text>
         </Space>
       ),
     },
     {
-      title: 'Different Status',
-      key: 'differentStatus',
+      title: "Different Status",
+      key: "differentStatus",
       width: 150,
       render: (record: any) => {
         const status = getDifferentStatus(record);
-        return (
-          <Tag color={getDifferentStatusColor(status)}>
-            {status}
-          </Tag>
-        );
+        return <Tag color={getDifferentStatusColor(status)}>{status}</Tag>;
       },
     },
     {
-      title: 'Source',
-      key: 'source',
+      title: "Source",
+      key: "source",
       width: 300,
       render: (record: any) => {
         if (!record.source) {
-          return <Text type="secondary" italic>Not found</Text>;
+          return (
+            <Text type="secondary" italic>
+              Not found
+            </Text>
+          );
         }
         return (
           <Space direction="vertical" size="small">
-            <Text style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+            <Text style={{ fontFamily: "monospace", fontSize: "12px" }}>
               {record.source.imageTag}
             </Text>
-            <Text type="secondary" style={{ fontSize: '11px' }}>
+            <Text type="secondary" style={{ fontSize: "11px" }}>
               Status: {record.source.status}
             </Text>
           </Space>
@@ -118,19 +144,23 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
       },
     },
     {
-      title: 'Target',
-      key: 'target',
+      title: "Target",
+      key: "target",
       width: 300,
       render: (record: any) => {
         if (!record.target) {
-          return <Text type="secondary" italic>Not found</Text>;
+          return (
+            <Text type="secondary" italic>
+              Not found
+            </Text>
+          );
         }
         return (
           <Space direction="vertical" size="small">
-            <Text style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+            <Text style={{ fontFamily: "monospace", fontSize: "12px" }}>
               {record.target.imageTag}
             </Text>
-            <Text type="secondary" style={{ fontSize: '11px' }}>
+            <Text type="secondary" style={{ fontSize: "11px" }}>
               Status: {record.target.status}
             </Text>
           </Space>
@@ -139,8 +169,12 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
     },
   ];
 
-  const sourceEnvName = environments?.find(env => env.id === sourceEnvironmentId)?.name || 'Unknown';
-  const targetEnvName = environments?.find(env => env.id === targetEnvironmentId)?.name || 'Unknown';
+  const sourceEnvName =
+    environments?.find((env) => env.id === sourceEnvironmentId)?.name ||
+    "Unknown";
+  const targetEnvName =
+    environments?.find((env) => env.id === targetEnvironmentId)?.name ||
+    "Unknown";
 
   return (
     <div className="space-y-6">
@@ -148,7 +182,9 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <GitCompareIcon size={24} className="text-blue-500" />
-            <Title level={3} className="mb-0">Service Comparison</Title>
+            <Title level={3} className="mb-0">
+              Service Comparison
+            </Title>
           </div>
         </div>
 
@@ -186,7 +222,11 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
               loading={isLoadingEnvironments}
             >
               {environments?.map((env) => (
-                <Option key={env.id} value={env.id} disabled={env.id === sourceEnvironmentId}>
+                <Option
+                  key={env.id}
+                  value={env.id}
+                  disabled={env.id === sourceEnvironmentId}
+                >
                   <div className="flex items-center space-x-2">
                     <div
                       className="w-3 h-3 rounded-full"
@@ -205,7 +245,11 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
               icon={<GitCompareIcon size={16} />}
               onClick={handleCompare}
               loading={isLoadingComparison}
-              disabled={!sourceEnvironmentId || !targetEnvironmentId || sourceEnvironmentId === targetEnvironmentId}
+              disabled={
+                !sourceEnvironmentId ||
+                !targetEnvironmentId ||
+                sourceEnvironmentId === targetEnvironmentId
+              }
               className="w-full"
             >
               Compare
@@ -217,7 +261,10 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
           <Alert
             type="error"
             message="Comparison Failed"
-            description={(comparisonError as any)?.message || "An error occurred during comparison"}
+            description={
+              (comparisonError as any)?.message ||
+              "An error occurred during comparison"
+            }
             className="mb-4"
           />
         )}
@@ -277,12 +324,20 @@ export function ServiceComparison({ initialSourceEnv, initialTargetEnv }: Servic
           </>
         )}
 
-        {!comparison && !isLoadingComparison && sourceEnvironmentId && targetEnvironmentId && (
-          <div className="text-center py-12">
-            <GitCompareIcon size={48} className="text-gray-300 mx-auto mb-4" />
-            <Text type="secondary">Click "Compare" to see the differences between environments</Text>
-          </div>
-        )}
+        {!comparison &&
+          !isLoadingComparison &&
+          sourceEnvironmentId &&
+          targetEnvironmentId && (
+            <div className="text-center py-12">
+              <GitCompareIcon
+                size={48}
+                className="text-gray-300 mx-auto mb-4"
+              />
+              <Text type="secondary">
+                Click "Compare" to see the differences between environments
+              </Text>
+            </div>
+          )}
       </Card>
     </div>
   );

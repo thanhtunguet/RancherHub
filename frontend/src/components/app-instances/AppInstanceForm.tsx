@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Form, Input, Select, Button, Space, Alert, Spin } from "antd";
+import Form from "antd/es/form";
+import Input from "antd/es/input";
+import Select from "antd/es/select";
+import Button from "antd/es/button";
+import Space from "antd/es/space";
+import Alert from "antd/es/alert";
+import Spin from "antd/es/spin";
 import { useQuery } from "@tanstack/react-query";
 import { sitesApi } from "../../services/api";
 import type {

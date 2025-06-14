@@ -4,7 +4,10 @@ import {
   ExclamationCircleTwoTone,
   SyncOutlined as SyncIcon,
 } from "@ant-design/icons";
-import { Badge, Space, Table, Typography } from "antd";
+import Badge from "antd/es/badge";
+import Space from "antd/es/space";
+import Table from "antd/es/table";
+import Typography from "antd/es/typography";
 import { useMemo, useState } from "react";
 import type { Service } from "../../types";
 

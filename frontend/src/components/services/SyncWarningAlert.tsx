@@ -1,4 +1,4 @@
-import { Alert } from "antd";
+import Alert from "antd/es/alert";
 
 export function SyncWarningAlert() {
   return (

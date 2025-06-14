@@ -1,18 +1,16 @@
 import { useState } from "react";
-import {
-  Modal,
-  Steps,
-  Select,
-  Button,
-  Alert,
-  Typography,
-  Space,
-  Card,
-  Tag,
-  Checkbox,
-  List,
-  App,
-} from "antd";
+import Modal from "antd/es/modal";
+import Steps from "antd/es/steps";
+import Select from "antd/es/select";
+import Button from "antd/es/button";
+import Alert from "antd/es/alert";
+import Typography from "antd/es/typography";
+import Space from "antd/es/space";
+import Card from "antd/es/card";
+import Tag from "antd/es/tag";
+import Checkbox from "antd/es/checkbox";
+import List from "antd/es/list";
+import App from "antd/es/app";
 import { useAppInstancesByEnvironment } from "../../hooks/useAppInstances";
 import { useSyncServices } from "../../hooks/useServices";
 import type {

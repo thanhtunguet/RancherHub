@@ -1,7 +1,16 @@
-import { Card, Tag, Typography, Space, Tooltip } from 'antd';
-import { CheckCircleIcon, XCircleIcon, ClockIcon, ServerIcon } from 'lucide-react';
-import dayjs from 'dayjs';
-import type { Service } from '../../types';
+import Card from "antd/es/card";
+import Tag from "antd/es/tag";
+import Typography from "antd/es/typography";
+import Space from "antd/es/space";
+import Tooltip from "antd/es/tooltip";
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  ServerIcon,
+} from "lucide-react";
+import dayjs from "dayjs";
+import type { Service } from "../../types";
 
 const { Text, Title } = Typography;
 
@@ -11,17 +20,21 @@ interface ServiceCardProps {
   onSelect?: (service: Service) => void;
 }
 
-export function ServiceCard({ service, selected = false, onSelect }: ServiceCardProps) {
+export function ServiceCard({
+  service,
+  selected = false,
+  onSelect,
+}: ServiceCardProps) {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'active':
-      case 'running':
+      case "active":
+      case "running":
         return <CheckCircleIcon size={16} className="text-green-500" />;
-      case 'failed':
-      case 'error':
+      case "failed":
+      case "error":
         return <XCircleIcon size={16} className="text-red-500" />;
-      case 'pending':
-      case 'starting':
+      case "pending":
+      case "starting":
         return <ClockIcon size={16} className="text-yellow-500" />;
       default:
         return <ServerIcon size={16} className="text-gray-500" />;
@@ -30,17 +43,17 @@ export function ServiceCard({ service, selected = false, onSelect }: ServiceCard
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'active':
-      case 'running':
-        return 'green';
-      case 'failed':
-      case 'error':
-        return 'red';
-      case 'pending':
-      case 'starting':
-        return 'orange';
+      case "active":
+      case "running":
+        return "green";
+      case "failed":
+      case "error":
+        return "red";
+      case "pending":
+      case "starting":
+        return "orange";
       default:
-        return 'default';
+        return "default";
     }
   };
 
@@ -54,9 +67,9 @@ export function ServiceCard({ service, selected = false, onSelect }: ServiceCard
     <Card
       size="small"
       className={`cursor-pointer transition-all duration-200 ${
-        selected 
-          ? 'border-blue-500 shadow-md bg-blue-50' 
-          : 'hover:border-blue-300 hover:shadow-sm'
+        selected
+          ? "border-blue-500 shadow-md bg-blue-50"
+          : "hover:border-blue-300 hover:shadow-sm"
       }`}
       onClick={handleCardClick}
     >
@@ -73,9 +86,7 @@ export function ServiceCard({ service, selected = false, onSelect }: ServiceCard
           </div>
           <div className="flex items-center gap-1 ml-2">
             {getStatusIcon(service.status)}
-            <Tag color={getStatusColor(service.status)}>
-              {service.status}
-            </Tag>
+            <Tag color={getStatusColor(service.status)}>{service.status}</Tag>
           </div>
         </div>
 
@@ -85,7 +96,7 @@ export function ServiceCard({ service, selected = false, onSelect }: ServiceCard
             IMAGE
           </Text>
           <div className="bg-gray-100 p-2 rounded text-xs font-mono break-all">
-            {service.imageTag || 'unknown'}
+            {service.imageTag || "unknown"}
           </div>
         </div>
 
@@ -97,12 +108,12 @@ export function ServiceCard({ service, selected = false, onSelect }: ServiceCard
               {service.availableReplicas} / {service.replicas}
             </Text>
           </Space>
-          
+
           {service.lastSynced && (
-            <Tooltip title={`Last synced: ${dayjs(service.lastSynced).format('YYYY-MM-DD HH:mm:ss')}`}>
-              <Tag color="blue">
-                Synced
-              </Tag>
+            <Tooltip
+              title={`Last synced: ${dayjs(service.lastSynced).format("YYYY-MM-DD HH:mm:ss")}`}
+            >
+              <Tag color="blue">Synced</Tag>
             </Tooltip>
           )}
         </div>

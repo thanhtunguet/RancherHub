@@ -1,11 +1,24 @@
-import { useState } from 'react';
-import { Button, Row, Col, Modal, Empty, Spin, Alert } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { ServerIcon } from 'lucide-react';
-import { SiteCard } from './SiteCard';
-import { SiteForm } from './SiteForm';
-import { useSites, useCreateSite, useUpdateSite, useDeleteSite, useTestConnection, useActivateSite } from '../../hooks/useSites';
-import type { RancherSite, CreateSiteRequest } from '../../types';
+import { useState } from "react";
+import Button from "antd/es/button";
+import Row from "antd/es/row";
+import Col from "antd/es/col";
+import Modal from "antd/es/modal";
+import Empty from "antd/es/empty";
+import Spin from "antd/es/spin";
+import Alert from "antd/es/alert";
+import { PlusOutlined } from "@ant-design/icons";
+import { ServerIcon } from "lucide-react";
+import { SiteCard } from "./SiteCard";
+import { SiteForm } from "./SiteForm";
+import {
+  useSites,
+  useCreateSite,
+  useUpdateSite,
+  useDeleteSite,
+  useTestConnection,
+  useActivateSite,
+} from "../../hooks/useSites";
+import type { RancherSite, CreateSiteRequest } from "../../types";
 
 export function SiteManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,25 +137,33 @@ export function SiteManagement() {
             </div>
           }
         >
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenModal}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenModal}
+          >
             Add Your First Site
           </Button>
         </Empty>
       )}
 
       <Modal
-        title={editingSite ? 'Edit Site' : 'Add New Site'}
+        title={editingSite ? "Edit Site" : "Add New Site"}
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={null}
         width={500}
       >
         <SiteForm
-          initialValues={editingSite ? {
-            name: editingSite.name,
-            url: editingSite.url,
-            token: '', // Don't pre-fill token for security
-          } : undefined}
+          initialValues={
+            editingSite
+              ? {
+                  name: editingSite.name,
+                  url: editingSite.url,
+                  token: "", // Don't pre-fill token for security
+                }
+              : undefined
+          }
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
           loading={createSiteMutation.isPending || updateSiteMutation.isPending}

@@ -1,4 +1,5 @@
-import { Select, Typography } from "antd";
+import Select from "antd/es/select";
+import Typography from "antd/es/typography";
 import type { Environment } from "../../types";
 
 const { Text } = Typography;

@@ -1,4 +1,4 @@
-import { Empty } from "antd";
+import Empty from "antd/es/empty";
 import { GitBranchIcon } from "lucide-react";
 
 interface ServiceEmptyStateProps {

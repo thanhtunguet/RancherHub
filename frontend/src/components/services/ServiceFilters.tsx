@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Button, Input, Select, Typography } from "antd";
+import Button from "antd/es/button";
+import Input from "antd/es/input";
+import Select from "antd/es/select";
+import Typography from "antd/es/typography";
 import { SearchOutlined } from "@ant-design/icons";
 import type { Environment, AppInstance } from "../../types";
 

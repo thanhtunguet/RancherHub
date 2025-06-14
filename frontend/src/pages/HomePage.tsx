@@ -1,4 +1,8 @@
-import { Typography, Card, Space, Button, Alert } from "antd";
+import Typography from "antd/es/typography";
+import Card from "antd/es/card";
+import Space from "antd/es/space";
+import Button from "antd/es/button";
+import Alert from "antd/es/alert";
 import {
   ServerIcon,
   LayersIcon,

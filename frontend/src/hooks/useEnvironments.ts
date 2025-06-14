@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
+import message from "antd/es/message";
 import { environmentsApi } from "../services/api";
 import type { CreateEnvironmentRequest } from "../types";
 

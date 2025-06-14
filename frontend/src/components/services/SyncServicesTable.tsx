@@ -1,4 +1,5 @@
-import { Typography, Table } from "antd";
+import Typography from "antd/es/typography";
+import Table from "antd/es/table";
 import type { Service } from "../../types";
 
 const { Text } = Typography;

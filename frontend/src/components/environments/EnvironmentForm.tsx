@@ -1,4 +1,8 @@
-import { Form, Input, Button, Space, ColorPicker } from "antd";
+import Form from "antd/es/form";
+import Input from "antd/es/input";
+import Button from "antd/es/button";
+import Space from "antd/es/space";
+import ColorPicker from "antd/es/color-picker";
 import type { Color } from "antd/es/color-picker";
 import { useEffect } from "react";
 import { CreateEnvironmentRequest } from "../../types";

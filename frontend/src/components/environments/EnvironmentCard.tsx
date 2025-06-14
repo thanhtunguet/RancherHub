@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Card, Button, Tag, Dropdown, Modal, Badge } from "antd";
+import Card from "antd/es/card";
+import Button from "antd/es/button";
+import Tag from "antd/es/tag";
+import Dropdown from "antd/es/dropdown";
+import Modal from "antd/es/modal";
+import Badge from "antd/es/badge";
 import {
   MoreOutlined,
   EditOutlined,

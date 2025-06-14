@@ -1,15 +1,23 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { Layout, Menu } from 'antd'
-import { ServerIcon, LayersIcon, HomeIcon, GitBranchIcon, DatabaseIcon, HistoryIcon } from 'lucide-react'
-import { HomePage } from './pages/HomePage'
-import { SiteManagement } from './components/sites/SiteManagement'
-import { EnvironmentManagement } from './components/environments/EnvironmentManagement'
-import { AppInstanceManagement } from './components/app-instances/AppInstanceManagement'
-import { ServiceManagement } from './components/services/ServiceManagement'
-import { SyncHistoryPage } from './pages/SyncHistoryPage'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "antd/es/layout";
+import Menu from "antd/es/menu";
+import {
+  ServerIcon,
+  LayersIcon,
+  HomeIcon,
+  GitBranchIcon,
+  DatabaseIcon,
+  HistoryIcon,
+} from "lucide-react";
+import { HomePage } from "./pages/HomePage";
+import { SiteManagement } from "./components/sites/SiteManagement";
+import { EnvironmentManagement } from "./components/environments/EnvironmentManagement";
+import { AppInstanceManagement } from "./components/app-instances/AppInstanceManagement";
+import { ServiceManagement } from "./components/services/ServiceManagement";
+import { SyncHistoryPage } from "./pages/SyncHistoryPage";
+import "./App.css";
 
-const { Header, Content, Sider } = Layout
+const { Header, Content, Sider } = Layout;
 
 function App() {
   return (
@@ -21,54 +29,57 @@ function App() {
             <h1 className="text-xl font-bold text-gray-900 m-0">Rancher Hub</h1>
           </div>
         </Header>
-        
+
         <Layout>
           <Sider width={200} className="bg-white border-r border-gray-200">
             <Menu
               mode="inline"
-              defaultSelectedKeys={['/']}
+              defaultSelectedKeys={["/"]}
               className="h-full border-r-0"
               items={[
                 {
-                  key: '/',
+                  key: "/",
                   icon: <HomeIcon size={16} />,
                   label: <a href="/">Dashboard</a>,
                 },
                 {
-                  key: '/sites',
+                  key: "/sites",
                   icon: <ServerIcon size={16} />,
                   label: <a href="/sites">Rancher Sites</a>,
                 },
                 {
-                  key: '/environments', 
+                  key: "/environments",
                   icon: <LayersIcon size={16} />,
                   label: <a href="/environments">Environments</a>,
                 },
                 {
-                  key: '/app-instances',
+                  key: "/app-instances",
                   icon: <DatabaseIcon size={16} />,
                   label: <a href="/app-instances">App Instances</a>,
                 },
                 {
-                  key: '/services',
+                  key: "/services",
                   icon: <GitBranchIcon size={16} />,
                   label: <a href="/services">Services</a>,
                 },
                 {
-                  key: '/sync-history',
+                  key: "/sync-history",
                   icon: <HistoryIcon size={16} />,
                   label: <a href="/sync-history">Sync History</a>,
                 },
               ]}
             />
           </Sider>
-          
+
           <Content className="bg-gray-50">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/sites" element={<SiteManagement />} />
               <Route path="/environments" element={<EnvironmentManagement />} />
-              <Route path="/app-instances" element={<AppInstanceManagement />} />
+              <Route
+                path="/app-instances"
+                element={<AppInstanceManagement />}
+              />
               <Route path="/services" element={<ServiceManagement />} />
               <Route path="/sync-history" element={<SyncHistoryPage />} />
             </Routes>
@@ -76,7 +87,7 @@ function App() {
         </Layout>
       </Layout>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

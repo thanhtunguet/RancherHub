@@ -1,4 +1,4 @@
-import { Card } from "antd";
+import Card from "antd/es/card";
 import type { Service, AppInstance } from "../../types";
 
 interface ServiceStatsProps {

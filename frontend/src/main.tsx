@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ConfigProvider, App as AntApp } from "antd";
+import ConfigProvider from "antd/es/config-provider";
+import AntApp from "antd/es/app";
 import App from "./App.tsx";
 import "./index.css";
 

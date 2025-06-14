@@ -1,4 +1,7 @@
-import { Alert, Button, Spin, Tabs } from "antd";
+import Alert from "antd/es/alert";
+import Button from "antd/es/button";
+import Spin from "antd/es/spin";
+import Tabs from "antd/es/tabs";
 import { RefreshCwIcon, GitBranchIcon, GitCompareIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
@@ -94,7 +97,7 @@ export function ServiceManagement() {
 
   const tabItems = [
     {
-      key: '1',
+      key: "1",
       label: (
         <span className="flex items-center space-x-2">
           <GitBranchIcon size={16} />
@@ -175,18 +178,14 @@ export function ServiceManagement() {
       ),
     },
     {
-      key: '2',
+      key: "2",
       label: (
         <span className="flex items-center space-x-2">
           <GitCompareIcon size={16} />
           <span>Compare Services</span>
         </span>
       ),
-      children: (
-        <ServiceComparison
-          initialSourceEnv={effectiveEnvironmentId}
-        />
-      ),
+      children: <ServiceComparison initialSourceEnv={effectiveEnvironmentId} />,
     },
   ];
 
