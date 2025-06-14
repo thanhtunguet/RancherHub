@@ -295,6 +295,65 @@ export class ServicesController {
     return this.servicesService.getDetailedSyncHistory(environmentId);
   }
 
+  @Get('compare')
+  @ApiOperation({ summary: 'Compare services between two environments' })
+  @ApiResponse({
+    status: 200,
+    description: 'Service comparison results',
+    schema: {
+      type: 'object',
+      properties: {
+        sourceEnvironmentId: { type: 'string' },
+        targetEnvironmentId: { type: 'string' },
+        summary: {
+          type: 'object',
+          properties: {
+            totalServices: { type: 'number' },
+            identical: { type: 'number' },
+            different: { type: 'number' },
+            missingInSource: { type: 'number' },
+            missingInTarget: { type: 'number' },
+          },
+        },
+        comparisons: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              serviceName: { type: 'string' },
+              workloadType: { type: 'string' },
+              source: { type: 'object', nullable: true },
+              target: { type: 'object', nullable: true },
+              differences: { type: 'object' },
+              status: { type: 'string', enum: ['identical', 'different', 'missing'] },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'source',
+    required: true,
+    description: 'Source environment ID',
+  })
+  @ApiQuery({
+    name: 'target',
+    required: true,
+    description: 'Target environment ID',
+  })
+  async compareServices(
+    @Query('source') sourceEnvironmentId: string,
+    @Query('target') targetEnvironmentId: string,
+  ) {
+    this.logger.debug(`compareServices called with:`, {
+      sourceEnvironmentId,
+      targetEnvironmentId,
+    });
+
+    return this.servicesService.compareServices(sourceEnvironmentId, targetEnvironmentId);
+  }
+
   @Get('debug/app-instances/:environmentId')
   @ApiOperation({ summary: 'Debug app instances for an environment' })
   @ApiResponse({

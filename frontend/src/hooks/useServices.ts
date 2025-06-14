@@ -93,3 +93,22 @@ export const useSyncHistory = (environmentId?: string) => {
     enabled: !!environmentId,
   });
 };
+
+export const useCompareServices = (sourceEnvironmentId?: string, targetEnvironmentId?: string) => {
+  return useQuery({
+    queryKey: ["services-comparison", sourceEnvironmentId, targetEnvironmentId],
+    queryFn: () => {
+      console.log(
+        "useCompareServices: Comparing services between environments:",
+        sourceEnvironmentId,
+        "->",
+        targetEnvironmentId
+      );
+      return servicesApi.compareServices(sourceEnvironmentId!, targetEnvironmentId!);
+    },
+    enabled: !!(sourceEnvironmentId && targetEnvironmentId && sourceEnvironmentId !== targetEnvironmentId),
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
+};

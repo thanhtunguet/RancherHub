@@ -1,5 +1,5 @@
-import { Alert, Button, Spin } from "antd";
-import { RefreshCwIcon } from "lucide-react";
+import { Alert, Button, Spin, Tabs } from "antd";
+import { RefreshCwIcon, GitBranchIcon, GitCompareIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
 import { ServiceFilters } from "./ServiceFilters";
@@ -7,6 +7,7 @@ import { ServiceStats } from "./ServiceStats";
 import { ServiceTable } from "./ServiceTable";
 import { ServiceEmptyState } from "./ServiceEmptyState";
 import { SyncHistoryModal } from "./SyncHistoryModal";
+import { ServiceComparison } from "./ServiceComparison";
 import { useServiceManagement } from "../../hooks/useServiceManagement";
 
 export function ServiceManagement() {
@@ -91,76 +92,107 @@ export function ServiceManagement() {
     );
   }
 
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <ServiceHeader
-          selectedServicesCount={selectedServices.length}
-          effectiveEnvironmentId={effectiveEnvironmentId}
-          onShowHistory={() => setShowHistory(true)}
-          onRefresh={handleRefresh}
-          onSync={handleSync}
-        />
-
-        {!effectiveEnvironmentId ? (
-          <Alert
-            message="Select Environment"
-            description="Please select an environment to view and manage services."
-            type="info"
-            showIcon
-          />
-        ) : (
-          <>
-            {/* Combined Filters */}
-            <ServiceFilters
-              // Environment filter
-              environments={environments}
-              effectiveEnvironmentId={effectiveEnvironmentId}
-              onEnvironmentChange={handleEnvironmentChange}
-              // App Instance filter
-              appInstances={appInstances || []}
-              selectedAppInstanceId={selectedAppInstanceId}
-              onAppInstanceChange={handleAppInstanceChange}
-              // Search and status filters
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-              availableStatuses={availableStatuses}
-              onSearchChange={setSearchTerm}
-              onStatusFilterChange={setStatusFilter}
-              // Select all functionality
-              filteredServicesCount={filteredServices.length}
+  const tabItems = [
+    {
+      key: '1',
+      label: (
+        <span className="flex items-center space-x-2">
+          <GitBranchIcon size={16} />
+          <span>Service Management</span>
+        </span>
+      ),
+      children: (
+        <>
+          {/* Header */}
+          <div className="mb-6">
+            <ServiceHeader
               selectedServicesCount={selectedServices.length}
-              onSelectAll={handleSelectAll}
+              effectiveEnvironmentId={effectiveEnvironmentId}
+              onShowHistory={() => setShowHistory(true)}
+              onRefresh={handleRefresh}
+              onSync={handleSync}
             />
 
-            {/* Stats */}
-            <ServiceStats
-              services={services || []}
+            {!effectiveEnvironmentId ? (
+              <Alert
+                message="Select Environment"
+                description="Please select an environment to view and manage services."
+                type="info"
+                showIcon
+              />
+            ) : (
+              <>
+                {/* Combined Filters */}
+                <ServiceFilters
+                  // Environment filter
+                  environments={environments}
+                  effectiveEnvironmentId={effectiveEnvironmentId}
+                  onEnvironmentChange={handleEnvironmentChange}
+                  // App Instance filter
+                  appInstances={appInstances || []}
+                  selectedAppInstanceId={selectedAppInstanceId}
+                  onAppInstanceChange={handleAppInstanceChange}
+                  // Search and status filters
+                  searchTerm={searchTerm}
+                  statusFilter={statusFilter}
+                  availableStatuses={availableStatuses}
+                  onSearchChange={setSearchTerm}
+                  onStatusFilterChange={setStatusFilter}
+                  // Select all functionality
+                  filteredServicesCount={filteredServices.length}
+                  selectedServicesCount={selectedServices.length}
+                  onSelectAll={handleSelectAll}
+                />
+
+                {/* Stats */}
+                <ServiceStats
+                  services={services || []}
+                  filteredServices={filteredServices}
+                  selectedServices={selectedServices}
+                  appInstances={appInstances || []}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Services Table */}
+          {!effectiveEnvironmentId ? null : filteredServices.length > 0 ? (
+            <ServiceTable
               filteredServices={filteredServices}
               selectedServices={selectedServices}
-              appInstances={appInstances || []}
+              onServiceSelectionChange={handleServiceSelectionChange}
             />
-          </>
-        )}
-      </div>
+          ) : (
+            <ServiceEmptyState
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              selectedAppInstanceId={selectedAppInstanceId}
+              selectedAppInstanceName={selectedAppInstance?.name}
+              selectedEnvironmentName={selectedEnv?.name}
+            />
+          )}
+        </>
+      ),
+    },
+    {
+      key: '2',
+      label: (
+        <span className="flex items-center space-x-2">
+          <GitCompareIcon size={16} />
+          <span>Compare Services</span>
+        </span>
+      ),
+      children: (
+        <ServiceComparison
+          initialSourceEnv={effectiveEnvironmentId}
+        />
+      ),
+    },
+  ];
 
-      {/* Services Table */}
-      {!effectiveEnvironmentId ? null : filteredServices.length > 0 ? (
-        <ServiceTable
-          filteredServices={filteredServices}
-          selectedServices={selectedServices}
-          onServiceSelectionChange={handleServiceSelectionChange}
-        />
-      ) : (
-        <ServiceEmptyState
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          selectedAppInstanceId={selectedAppInstanceId}
-          selectedAppInstanceName={selectedAppInstance?.name}
-          selectedEnvironmentName={selectedEnv?.name}
-        />
-      )}
+  return (
+    <div className="p-6">
+      <Tabs defaultActiveKey="1" items={tabItems} />
 
       {/* Sync Modal */}
       <SyncModal
