@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import {
   Service,
   AppInstance,
@@ -104,6 +104,7 @@ export class ServicesService {
         // If API fails, return cached services from database
         const cachedServices = await this.serviceRepository.find({
           where: { appInstanceId: appInstance.id },
+          relations: ['appInstance'],
         });
         this.logger.debug(
           `Returning ${cachedServices.length} cached services for ${appInstance.name}`,
@@ -111,6 +112,20 @@ export class ServicesService {
         allServices.push(...cachedServices);
       }
     }
+    
+    // Load appInstance relations for all services before returning
+    const serviceIds = allServices.map(service => service.id);
+    if (serviceIds.length > 0) {
+      const servicesWithRelations = await this.serviceRepository.find({
+        where: { id: In(serviceIds) },
+        relations: ['appInstance'],
+      });
+      this.logger.debug(
+        `Loaded ${servicesWithRelations.length} services with appInstance relations for environment ${environmentId}`,
+      );
+      return servicesWithRelations;
+    }
+    
     this.logger.debug(
       `Total services returned for environment ${environmentId}: ${allServices.length}`,
     );
@@ -178,6 +193,20 @@ export class ServicesService {
           `Saved service: ${service.name} (${service.imageTag})`,
         );
       }
+      
+      // Load appInstance relations for all services before returning
+      const serviceIds = services.map(service => service.id);
+      if (serviceIds.length > 0) {
+        const servicesWithRelations = await this.serviceRepository.find({
+          where: { id: In(serviceIds) },
+          relations: ['appInstance'],
+        });
+        this.logger.debug(
+          `Loaded ${servicesWithRelations.length} services with appInstance relations for app instance ${appInstanceId}`,
+        );
+        return servicesWithRelations;
+      }
+      
       this.logger.debug(
         `Total services returned for app instance ${appInstanceId}: ${services.length}`,
       );
@@ -189,6 +218,7 @@ export class ServicesService {
       // If API fails, return cached services from database
       const cachedServices = await this.serviceRepository.find({
         where: { appInstanceId: appInstance.id },
+        relations: ['appInstance'],
       });
       this.logger.debug(
         `Returning ${cachedServices.length} cached services for ${appInstance.name}`,
@@ -218,45 +248,44 @@ export class ServicesService {
     let hasErrors = false;
 
     try {
-      for (let i = 0; i < syncDto.serviceIds.length; i++) {
-        const serviceId = syncDto.serviceIds[i];
-        const targetAppInstanceId = syncDto.targetAppInstanceIds[i];
+      // New approach: sync each service to all selected target instances
+      for (const serviceId of syncDto.serviceIds) {
+        for (const targetAppInstanceId of syncDto.targetAppInstanceIds) {
+          try {
+            const result = await this.syncSingleService(
+              serviceId,
+              targetAppInstanceId,
+              syncOperation.id,
+            );
+            syncResults.push(result);
+          } catch (error) {
+            this.logger.error(
+              `Failed to sync service ${serviceId} to target instance ${targetAppInstanceId}: ${error.message}`,
+            );
+            hasErrors = true;
 
-        try {
-          const result = await this.syncSingleService(
-            serviceId,
-            targetAppInstanceId,
-            syncOperation.id,
-          );
-          syncResults.push(result);
-        } catch (error) {
-          this.logger.error(
-            `Failed to sync service ${serviceId}: ${error.message}`,
-          );
-          hasErrors = true;
+            const errorResult = {
+              serviceId,
+              targetAppInstanceId,
+              status: 'failed',
+              error: error.message,
+            };
+            syncResults.push(errorResult);
 
-          const errorResult = {
-            serviceId,
-            targetAppInstanceId,
-            status: 'failed',
-            error: error.message,
-          };
-          syncResults.push(errorResult);
-
-          // Record failed sync in history
-          await this.syncHistoryRepository.save({
-            syncOperationId: syncOperation.id,
-            serviceId,
-            serviceName: null,
-            workloadType: null,
-            sourceAppInstanceId: '', // We'll need to fetch this
-            sourceEnvironmentName: null,
-            sourceCluster: null,
-            sourceNamespace: null,
-            targetAppInstanceId,
-            targetEnvironmentName: null,
-            targetCluster: null,
-            targetNamespace: null,
+            // Record failed sync in history
+            await this.syncHistoryRepository.save({
+              syncOperationId: syncOperation.id,
+              serviceId,
+              serviceName: null,
+              workloadType: null,
+              sourceAppInstanceId: '', // We'll need to fetch this
+              sourceEnvironmentName: null,
+              sourceCluster: null,
+              sourceNamespace: null,
+              targetAppInstanceId,
+              targetEnvironmentName: null,
+              targetCluster: null,
+              targetNamespace: null,
             previousImageTag: '',
             newImageTag: '',
             containerName: null,
@@ -266,6 +295,7 @@ export class ServicesService {
             durationMs: null,
             timestamp: new Date(),
           });
+          }
         }
       }
 

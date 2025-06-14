@@ -114,7 +114,7 @@ export interface SyncServicesRequest {
   sourceEnvironmentId: string;
   targetEnvironmentId: string;
   serviceIds: string[];
-  targetAppInstanceIds: string[];
+  targetAppInstanceIds: string[]; // All selected target app instances (not 1:1 mapped)
 }
 
 export interface RancherCluster {

@@ -7,7 +7,6 @@ export const useAppInstances = (environmentId?: string) => {
   return useQuery({
     queryKey: ['app-instances', environmentId],
     queryFn: () => appInstancesApi.getAll(environmentId),
-    enabled: !!environmentId,
   });
 };
 

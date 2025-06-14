@@ -9,14 +9,19 @@ import {
   Space,
   Card,
   Tag,
-  Table,
+  Checkbox,
+  List,
   App,
 } from "antd";
-import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { ArrowRightIcon } from "lucide-react";
 import { useAppInstancesByEnvironment } from "../../hooks/useAppInstances";
 import { useSyncServices } from "../../hooks/useServices";
-import type { Service, Environment, SyncServicesRequest } from "../../types";
+import type {
+  Service,
+  Environment,
+  SyncServicesRequest,
+  AppInstance,
+} from "../../types";
+import { SyncReviewContent } from "./SyncReviewContent";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -41,9 +46,9 @@ export function SyncModal({
   const { message } = App.useApp();
   const [currentStep, setCurrentStep] = useState(0);
   const [targetEnvironmentId, setTargetEnvironmentId] = useState<string>("");
-  const [serviceAppInstanceMap, setServiceAppInstanceMap] = useState<
-    Record<string, string>
-  >({});
+  const [selectedTargetInstances, setSelectedTargetInstances] = useState<
+    string[]
+  >([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [closeTimeoutId, setCloseTimeoutId] = useState<NodeJS.Timeout | null>(
@@ -58,10 +63,14 @@ export function SyncModal({
     (env) => env.id !== sourceEnvironment.id
   );
 
+  const targetEnvironment = environments.find(
+    (e) => e.id === targetEnvironmentId
+  );
+
   const resetModal = () => {
     setCurrentStep(0);
     setTargetEnvironmentId("");
-    setServiceAppInstanceMap({});
+    setSelectedTargetInstances([]);
     setShowConfirmModal(false);
     setIsSyncing(false);
     if (closeTimeoutId) {
@@ -83,12 +92,8 @@ export function SyncModal({
       }
       setCurrentStep(1);
     } else if (currentStep === 1) {
-      // Validate app instance mappings
-      const missingMappings = selectedServices.filter(
-        (service) => !serviceAppInstanceMap[service.id]
-      );
-      if (missingMappings.length > 0) {
-        message.warning("Please select target app instances for all services");
+      if (selectedTargetInstances.length === 0) {
+        message.warning("Please select at least one target app instance");
         return;
       }
       setCurrentStep(2);
@@ -110,9 +115,7 @@ export function SyncModal({
         sourceEnvironmentId: sourceEnvironment.id,
         targetEnvironmentId,
         serviceIds: selectedServices.map((s) => s.id),
-        targetAppInstanceIds: selectedServices.map(
-          (s) => serviceAppInstanceMap[s.id]
-        ),
+        targetAppInstanceIds: selectedTargetInstances,
       };
 
       const result = await syncMutation.mutateAsync(syncRequest);
@@ -145,14 +148,27 @@ export function SyncModal({
     }
   };
 
-  const handleAppInstanceChange = (
-    serviceId: string,
-    appInstanceId: string
+  const handleInstanceSelectionChange = (
+    instanceId: string,
+    checked: boolean
   ) => {
-    setServiceAppInstanceMap((prev) => ({
-      ...prev,
-      [serviceId]: appInstanceId,
-    }));
+    if (checked) {
+      setSelectedTargetInstances([...selectedTargetInstances, instanceId]);
+    } else {
+      setSelectedTargetInstances(
+        selectedTargetInstances.filter((id) => id !== instanceId)
+      );
+    }
+  };
+
+  const handleSelectAllInstances = (checked: boolean) => {
+    if (checked) {
+      setSelectedTargetInstances(
+        targetAppInstances?.map((instance) => instance.id) || []
+      );
+    } else {
+      setSelectedTargetInstances([]);
+    }
   };
 
   const steps = [
@@ -161,8 +177,8 @@ export function SyncModal({
       description: "Choose target environment",
     },
     {
-      title: "Map Services",
-      description: "Map to app instances",
+      title: "Select Instances",
+      description: "Choose target app instances",
     },
     {
       title: "Review & Sync",
@@ -170,52 +186,31 @@ export function SyncModal({
     },
   ];
 
-  const serviceColumns = [
-    {
-      title: "Service",
-      dataIndex: "name",
-      key: "name",
-      render: (name: string, service: Service) => (
-        <div>
-          <div className="font-medium">{name}</div>
-          <div className="text-sm text-gray-500">{service.workloadType}</div>
-        </div>
-      ),
-    },
-    {
-      title: "Current Image",
-      dataIndex: "imageTag",
-      key: "imageTag",
-      render: (tag: string) => (
-        <code className="text-xs bg-gray-100 px-2 py-1 rounded">{tag}</code>
-      ),
-    },
-    {
-      title: "Target App Instance",
-      key: "target",
-      render: (_: any, service: Service) => (
-        <Select
-          placeholder="Select app instance"
-          value={serviceAppInstanceMap[service.id]}
-          onChange={(value) => handleAppInstanceChange(service.id, value)}
-          className="w-full"
-        >
-          {targetAppInstances?.map((appInstance) => (
-            <Option key={appInstance.id} value={appInstance.id}>
-              {appInstance.name} ({appInstance.cluster}/{appInstance.namespace})
-            </Option>
-          ))}
-        </Select>
-      ),
-    },
-  ];
+  // Helper function to get readable cluster name
+  const getClusterDisplayName = (cluster?: string) => {
+    if (!cluster) return "Unknown";
+    // Extract name from cluster ID (e.g., "c-local" -> "local", "c-dev" -> "dev")
+    const match = cluster.match(/^(c\-\w+)$/);
+    return match ? match[1] : cluster;
+  };
+
+  // Helper function to extract version from image tag (part after colon)
+  const getImageVersion = (imageTag?: string) => {
+    if (!imageTag) return "";
+    const parts = imageTag.split(":");
+    const version = parts.length > 1 ? parts[parts.length - 1] : imageTag;
+
+    // Check if version is a hash (SHA1/MD5) and truncate to 7 characters
+    const hashPattern = /^[a-fA-F0-9]{32,40}$/; // Matches 32-40 hex characters
+    return hashPattern.test(version) ? version.substring(0, 7) : version;
+  };
 
   return (
     <Modal
       title="Synchronize Services"
       open={open}
       onCancel={handleClose}
-      width={800}
+      width={960}
       footer={null}
     >
       <div className="mb-6">
@@ -285,14 +280,14 @@ export function SyncModal({
         </div>
       )}
 
-      {/* Step 1: Map Services to App Instances */}
+      {/* Step 1: Select Target App Instances */}
       {currentStep === 1 && (
         <div className="space-y-4">
           <div>
-            <Title level={4}>Map Services to App Instances</Title>
+            <Title level={4}>Select Target App Instances</Title>
             <Text className="text-gray-600">
-              Select the target app instance for each service in the destination
-              environment.
+              Choose all app instances where you want to deploy the services.
+              Each service will be synchronized to all selected instances.
             </Text>
           </div>
 
@@ -304,19 +299,71 @@ export function SyncModal({
               showIcon
             />
           ) : (
-            <Table
-              dataSource={selectedServices}
-              columns={serviceColumns}
-              rowKey="id"
-              pagination={false}
-              size="small"
-            />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Text strong>
+                  Available App Instances ({targetAppInstances.length})
+                </Text>
+                <Checkbox
+                  checked={
+                    selectedTargetInstances.length === targetAppInstances.length
+                  }
+                  indeterminate={
+                    selectedTargetInstances.length > 0 &&
+                    selectedTargetInstances.length < targetAppInstances.length
+                  }
+                  onChange={(e) => handleSelectAllInstances(e.target.checked)}
+                >
+                  Select All
+                </Checkbox>
+              </div>
+
+              <List
+                dataSource={targetAppInstances}
+                renderItem={(instance: AppInstance) => (
+                  <List.Item className="border rounded p-3 bg-gray-50">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selectedTargetInstances.includes(
+                            instance.id
+                          )}
+                          onChange={(e) =>
+                            handleInstanceSelectionChange(
+                              instance.id,
+                              e.target.checked
+                            )
+                          }
+                        />
+                        <div>
+                          <div className="font-medium">{instance.name}</div>
+                          <div className="text-sm text-gray-600">
+                            {getClusterDisplayName(instance.cluster)}/
+                            {instance.namespace}
+                          </div>
+                        </div>
+                      </div>
+                      <Tag color="green">Active</Tag>
+                    </div>
+                  </List.Item>
+                )}
+              />
+
+              {selectedTargetInstances.length > 0 && (
+                <Alert
+                  message={`${selectedTargetInstances.length} instance(s) selected`}
+                  description={`Each of the ${selectedServices.length} services will be synchronized to all ${selectedTargetInstances.length} selected app instances.`}
+                  type="info"
+                  showIcon
+                />
+              )}
+            </div>
           )}
         </div>
       )}
 
       {/* Step 2: Review and Confirm */}
-      {currentStep === 2 && (
+      {currentStep === 2 && targetEnvironment && (
         <div className="space-y-4">
           <div>
             <Title level={4}>Review Synchronization</Title>
@@ -325,60 +372,14 @@ export function SyncModal({
             </Text>
           </div>
 
-          <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded">
-            <Card size="small" className="text-center">
-              <div
-                className="w-4 h-4 rounded-full mx-auto mb-2"
-                style={{ backgroundColor: sourceEnvironment.color }}
-              />
-              <div className="font-medium">{sourceEnvironment.name}</div>
-              <div className="text-sm text-gray-600">Source</div>
-            </Card>
-
-            <ArrowRightIcon size={24} className="text-gray-400" />
-
-            <Card size="small" className="text-center">
-              <div
-                className="w-4 h-4 rounded-full mx-auto mb-2"
-                style={{
-                  backgroundColor: environments.find(
-                    (e) => e.id === targetEnvironmentId
-                  )?.color,
-                }}
-              />
-              <div className="font-medium">
-                {environments.find((e) => e.id === targetEnvironmentId)?.name}
-              </div>
-              <div className="text-sm text-gray-600">Target</div>
-            </Card>
-          </div>
-
-          <Card
-            title={`Services to Sync (${selectedServices.length})`}
-            size="small"
-          >
-            <div className="space-y-2">
-              {selectedServices.map((service) => {
-                const targetAppInstance = targetAppInstances?.find(
-                  (ai) => ai.id === serviceAppInstanceMap[service.id]
-                );
-                return (
-                  <div
-                    key={service.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                  >
-                    <div>
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-gray-600">
-                        {service.imageTag} → {targetAppInstance?.name}
-                      </div>
-                    </div>
-                    <Tag color="blue">{service.workloadType}</Tag>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          <SyncReviewContent
+            selectedServices={selectedServices}
+            sourceEnvironment={sourceEnvironment}
+            targetEnvironment={targetEnvironment}
+            selectedTargetInstancesCount={selectedTargetInstances.length}
+            getClusterDisplayName={getClusterDisplayName}
+            getImageVersion={getImageVersion}
+          />
         </div>
       )}
 
@@ -406,12 +407,12 @@ export function SyncModal({
         </Space>
       </div>
 
-      {showConfirmModal && (
+      {showConfirmModal && targetEnvironment && (
         <Modal
           title="Confirm Synchronization"
           open={showConfirmModal}
           onCancel={() => !isSyncing && setShowConfirmModal(false)}
-          width={500}
+          width={800}
           closable={!isSyncing}
           maskClosable={!isSyncing}
           footer={[
@@ -433,31 +434,14 @@ export function SyncModal({
             </Button>,
           ]}
         >
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <ExclamationCircleOutlined className="text-yellow-500" />
-              <Text strong>Confirm Synchronization</Text>
-            </div>
-            <div>
-              <p>
-                This will synchronize{" "}
-                <strong>{selectedServices.length} services</strong> from:
-              </p>
-              <p>
-                <strong>Source:</strong> {sourceEnvironment.name}
-              </p>
-              <p>
-                <strong>Target:</strong>{" "}
-                {environments.find((e) => e.id === targetEnvironmentId)?.name}
-              </p>
-            </div>
-            <Alert
-              message="Warning"
-              description="This action will update image tags in the target environment. Make sure you understand the impact."
-              type="warning"
-              showIcon
-            />
-          </div>
+          <SyncReviewContent
+            selectedServices={selectedServices}
+            sourceEnvironment={sourceEnvironment}
+            targetEnvironment={targetEnvironment}
+            selectedTargetInstancesCount={selectedTargetInstances.length}
+            getClusterDisplayName={getClusterDisplayName}
+            getImageVersion={getImageVersion}
+          />
         </Modal>
       )}
     </Modal>
