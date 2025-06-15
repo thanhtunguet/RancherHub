@@ -185,7 +185,7 @@ export function ServiceManagement() {
           <span>Compare Services</span>
         </span>
       ),
-      children: <ServiceComparison initialSourceEnv={effectiveEnvironmentId} />,
+      children: <ServiceComparison />,
     },
   ];
 

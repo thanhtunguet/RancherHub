@@ -75,8 +75,7 @@ export function SyncTargetInstancesStep({
                     <div>
                       <div className="font-medium">{instance.name}</div>
                       <div className="text-sm text-gray-600">
-                        {getClusterDisplayName(instance.cluster)}/
-                        {instance.namespace}
+                        {getClusterDisplayName(instance.cluster)}/{instance.namespace}
                       </div>
                     </div>
                   </div>

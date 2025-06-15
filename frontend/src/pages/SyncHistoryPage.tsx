@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Card from "antd/es/card";
 import Table from "antd/es/table";
 import Tag from "antd/es/tag";
@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../services/api";
-import type { SyncHistory } from "../types";
+import type { SyncHistory, AppInstance } from "../types";
+import { formatAppInstanceDisplayWithCache } from "../utils/displayUtils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -31,6 +32,7 @@ export function SyncHistoryPage() {
   const [selectedRecord, setSelectedRecord] = useState<SyncHistory | null>(
     null
   );
+  const [appInstancesCache, setAppInstancesCache] = useState<Map<string, AppInstance>>(new Map());
 
   const { data: syncHistory, isLoading } = useQuery({
     queryKey: ["detailed-sync-history"],
@@ -40,6 +42,41 @@ export function SyncHistoryPage() {
         .then((res) => res.data),
     refetchInterval: 30000,
   });
+
+  // Fetch app instances for the sync history records
+  const appInstanceIds = syncHistory
+    ? Array.from(new Set([
+        ...syncHistory.map(record => record.sourceAppInstanceId),
+        ...syncHistory.map(record => record.targetAppInstanceId)
+      ])).filter(Boolean)
+    : [];
+
+  const { data: appInstances } = useQuery({
+    queryKey: ["app-instances-for-sync-history", appInstanceIds],
+    queryFn: async () => {
+      const instances = await Promise.all(
+        appInstanceIds.map(id => 
+          api.get<AppInstance>(`/api/app-instances/${id}`)
+            .then(res => res.data)
+            .catch(() => null)
+        )
+      );
+      return instances.filter(Boolean) as AppInstance[];
+    },
+    enabled: appInstanceIds.length > 0,
+  });
+
+  // Update app instances cache when data changes
+  React.useEffect(() => {
+    if (appInstances) {
+      const newCache = new Map(appInstancesCache);
+      appInstances.forEach(instance => {
+        newCache.set(instance.id, instance);
+      });
+      setAppInstancesCache(newCache);
+    }
+  }, [appInstances]);
+
 
   const filteredHistory =
     syncHistory?.filter((record) => {
@@ -103,7 +140,7 @@ export function SyncHistoryPage() {
               {record.sourceEnvironmentName || "Unknown"}
             </div>
             <div className="text-xs text-gray-500">
-              {record.sourceCluster || "N/A"}/{record.sourceNamespace || "N/A"}
+              {formatAppInstanceDisplayWithCache(record.sourceAppInstanceId, record.sourceCluster, record.sourceNamespace, appInstancesCache)}
             </div>
           </div>
           <ArrowRightIcon size={16} className="text-gray-400" />
@@ -112,7 +149,7 @@ export function SyncHistoryPage() {
               {record.targetEnvironmentName || "Unknown"}
             </div>
             <div className="text-xs text-gray-500">
-              {record.targetCluster || "N/A"}/{record.targetNamespace || "N/A"}
+              {formatAppInstanceDisplayWithCache(record.targetAppInstanceId, record.targetCluster, record.targetNamespace, appInstancesCache)}
             </div>
           </div>
         </div>

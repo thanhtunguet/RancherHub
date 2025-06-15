@@ -1,3 +1,4 @@
+import React from "react";
 import Card from "antd/es/card";
 import Empty from "antd/es/empty";
 import Modal from "antd/es/modal";
@@ -10,7 +11,8 @@ import Tooltip from "antd/es/tooltip";
 import { ArrowRightIcon, ClockIcon, AlertTriangleIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../services/api";
-import type { SyncHistory } from "../../types";
+import type { SyncHistory, AppInstance } from "../../types";
+import { formatAppInstanceDisplayWithCache } from "../../utils/displayUtils";
 import dayjs from "dayjs";
 
 const { Text } = Typography;
@@ -29,6 +31,8 @@ export function SyncHistoryModal({
   environmentId,
   title = "Synchronization History",
 }: SyncHistoryModalProps) {
+  const [appInstancesCache, setAppInstancesCache] = React.useState<Map<string, AppInstance>>(new Map());
+
   const { data: syncHistory, isLoading } = useQuery({
     queryKey: ["detailed-sync-history", environmentId],
     queryFn: () => {
@@ -40,6 +44,41 @@ export function SyncHistoryModal({
     enabled: open,
     refetchInterval: 30000,
   });
+
+  // Fetch app instances for the sync history records
+  const appInstanceIds = syncHistory
+    ? Array.from(new Set([
+        ...syncHistory.map(record => record.sourceAppInstanceId),
+        ...syncHistory.map(record => record.targetAppInstanceId)
+      ])).filter(Boolean)
+    : [];
+
+  const { data: appInstances } = useQuery({
+    queryKey: ["app-instances-for-sync-history-modal", appInstanceIds],
+    queryFn: async () => {
+      const instances = await Promise.all(
+        appInstanceIds.map(id => 
+          api.get<AppInstance>(`/api/app-instances/${id}`)
+            .then(res => res.data)
+            .catch(() => null)
+        )
+      );
+      return instances.filter(Boolean) as AppInstance[];
+    },
+    enabled: appInstanceIds.length > 0 && open,
+  });
+
+  // Update app instances cache when data changes
+  React.useEffect(() => {
+    if (appInstances) {
+      const newCache = new Map(appInstancesCache);
+      appInstances.forEach(instance => {
+        newCache.set(instance.id, instance);
+      });
+      setAppInstancesCache(newCache);
+    }
+  }, [appInstances]);
+
 
   const getStatusTag = (status: string) => {
     const colors = {
@@ -159,8 +198,7 @@ export function SyncHistoryModal({
                                   {record.sourceEnvironmentName || "Unknown"}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {record.sourceCluster || "N/A"}/
-                                  {record.sourceNamespace || "N/A"}
+                                  {formatAppInstanceDisplayWithCache(record.sourceAppInstanceId, record.sourceCluster, record.sourceNamespace, appInstancesCache)}
                                 </div>
                               </div>
                               <ArrowRightIcon
@@ -172,8 +210,7 @@ export function SyncHistoryModal({
                                   {record.targetEnvironmentName || "Unknown"}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {record.targetCluster || "N/A"}/
-                                  {record.targetNamespace || "N/A"}
+                                  {formatAppInstanceDisplayWithCache(record.targetAppInstanceId, record.targetCluster, record.targetNamespace, appInstancesCache)}
                                 </div>
                               </div>
                             </div>

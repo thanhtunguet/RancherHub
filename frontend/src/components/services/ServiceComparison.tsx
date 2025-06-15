@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Card from "antd/es/card";
-import Select from "antd/es/select";
+import TreeSelect from "antd/es/tree-select";
 import Button from "antd/es/button";
 import Table from "antd/es/table";
 import Tag from "antd/es/tag";
@@ -10,35 +10,55 @@ import Typography from "antd/es/typography";
 import Divider from "antd/es/divider";
 import { GitCompareIcon } from "lucide-react";
 import { useEnvironments } from "../../hooks/useEnvironments";
-import { useCompareServices } from "../../hooks/useServices";
+import { useAppInstances } from "../../hooks/useAppInstances";
+import { useCompareServicesByInstance } from "../../hooks/useServices";
+import { formatAppInstanceDisplay } from "../../utils/displayUtils";
 
-const { Option } = Select;
 const { Title, Text } = Typography;
 
 interface ServiceComparisonProps {
-  initialSourceEnv?: string;
-  initialTargetEnv?: string;
+  initialSourceInstance?: string;
+  initialTargetInstance?: string;
 }
 
 export function ServiceComparison({
-  initialSourceEnv,
-  initialTargetEnv,
+  initialSourceInstance,
+  initialTargetInstance,
 }: ServiceComparisonProps) {
-  const [sourceEnvironmentId, setSourceEnvironmentId] = useState<
+  const [sourceAppInstanceId, setSourceAppInstanceId] = useState<
     string | undefined
-  >(initialSourceEnv);
-  const [targetEnvironmentId, setTargetEnvironmentId] = useState<
+  >(initialSourceInstance);
+  const [targetAppInstanceId, setTargetAppInstanceId] = useState<
     string | undefined
-  >(initialTargetEnv);
+  >(initialTargetInstance);
 
   const { data: environments, isLoading: isLoadingEnvironments } =
     useEnvironments();
+  const { data: allAppInstances, isLoading: isLoadingAppInstances } =
+    useAppInstances();
   const {
     data: comparison,
     isLoading: isLoadingComparison,
     error: comparisonError,
     refetch: refetchComparison,
-  } = useCompareServices(sourceEnvironmentId, targetEnvironmentId);
+  } = useCompareServicesByInstance(sourceAppInstanceId, targetAppInstanceId);
+
+  // Create tree data for app instance selection
+  const treeData = useMemo(() => {
+    if (!environments || !allAppInstances) return [];
+    
+    return environments.map(env => ({
+      title: env.name, // Use string for better filtering support
+      value: `env-${env.id}`,
+      disabled: true, // Environment nodes are not selectable
+      children: allAppInstances
+        .filter(instance => instance.environmentId === env.id)
+        .map(instance => ({
+          title: formatAppInstanceDisplay(instance.name, instance.cluster, instance.namespace),
+          value: instance.id,
+        }))
+    })).filter(env => env.children && env.children.length > 0);
+  }, [environments, allAppInstances]);
 
   const handleCompare = () => {
     refetchComparison();
@@ -169,12 +189,15 @@ export function ServiceComparison({
     },
   ];
 
-  const sourceEnvName =
-    environments?.find((env) => env.id === sourceEnvironmentId)?.name ||
-    "Unknown";
-  const targetEnvName =
-    environments?.find((env) => env.id === targetEnvironmentId)?.name ||
-    "Unknown";
+  const sourceInstance = allAppInstances?.find(instance => instance.id === sourceAppInstanceId);
+  const targetInstance = allAppInstances?.find(instance => instance.id === targetAppInstanceId);
+  
+  const sourceInstanceDisplay = sourceInstance 
+    ? formatAppInstanceDisplay(sourceInstance.name, sourceInstance.cluster, sourceInstance.namespace)
+    : "Unknown";
+  const targetInstanceDisplay = targetInstance
+    ? formatAppInstanceDisplay(targetInstance.name, targetInstance.cluster, targetInstance.namespace)
+    : "Unknown";
 
   return (
     <div className="space-y-6">
@@ -190,53 +213,46 @@ export function ServiceComparison({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <Text strong>Source Environment</Text>
-            <Select
+            <Text strong>Source Instance</Text>
+            <TreeSelect
               className="w-full mt-1"
-              placeholder="Select source environment"
-              value={sourceEnvironmentId}
-              onChange={setSourceEnvironmentId}
-              loading={isLoadingEnvironments}
-            >
-              {environments?.map((env) => (
-                <Option key={env.id} value={env.id}>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: env.color }}
-                    />
-                    <span>{env.name}</span>
-                  </div>
-                </Option>
-              ))}
-            </Select>
+              placeholder="Select source app instance"
+              value={sourceAppInstanceId}
+              onChange={setSourceAppInstanceId}
+              treeData={treeData}
+              loading={isLoadingEnvironments || isLoadingAppInstances}
+              showSearch
+              filterTreeNode={(search, node) => {
+                if (typeof node.title === 'string') {
+                  return node.title.toLowerCase().includes(search.toLowerCase());
+                }
+                return false;
+              }}
+              treeDefaultExpandAll
+            />
           </div>
 
           <div>
-            <Text strong>Target Environment</Text>
-            <Select
+            <Text strong>Target Instance</Text>
+            <TreeSelect
               className="w-full mt-1"
-              placeholder="Select target environment"
-              value={targetEnvironmentId}
-              onChange={setTargetEnvironmentId}
-              loading={isLoadingEnvironments}
-            >
-              {environments?.map((env) => (
-                <Option
-                  key={env.id}
-                  value={env.id}
-                  disabled={env.id === sourceEnvironmentId}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: env.color }}
-                    />
-                    <span>{env.name}</span>
-                  </div>
-                </Option>
-              ))}
-            </Select>
+              placeholder="Select target app instance"
+              value={targetAppInstanceId}
+              onChange={setTargetAppInstanceId}
+              treeData={treeData.map(env => ({
+                ...env,
+                children: env.children?.filter(instance => instance.value !== sourceAppInstanceId)
+              }))}
+              loading={isLoadingEnvironments || isLoadingAppInstances}
+              showSearch
+              filterTreeNode={(search, node) => {
+                if (typeof node.title === 'string') {
+                  return node.title.toLowerCase().includes(search.toLowerCase());
+                }
+                return false;
+              }}
+              treeDefaultExpandAll
+            />
           </div>
 
           <div className="flex items-end">
@@ -246,9 +262,9 @@ export function ServiceComparison({
               onClick={handleCompare}
               loading={isLoadingComparison}
               disabled={
-                !sourceEnvironmentId ||
-                !targetEnvironmentId ||
-                sourceEnvironmentId === targetEnvironmentId
+                !sourceAppInstanceId ||
+                !targetAppInstanceId ||
+                sourceAppInstanceId === targetAppInstanceId
               }
               className="w-full"
             >
@@ -308,7 +324,7 @@ export function ServiceComparison({
 
             <div className="mb-4">
               <Title level={4}>
-                {sourceEnvName} vs {targetEnvName}
+                {sourceInstanceDisplay} vs {targetInstanceDisplay}
               </Title>
             </div>
 
@@ -326,15 +342,15 @@ export function ServiceComparison({
 
         {!comparison &&
           !isLoadingComparison &&
-          sourceEnvironmentId &&
-          targetEnvironmentId && (
+          sourceAppInstanceId &&
+          targetAppInstanceId && (
             <div className="text-center py-12">
               <GitCompareIcon
                 size={48}
                 className="text-gray-300 mx-auto mb-4"
               />
               <Text type="secondary">
-                Click "Compare" to see the differences between environments
+                Click "Compare" to see the differences between app instances
               </Text>
             </div>
           )}

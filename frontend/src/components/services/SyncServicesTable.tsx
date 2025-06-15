@@ -75,8 +75,7 @@ export function SyncServicesTable({
                       {sourceAppInstance?.name || "Unknown"}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {getClusterDisplayName(sourceAppInstance?.cluster)}/
-                      {sourceAppInstance?.namespace}
+                      {getClusterDisplayName(sourceAppInstance?.cluster)}/{sourceAppInstance?.namespace}
                     </div>
                   </div>
                 );

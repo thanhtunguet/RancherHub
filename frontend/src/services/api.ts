@@ -196,6 +196,13 @@ export const servicesApi = {
         params: { source: sourceEnvironmentId, target: targetEnvironmentId },
       })
       .then((res) => res.data),
+
+  compareServicesByInstance: (sourceAppInstanceId: string, targetAppInstanceId: string): Promise<any> =>
+    api
+      .get("/api/services/compare/by-instance", {
+        params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
 };
 
 export default api;

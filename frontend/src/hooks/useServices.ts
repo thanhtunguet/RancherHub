@@ -112,3 +112,22 @@ export const useCompareServices = (sourceEnvironmentId?: string, targetEnvironme
     retry: 2,
   });
 };
+
+export const useCompareServicesByInstance = (sourceAppInstanceId?: string, targetAppInstanceId?: string) => {
+  return useQuery({
+    queryKey: ["services-comparison-instance", sourceAppInstanceId, targetAppInstanceId],
+    queryFn: () => {
+      console.log(
+        "useCompareServicesByInstance: Comparing services between app instances:",
+        sourceAppInstanceId,
+        "->",
+        targetAppInstanceId
+      );
+      return servicesApi.compareServicesByInstance(sourceAppInstanceId!, targetAppInstanceId!);
+    },
+    enabled: !!(sourceAppInstanceId && targetAppInstanceId && sourceAppInstanceId !== targetAppInstanceId),
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
+};
