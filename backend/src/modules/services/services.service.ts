@@ -724,6 +724,8 @@ export class ServicesService {
         ...service,
         imageSize: null,
         imageSizeFormatted: null,
+        compressedImageSize: null,
+        compressedImageSizeFormatted: null,
       }));
     }
 
@@ -738,6 +740,8 @@ export class ServicesService {
               ...service,
               imageSize: null,
               imageSizeFormatted: null,
+              compressedImageSize: null,
+              compressedImageSizeFormatted: null,
             };
           }
 
@@ -748,6 +752,8 @@ export class ServicesService {
             ...service,
             imageSize: sizeInfo?.size || null,
             imageSizeFormatted: sizeInfo?.sizeFormatted || null,
+            compressedImageSize: sizeInfo?.compressedSize || null,
+            compressedImageSizeFormatted: sizeInfo?.compressedSizeFormatted || null,
           };
         } catch (error) {
           this.logger.warn(`Failed to get image size for ${service.name}: ${error.message}`);
@@ -755,6 +761,8 @@ export class ServicesService {
             ...service,
             imageSize: null,
             imageSizeFormatted: null,
+            compressedImageSize: null,
+            compressedImageSizeFormatted: null,
           };
         }
       })

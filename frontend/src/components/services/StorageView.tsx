@@ -212,9 +212,9 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       ),
     },
     {
-      title: "Image Size",
+      title: "Uncompressed Size",
       key: "imageSize",
-      width: 150,
+      width: 160,
       render: (_, record) => {
         if (!record.imageSize) {
           return <Tag color="default">Unknown</Tag>;
@@ -226,7 +226,13 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
         else if (sizeInMB > 500) color = "orange";
         else if (sizeInMB > 100) color = "yellow";
 
-        return <Tag color={color}>{record.imageSizeFormatted}</Tag>;
+        return (
+          <Tooltip
+            title={`Uncompressed: ${record.imageSizeFormatted}${record.compressedImageSizeFormatted ? `\nCompressed: ${record.compressedImageSizeFormatted}` : ""}`}
+          >
+            <Tag color={color}>{record.imageSizeFormatted}</Tag>
+          </Tooltip>
+        );
       },
       sorter: (a, b) => (a.imageSize || 0) - (b.imageSize || 0),
     },
@@ -458,10 +464,10 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
               />
             ) : (
               <Table
-                pagination={false}
                 columns={columns}
                 dataSource={services}
                 rowKey="id"
+                pagination={false}
                 scroll={{ x: 1000 }}
                 size="small"
               />

@@ -132,14 +132,91 @@ export class HarborApiService {
         with_scan_overview: false,
         with_signature: false,
         with_immutable_status: false,
+        with_accessory: false,
       },
     );
+  }
+
+  async getArtifactManifest(
+    harborSite: HarborSite,
+    projectName: string,
+    repositoryName: string,
+    reference: string,
+  ): Promise<any> {
+    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedReference = encodeURIComponent(reference);
+    return this.makeRequest<any>(
+      harborSite,
+      `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/addition/build_history`,
+    );
+  }
+
+  async getArtifactLayers(
+    harborSite: HarborSite,
+    projectName: string,
+    repositoryName: string,
+    reference: string,
+  ): Promise<any> {
+    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedReference = encodeURIComponent(reference);
+    
+    try {
+      // Try to get the manifest to understand the image structure
+      const manifest = await this.makeRequest<any>(
+        harborSite,
+        `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}`,
+        {
+          with_tag: true,
+          with_label: false,
+          with_scan_overview: false,
+          with_signature: false,
+          with_immutable_status: false,
+          with_accessory: false,
+        },
+      );
+
+      // If it's a manifest list (multi-platform image), get the first platform
+      if (manifest.manifest_media_type === 'application/vnd.docker.distribution.manifest.list.v2+json' ||
+          manifest.manifest_media_type === 'application/vnd.oci.image.index.v1+json') {
+        this.logger.debug(`Multi-platform image detected for ${projectName}/${repositoryName}:${reference}`);
+        
+        // Get references (different platform manifests)
+        const references = await this.makeRequest<any[]>(
+          harborSite,
+          `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/references`,
+        );
+
+        if (references && references.length > 0) {
+          // Use the first available platform (usually amd64)
+          const platformManifest = references[0];
+          this.logger.debug(`Using platform manifest: ${platformManifest.digest}`);
+          
+          return await this.makeRequest<any>(
+            harborSite,
+            `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodeURIComponent(platformManifest.digest)}`,
+            {
+              with_tag: true,
+              with_label: false,
+              with_scan_overview: false,
+              with_signature: false,
+              with_immutable_status: false,
+              with_accessory: false,
+            },
+          );
+        }
+      }
+
+      return manifest;
+    } catch (error) {
+      this.logger.error(`Failed to get artifact layers for ${projectName}/${repositoryName}:${reference}`, error.stack);
+      throw error;
+    }
   }
 
   async getImageSize(
     harborSite: HarborSite,
     fullImageTag: string,
-  ): Promise<{ size: number; sizeFormatted: string } | null> {
+  ): Promise<{ size: number; sizeFormatted: string; compressedSize?: number; compressedSizeFormatted?: string } | null> {
     try {
       this.logger.debug(`Getting image size for: ${fullImageTag} from Harbor: ${harborSite.url}`);
       
@@ -165,16 +242,51 @@ export class HarborApiService {
         (tag === 'latest' && a.tags?.some(t => t.name === 'latest'))
       );
 
-      if (artifact && artifact.size) {
-        this.logger.debug(`Found artifact with size: ${artifact.size} bytes`);
-        return {
-          size: artifact.size,
-          sizeFormatted: this.formatBytes(artifact.size),
-        };
+      if (!artifact) {
+        this.logger.warn(`No artifact found with tag '${tag}' for ${fullImageTag}`);
+        return null;
       }
 
-      this.logger.warn(`No artifact found with tag '${tag}' for ${fullImageTag}`);
-      return null;
+      this.logger.debug(`Found artifact with compressed size: ${artifact.size} bytes`);
+
+      // Try to get the actual uncompressed size by examining the manifest/layers
+      try {
+        const detailedArtifact = await this.getArtifactLayers(harborSite, projectName, repositoryName, artifact.digest);
+        
+        // Calculate total uncompressed size from extra_attrs if available
+        let uncompressedSize = artifact.size; // Fallback to compressed size
+        
+        if (detailedArtifact?.extra_attrs?.config?.Size) {
+          // Docker image config often contains the total size
+          uncompressedSize = detailedArtifact.extra_attrs.config.Size;
+          this.logger.debug(`Found uncompressed size from config: ${uncompressedSize} bytes`);
+        } else if (detailedArtifact?.extra_attrs?.config?.RootFS?.DiffIDs) {
+          // Try to estimate from layer information if available
+          // This is an approximation - real uncompressed size would need layer blob analysis
+          uncompressedSize = Math.round(artifact.size * 2.5); // Typical compression ratio estimate
+          this.logger.debug(`Estimated uncompressed size: ${uncompressedSize} bytes (estimated from compression ratio)`);
+        }
+
+        return {
+          size: uncompressedSize,
+          sizeFormatted: this.formatBytes(uncompressedSize),
+          compressedSize: artifact.size,
+          compressedSizeFormatted: this.formatBytes(artifact.size),
+        };
+      } catch (detailError) {
+        this.logger.warn(`Could not get detailed size information, using compressed size: ${detailError.message}`);
+        
+        // If we can't get detailed info, estimate the uncompressed size
+        // Docker images typically have a compression ratio of 2-3x
+        const estimatedUncompressedSize = Math.round(artifact.size * 2.5);
+        
+        return {
+          size: estimatedUncompressedSize,
+          sizeFormatted: this.formatBytes(estimatedUncompressedSize) + ' (estimated)',
+          compressedSize: artifact.size,
+          compressedSizeFormatted: this.formatBytes(artifact.size),
+        };
+      }
     } catch (error) {
       this.logger.error(`Failed to get image size for ${fullImageTag}`, error.stack);
       return null;

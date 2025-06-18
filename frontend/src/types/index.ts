@@ -157,6 +157,8 @@ export interface TestHarborConnectionRequest {
 export interface ServiceWithImageSize extends Service {
   imageSize?: number;
   imageSizeFormatted?: string;
+  compressedImageSize?: number;
+  compressedImageSizeFormatted?: string;
 }
 
 export interface AppInstanceTreeNode {
