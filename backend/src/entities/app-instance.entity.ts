@@ -11,6 +11,7 @@ import {
 import { RancherSite } from './rancher-site.entity';
 import { Environment } from './environment.entity';
 import { Service } from './service.entity';
+import { MonitoredInstance } from './monitored-instance.entity';
 
 @Entity('app_instances')
 export class AppInstance {
@@ -48,4 +49,7 @@ export class AppInstance {
 
   @OneToMany(() => Service, (service) => service.appInstance)
   services: Service[];
+
+  @OneToMany(() => MonitoredInstance, (instance) => instance.appInstance)
+  monitoredInstances: MonitoredInstance[];
 }

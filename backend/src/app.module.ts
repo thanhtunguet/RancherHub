@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
@@ -11,12 +12,17 @@ import {
   Service,
   SyncOperation,
   SyncHistory,
+  MonitoringConfig,
+  MonitoredInstance,
+  MonitoringHistory,
+  AlertHistory,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
 import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
 import { EnvironmentsModule } from './modules/environments/environments.module';
 import { AppInstancesModule } from './modules/app-instances/app-instances.module';
 import { ServicesModule } from './modules/services/services.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { RancherApiService } from './services/rancher-api.service';
 import { HarborApiService } from './services/harbor-api.service';
 
@@ -25,6 +31,7 @@ import { HarborApiService } from './services/harbor-api.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: process.env.DATABASE_PATH || 'rancher-hub.db',
@@ -36,6 +43,10 @@ import { HarborApiService } from './services/harbor-api.service';
         Service,
         SyncOperation,
         SyncHistory,
+        MonitoringConfig,
+        MonitoredInstance,
+        MonitoringHistory,
+        AlertHistory,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -45,6 +56,7 @@ import { HarborApiService } from './services/harbor-api.service';
     EnvironmentsModule,
     AppInstancesModule,
     ServicesModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],

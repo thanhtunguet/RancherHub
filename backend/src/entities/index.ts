@@ -5,3 +5,7 @@ export { AppInstance } from './app-instance.entity';
 export { Service } from './service.entity';
 export { SyncOperation } from './sync-operation.entity';
 export { SyncHistory } from './sync-history.entity';
+export { MonitoringConfig } from './monitoring-config.entity';
+export { MonitoredInstance } from './monitored-instance.entity';
+export { MonitoringHistory } from './monitoring-history.entity';
+export { AlertHistory } from './alert-history.entity';

@@ -9,6 +9,7 @@ import {
   DatabaseIcon,
   HistoryIcon,
   HardDriveIcon,
+  ActivityIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { SiteManagement } from "./components/sites/SiteManagement";
@@ -17,6 +18,7 @@ import { AppInstanceManagement } from "./components/app-instances/AppInstanceMan
 import { ServiceManagement } from "./components/services/ServiceManagement";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
+import { MonitoringPage } from "./pages/MonitoringPage";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -69,7 +71,11 @@ function App() {
                   icon: <GitBranchIcon size={16} />,
                   label: <a href="/services">Services</a>,
                 },
-                
+                {
+                  key: "/monitoring",
+                  icon: <ActivityIcon size={16} />,
+                  label: <a href="/monitoring">Monitoring</a>,
+                },
                 {
                   key: "/sync-history",
                   icon: <HistoryIcon size={16} />,
@@ -90,6 +96,7 @@ function App() {
               />
               <Route path="/services" element={<ServiceManagement />} />
               <Route path="/harbor-sites" element={<HarborSiteManagement />} />
+              <Route path="/monitoring" element={<MonitoringPage />} />
               <Route path="/sync-history" element={<SyncHistoryPage />} />
             </Routes>
           </Content>

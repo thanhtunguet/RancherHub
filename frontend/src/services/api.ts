@@ -205,4 +205,50 @@ export const servicesApi = {
       .then((res) => res.data),
 };
 
+export const monitoringApi = {
+  // Configuration
+  getConfig: (): Promise<any> =>
+    api.get("/api/monitoring/config").then((res) => res.data),
+
+  createOrUpdateConfig: (data: any): Promise<any> =>
+    api.post("/api/monitoring/config", data).then((res) => res.data),
+
+  updateConfig: (data: any): Promise<any> =>
+    api.put("/api/monitoring/config", data).then((res) => res.data),
+
+  testTelegramConnection: (data: any): Promise<{ success: boolean; message: string }> =>
+    api.post("/api/monitoring/config/test-telegram", data).then((res) => res.data),
+
+  // Monitored Instances
+  getMonitoredInstances: (): Promise<any[]> =>
+    api.get("/api/monitoring/instances").then((res) => res.data),
+
+  getMonitoredInstance: (id: string): Promise<any> =>
+    api.get(`/api/monitoring/instances/${id}`).then((res) => res.data),
+
+  createMonitoredInstance: (data: any): Promise<any> =>
+    api.post("/api/monitoring/instances", data).then((res) => res.data),
+
+  updateMonitoredInstance: (id: string, data: any): Promise<any> =>
+    api.put(`/api/monitoring/instances/${id}`, data).then((res) => res.data),
+
+  deleteMonitoredInstance: (id: string): Promise<void> =>
+    api.delete(`/api/monitoring/instances/${id}`).then(() => undefined),
+
+  // History
+  getMonitoringHistory: (instanceId?: string, days?: number): Promise<any[]> =>
+    api.get("/api/monitoring/history", {
+      params: { instanceId, days }
+    }).then((res) => res.data),
+
+  // Alerts
+  getAlertHistory: (instanceId?: string, resolved?: boolean): Promise<any[]> =>
+    api.get("/api/monitoring/alerts", {
+      params: { instanceId, resolved }
+    }).then((res) => res.data),
+
+  resolveAlert: (id: string): Promise<any> =>
+    api.put(`/api/monitoring/alerts/${id}/resolve`).then((res) => res.data),
+};
+
 export default api;
