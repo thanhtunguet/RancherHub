@@ -15,7 +15,7 @@ export function ServiceStats({
   appInstances,
 }: ServiceStatsProps) {
   const runningServicesCount =
-    services?.filter((s) => s.status.toLowerCase() === "running").length || 0;
+    services?.filter((s) => s.status.toLowerCase() === "active").length || 0;
 
   return (
     <div className="grid grid-cols-5 gap-4 mb-6">

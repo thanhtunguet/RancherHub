@@ -183,7 +183,7 @@ export function ServiceManagement() {
       label: (
         <span className="flex items-center space-x-2">
           <GitCompareIcon size={16} />
-          <span>Compare Services</span>
+          <span>Service Diffs</span>
         </span>
       ),
       children: <ServiceComparison />,

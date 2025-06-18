@@ -206,7 +206,7 @@ export function ServiceComparison({
           <div className="flex items-center space-x-3">
             <GitCompareIcon size={24} className="text-blue-500" />
             <Title level={3} className="mb-0">
-              Service Comparison
+              Service Diffs
             </Title>
           </div>
         </div>

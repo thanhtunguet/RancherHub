@@ -50,6 +50,11 @@ function App() {
                   label: <a href="/sites">Rancher Sites</a>,
                 },
                 {
+                  key: "/harbor-sites",
+                  icon: <HardDriveIcon size={16} />,
+                  label: <a href="/harbor-sites">Harbor Sites</a>,
+                },
+                {
                   key: "/environments",
                   icon: <LayersIcon size={16} />,
                   label: <a href="/environments">Environments</a>,
@@ -64,11 +69,7 @@ function App() {
                   icon: <GitBranchIcon size={16} />,
                   label: <a href="/services">Services</a>,
                 },
-                {
-                  key: "/harbor-sites",
-                  icon: <HardDriveIcon size={16} />,
-                  label: <a href="/harbor-sites">Harbor Sites</a>,
-                },
+                
                 {
                   key: "/sync-history",
                   icon: <HistoryIcon size={16} />,
