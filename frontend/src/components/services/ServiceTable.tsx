@@ -3,11 +3,14 @@ import {
   CloseCircleTwoTone,
   ExclamationCircleTwoTone,
   SyncOutlined as SyncIcon,
+  CopyOutlined,
 } from "@ant-design/icons";
 import Badge from "antd/es/badge";
+import Button from "antd/es/button";
 import Space from "antd/es/space";
 import Table from "antd/es/table";
 import Typography from "antd/es/typography";
+import message from "antd/es/message";
 import { useMemo, useState } from "react";
 import type { Service } from "../../types";
 
@@ -92,6 +95,15 @@ export function ServiceTable({
     });
   };
 
+  const handleCopyTag = async (imageTag: string) => {
+    try {
+      await navigator.clipboard.writeText(imageTag);
+      message.success("Tag copied to clipboard");
+    } catch (error) {
+      message.error("Failed to copy tag");
+    }
+  };
+
   const columns = [
     {
       title: "Name",
@@ -173,9 +185,19 @@ export function ServiceTable({
           version = version.slice(0, 7);
         }
         return (
-          <span style={{ fontFamily: "monospace", fontSize: 14 }}>
-            {version}
-          </span>
+          <div className="flex items-center gap-2">
+            <span style={{ fontFamily: "monospace", fontSize: 14 }}>
+              {version}
+            </span>
+            <Button
+              type="text"
+              size="small"
+              icon={<CopyOutlined />}
+              onClick={() => handleCopyTag(imageTag)}
+              title="Copy full image tag"
+              className="text-gray-500 hover:text-blue-600"
+            />
+          </div>
         );
       },
     },
