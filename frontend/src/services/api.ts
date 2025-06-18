@@ -249,6 +249,13 @@ export const monitoringApi = {
 
   resolveAlert: (id: string): Promise<any> =>
     api.put(`/api/monitoring/alerts/${id}/resolve`).then((res) => res.data),
+
+  // Manual Triggers
+  triggerDailyCheck: (): Promise<{ message: string }> =>
+    api.post("/api/monitoring/trigger/daily-check").then((res) => res.data),
+
+  triggerHourlyCheck: (): Promise<{ message: string }> =>
+    api.post("/api/monitoring/trigger/hourly-check").then((res) => res.data),
 };
 
 export default api;

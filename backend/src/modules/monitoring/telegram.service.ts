@@ -13,15 +13,21 @@ export class TelegramService {
     config: MonitoringConfig,
   ): Promise<string> {
     const axiosConfig = this.createAxiosConfig(config);
+    axiosConfig.headers = {
+      ...axiosConfig.headers,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
+    const formData = new URLSearchParams({
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'Markdown',
+    });
 
     try {
       const response = await axios.post(
         `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
-        {
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'Markdown',
-        },
+        formData.toString(),
         axiosConfig,
       );
 
@@ -42,17 +48,23 @@ export class TelegramService {
     proxyPassword?: string;
   }): Promise<boolean> {
     const axiosConfig = this.createAxiosConfigFromDto(config);
+    axiosConfig.headers = {
+      ...axiosConfig.headers,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
 
     try {
       const testMessage = `🔍 **Telegram Connection Test** - ${new Date().toISOString()}\n\nThis is a test message from RancherHub monitoring system.`;
 
+      const formData = new URLSearchParams({
+        chat_id: config.telegramChatId,
+        text: testMessage,
+        parse_mode: 'Markdown',
+      });
+
       const response = await axios.post(
         `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
-        {
-          chat_id: config.telegramChatId,
-          text: testMessage,
-          parse_mode: 'Markdown',
-        },
+        formData.toString(),
         axiosConfig,
       );
 

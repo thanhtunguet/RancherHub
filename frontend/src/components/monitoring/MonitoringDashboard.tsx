@@ -12,6 +12,7 @@ import {
   Empty,
   Alert,
   Space,
+  message,
 } from 'antd';
 import {
   CheckCircleOutlined,
@@ -20,6 +21,7 @@ import {
   WarningOutlined,
   ReloadOutlined,
   EyeOutlined,
+  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { monitoringApi } from '../../services/api';
 
@@ -68,6 +70,8 @@ export const MonitoringDashboard: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [triggeringDaily, setTriggeringDaily] = useState(false);
+  const [triggeringHourly, setTriggeringHourly] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -93,6 +97,40 @@ export const MonitoringDashboard: React.FC = () => {
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+  };
+
+  const handleTriggerDailyCheck = async () => {
+    try {
+      setTriggeringDaily(true);
+      const response = await monitoringApi.triggerDailyCheck();
+      message.success(response.message || 'Daily health check triggered successfully');
+      // Refresh data after trigger
+      setTimeout(() => {
+        handleRefresh();
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to trigger daily check:', error);
+      message.error('Failed to trigger daily health check');
+    } finally {
+      setTriggeringDaily(false);
+    }
+  };
+
+  const handleTriggerHourlyCheck = async () => {
+    try {
+      setTriggeringHourly(true);
+      const response = await monitoringApi.triggerHourlyCheck();
+      message.success(response.message || 'Hourly health check triggered successfully');
+      // Refresh data after trigger
+      setTimeout(() => {
+        handleRefresh();
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to trigger hourly check:', error);
+      message.error('Failed to trigger hourly health check');
+    } finally {
+      setTriggeringHourly(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -252,13 +290,32 @@ export const MonitoringDashboard: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Title level={3}>Monitoring Dashboard</Title>
-        <Button 
-          icon={<ReloadOutlined />} 
-          onClick={handleRefresh} 
-          loading={refreshing}
-        >
-          Refresh
-        </Button>
+        <Space>
+          <Button 
+            icon={<PlayCircleOutlined />} 
+            onClick={handleTriggerHourlyCheck} 
+            loading={triggeringHourly}
+            type="primary"
+            ghost
+          >
+            Trigger Hourly Check
+          </Button>
+          <Button 
+            icon={<PlayCircleOutlined />} 
+            onClick={handleTriggerDailyCheck} 
+            loading={triggeringDaily}
+            type="primary"
+          >
+            Trigger Daily Check
+          </Button>
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={handleRefresh} 
+            loading={refreshing}
+          >
+            Refresh
+          </Button>
+        </Space>
       </div>
 
       {/* Statistics */}

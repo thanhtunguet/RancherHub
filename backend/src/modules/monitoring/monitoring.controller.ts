@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { MonitoringService } from './monitoring.service';
+import { MonitoringCronService } from './cron.service';
 import { CreateMonitoringConfigDto } from './dto/create-monitoring-config.dto';
 import { UpdateMonitoringConfigDto } from './dto/update-monitoring-config.dto';
 import { CreateMonitoredInstanceDto } from './dto/create-monitored-instance.dto';
@@ -21,7 +22,10 @@ import { TestTelegramConnectionDto } from './dto/test-telegram-connection.dto';
 @ApiTags('monitoring')
 @Controller('api/monitoring')
 export class MonitoringController {
-  constructor(private readonly monitoringService: MonitoringService) {}
+  constructor(
+    private readonly monitoringService: MonitoringService,
+    private readonly monitoringCronService: MonitoringCronService,
+  ) {}
 
   @Get('test')
   test() {
@@ -138,5 +142,24 @@ export class MonitoringController {
   @ApiResponse({ status: 200, description: 'Alert resolved successfully' })
   async resolveAlert(@Param('id') id: string) {
     return this.monitoringService.resolveAlert(id);
+  }
+
+  // Manual Trigger Endpoints
+  @Post('trigger/daily-check')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Manually trigger daily health check' })
+  @ApiResponse({ status: 200, description: 'Daily health check triggered successfully' })
+  async triggerDailyCheck() {
+    await this.monitoringCronService.triggerDailyCheck();
+    return { message: 'Daily health check triggered successfully' };
+  }
+
+  @Post('trigger/hourly-check')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Manually trigger hourly health check' })
+  @ApiResponse({ status: 200, description: 'Hourly health check triggered successfully' })
+  async triggerHourlyCheck() {
+    await this.monitoringCronService.triggerHourlyCheck();
+    return { message: 'Hourly health check triggered successfully' };
   }
 }

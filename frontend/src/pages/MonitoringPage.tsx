@@ -124,7 +124,7 @@ export const MonitoringPage: React.FC = () => {
         <TabPane 
           tab={
             <span>
-              <DashboardOutlined />
+              <DashboardOutlined  className="mr-2"/>
               Dashboard
             </span>
           } 
@@ -136,7 +136,7 @@ export const MonitoringPage: React.FC = () => {
         <TabPane 
           tab={
             <span>
-              <MonitorOutlined />
+              <MonitorOutlined className="mr-2" />
               Monitored Instances
             </span>
           } 
@@ -184,7 +184,7 @@ export const MonitoringPage: React.FC = () => {
         <TabPane 
           tab={
             <span>
-              <SettingOutlined />
+              <SettingOutlined className="mr-2" />
               Configuration
             </span>
           } 
