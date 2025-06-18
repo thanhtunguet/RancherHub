@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
   RancherSite,
+  HarborSite,
   Environment,
   AppInstance,
   Service,
@@ -12,10 +13,12 @@ import {
   SyncHistory,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
+import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
 import { EnvironmentsModule } from './modules/environments/environments.module';
 import { AppInstancesModule } from './modules/app-instances/app-instances.module';
 import { ServicesModule } from './modules/services/services.module';
 import { RancherApiService } from './services/rancher-api.service';
+import { HarborApiService } from './services/harbor-api.service';
 
 @Module({
   imports: [
@@ -27,6 +30,7 @@ import { RancherApiService } from './services/rancher-api.service';
       database: process.env.DATABASE_PATH || 'rancher-hub.db',
       entities: [
         RancherSite,
+        HarborSite,
         Environment,
         AppInstance,
         Service,
@@ -37,11 +41,12 @@ import { RancherApiService } from './services/rancher-api.service';
       logging: process.env.NODE_ENV === 'development',
     }),
     SitesModule,
+    HarborSitesModule,
     EnvironmentsModule,
     AppInstancesModule,
     ServicesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RancherApiService],
+  providers: [AppService, RancherApiService, HarborApiService],
 })
 export class AppModule {}

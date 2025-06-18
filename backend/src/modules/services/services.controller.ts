@@ -214,6 +214,63 @@ export class ServicesController {
     return filteredServices;
   }
 
+  @Get('with-image-sizes/:appInstanceId')
+  @ApiOperation({
+    summary: 'Get services with image size information from Harbor',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of services with image size information',
+  })
+  @ApiResponse({ status: 404, description: 'App instance not found' })
+  @ApiParam({ name: 'appInstanceId', description: 'App instance ID' })
+  async getServicesWithImageSizes(@Param('appInstanceId') appInstanceId: string) {
+    this.logger.debug(`getServicesWithImageSizes called for app instance: ${appInstanceId}`);
+    return this.servicesService.getServicesWithImageSizes(appInstanceId);
+  }
+
+  @Get('app-instances/tree')
+  @ApiOperation({
+    summary: 'Get app instances grouped by environment in tree format',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'App instances grouped by environment',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          appInstances: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                cluster: { type: 'string' },
+                namespace: { type: 'string' },
+                rancherSite: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async getAppInstancesTree() {
+    this.logger.debug('getAppInstancesTree called');
+    return this.servicesService.getAllAppInstancesGroupedByEnvironment();
+  }
+
   @Get('test-api/:siteId')
   @ApiOperation({ summary: 'Test Rancher API endpoints' })
   @ApiResponse({

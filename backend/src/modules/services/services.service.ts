@@ -9,6 +9,8 @@ import {
   SyncHistory,
 } from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { HarborApiService } from '../../services/harbor-api.service';
+import { HarborSitesService } from '../harbor-sites/harbor-sites.service';
 import { SyncServicesDto } from './dto/sync-services.dto';
 
 @Injectable()
@@ -27,6 +29,8 @@ export class ServicesService {
     @InjectRepository(SyncHistory)
     private readonly syncHistoryRepository: Repository<SyncHistory>,
     private readonly rancherApiService: RancherApiService,
+    private readonly harborApiService: HarborApiService,
+    private readonly harborSitesService: HarborSitesService,
   ) {}
 
   async getServicesByEnvironment(environmentId: string): Promise<Service[]> {
@@ -703,5 +707,106 @@ export class ServicesService {
       return 'different';
     }
     return 'identical';
+  }
+
+  async getServicesWithImageSizes(appInstanceId: string): Promise<any[]> {
+    this.logger.debug(`Fetching services with image sizes for app instance: ${appInstanceId}`);
+
+    // Get services from the app instance
+    const services = await this.getServicesByAppInstance(appInstanceId);
+    
+    // Get active Harbor site
+    const harborSite = await this.harborSitesService.getActiveSite();
+    
+    if (!harborSite) {
+      this.logger.warn('No active Harbor site found, returning services without size information');
+      return services.map(service => ({
+        ...service,
+        imageSize: null,
+        imageSizeFormatted: null,
+      }));
+    }
+
+    // Enrich services with image size information
+    const enrichedServices = await Promise.all(
+      services.map(async (service) => {
+        try {
+          // Extract image name and tag from imageTag
+          const imageTag = service.imageTag;
+          if (!imageTag) {
+            return {
+              ...service,
+              imageSize: null,
+              imageSizeFormatted: null,
+            };
+          }
+
+          // Parse image name and tag
+          const [imageName, tag = 'latest'] = imageTag.includes(':') 
+            ? imageTag.split(':') 
+            : [imageTag, 'latest'];
+
+          // Get image size from Harbor
+          const sizeInfo = await this.harborApiService.getImageSize(harborSite, imageName, tag);
+          
+          return {
+            ...service,
+            imageSize: sizeInfo?.size || null,
+            imageSizeFormatted: sizeInfo?.sizeFormatted || null,
+          };
+        } catch (error) {
+          this.logger.warn(`Failed to get image size for ${service.name}: ${error.message}`);
+          return {
+            ...service,
+            imageSize: null,
+            imageSizeFormatted: null,
+          };
+        }
+      })
+    );
+
+    return enrichedServices;
+  }
+
+  async getAllAppInstancesGroupedByEnvironment(): Promise<any> {
+    this.logger.debug('Fetching all app instances grouped by environment');
+
+    const appInstances = await this.appInstanceRepository.find({
+      relations: ['environment', 'rancherSite'],
+      order: {
+        environment: { name: 'ASC' },
+        name: 'ASC',
+      },
+    });
+
+    // Group by environment
+    const grouped = appInstances.reduce((acc, appInstance) => {
+      const envId = appInstance.environmentId;
+      const envName = appInstance.environment?.name || 'Unknown Environment';
+      
+      if (!acc[envId]) {
+        acc[envId] = {
+          id: envId,
+          name: envName,
+          appInstances: [],
+        };
+      }
+      
+      acc[envId].appInstances.push({
+        id: appInstance.id,
+        name: appInstance.name,
+        cluster: appInstance.cluster,
+        namespace: appInstance.namespace,
+        rancherSite: {
+          id: appInstance.rancherSite?.id,
+          name: appInstance.rancherSite?.name,
+        },
+      });
+      
+      return acc;
+    }, {});
+
+    // Convert to array format
+    return Object.values(grouped);
   }
 }

@@ -130,3 +130,46 @@ export interface RancherNamespace {
   projectId: string;
   clusterId: string;
 }
+
+export interface HarborSite {
+  id: string;
+  name: string;
+  url: string;
+  username: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateHarborSiteRequest {
+  name: string;
+  url: string;
+  username: string;
+  password: string;
+}
+
+export interface TestHarborConnectionRequest {
+  url: string;
+  username: string;
+  password: string;
+}
+
+export interface ServiceWithImageSize extends Service {
+  imageSize?: number;
+  imageSizeFormatted?: string;
+}
+
+export interface AppInstanceTreeNode {
+  id: string;
+  name: string;
+  appInstances: Array<{
+    id: string;
+    name: string;
+    cluster: string;
+    namespace: string;
+    rancherSite: {
+      id: string;
+      name: string;
+    };
+  }>;
+}

@@ -10,6 +10,7 @@ import {
   SyncHistory,
 } from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { HarborSitesModule } from '../harbor-sites/harbor-sites.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RancherApiService } from '../../services/rancher-api.service';
       SyncOperation,
       SyncHistory,
     ]),
+    HarborSitesModule,
   ],
   controllers: [ServicesController],
   providers: [ServicesService, RancherApiService],
