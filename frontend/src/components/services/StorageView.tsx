@@ -203,12 +203,24 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       dataIndex: "imageTag",
       key: "imageTag",
       width: 300,
-      render: (text: string) => (
-        <Tooltip title={text}>
-          <Text code style={{ fontSize: "12px" }}>
-            {text?.length > 40 ? `${text.substring(0, 40)}...` : text}
-          </Text>
-        </Tooltip>
+      render: (text: string, record) => (
+        <div>
+          <Tooltip title={text}>
+            <Text code style={{ fontSize: "12px" }}>
+              {text?.length > 40 ? `${text.substring(0, 40)}...` : text}
+            </Text>
+          </Tooltip>
+          {record.imageSource && (
+            <div style={{ marginTop: "4px" }}>
+              <Tag 
+                color={record.imageSource === 'Harbor' ? 'blue' : record.imageSource === 'DockerHub' ? 'orange' : 'default'}
+                style={{ fontSize: '10px' }}
+              >
+                {record.imageSource}
+              </Tag>
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -289,7 +301,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
           Storage View
         </Title>
         <Text type="secondary">
-          View services with their container image sizes from Harbor registry
+          View services with their container image sizes from Harbor registry and DockerHub
         </Text>
       </div>
 

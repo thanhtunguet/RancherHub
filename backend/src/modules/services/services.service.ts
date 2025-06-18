@@ -10,6 +10,7 @@ import {
 } from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
 import { HarborApiService } from '../../services/harbor-api.service';
+import { DockerHubApiService } from '../../services/dockerhub-api.service';
 import { HarborSitesService } from '../harbor-sites/harbor-sites.service';
 import { SyncServicesDto } from './dto/sync-services.dto';
 
@@ -30,6 +31,7 @@ export class ServicesService {
     private readonly syncHistoryRepository: Repository<SyncHistory>,
     private readonly rancherApiService: RancherApiService,
     private readonly harborApiService: HarborApiService,
+    private readonly dockerHubApiService: DockerHubApiService,
     private readonly harborSitesService: HarborSitesService,
   ) {}
 
@@ -717,19 +719,8 @@ export class ServicesService {
     
     // Get active Harbor site
     const harborSite = await this.harborSitesService.getActiveSite();
-    
-    if (!harborSite) {
-      this.logger.warn('No active Harbor site found, returning services without size information');
-      return services.map(service => ({
-        ...service,
-        imageSize: null,
-        imageSizeFormatted: null,
-        compressedImageSize: null,
-        compressedImageSizeFormatted: null,
-      }));
-    }
 
-    // Enrich services with image size information
+    // Enrich services with image size information from Harbor or DockerHub
     const enrichedServices = await Promise.all(
       services.map(async (service) => {
         try {
@@ -742,11 +733,49 @@ export class ServicesService {
               imageSizeFormatted: null,
               compressedImageSize: null,
               compressedImageSizeFormatted: null,
+              imageSource: null,
             };
           }
 
-          // Get image size from Harbor using the full image tag
-          const sizeInfo = await this.harborApiService.getImageSize(harborSite, imageTag);
+          let sizeInfo = null;
+
+          // First, try to get size from Harbor if available and image appears to be from Harbor
+          if (harborSite && !this.dockerHubApiService.isDockerHubImage(imageTag)) {
+            this.logger.debug(`Trying Harbor API for image: ${imageTag}`);
+            try {
+              const harborSizeInfo = await this.harborApiService.getImageSize(harborSite, imageTag);
+              if (harborSizeInfo) {
+                sizeInfo = {
+                  size: harborSizeInfo.size,
+                  sizeFormatted: harborSizeInfo.sizeFormatted,
+                  compressedSize: harborSizeInfo.compressedSize,
+                  compressedSizeFormatted: harborSizeInfo.compressedSizeFormatted,
+                  source: 'Harbor',
+                };
+              }
+            } catch (harborError) {
+              this.logger.debug(`Harbor API failed for ${imageTag}: ${harborError.message}`);
+            }
+          }
+
+          // If Harbor didn't work or image is from DockerHub, try DockerHub
+          if (!sizeInfo && this.dockerHubApiService.isDockerHubImage(imageTag)) {
+            this.logger.debug(`Trying DockerHub API for image: ${imageTag}`);
+            try {
+              const dockerHubSizeInfo = await this.dockerHubApiService.getImageSize(imageTag);
+              if (dockerHubSizeInfo) {
+                sizeInfo = {
+                  size: dockerHubSizeInfo.size,
+                  sizeFormatted: dockerHubSizeInfo.sizeFormatted,
+                  compressedSize: null, // DockerHub doesn't provide compressed size
+                  compressedSizeFormatted: null,
+                  source: dockerHubSizeInfo.source,
+                };
+              }
+            } catch (dockerHubError) {
+              this.logger.debug(`DockerHub API failed for ${imageTag}: ${dockerHubError.message}`);
+            }
+          }
           
           return {
             ...service,
@@ -754,6 +783,7 @@ export class ServicesService {
             imageSizeFormatted: sizeInfo?.sizeFormatted || null,
             compressedImageSize: sizeInfo?.compressedSize || null,
             compressedImageSizeFormatted: sizeInfo?.compressedSizeFormatted || null,
+            imageSource: sizeInfo?.source || null,
           };
         } catch (error) {
           this.logger.warn(`Failed to get image size for ${service.name}: ${error.message}`);
@@ -763,6 +793,7 @@ export class ServicesService {
             imageSizeFormatted: null,
             compressedImageSize: null,
             compressedImageSizeFormatted: null,
+            imageSource: null,
           };
         }
       })

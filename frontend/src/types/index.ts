@@ -159,6 +159,7 @@ export interface ServiceWithImageSize extends Service {
   imageSizeFormatted?: string;
   compressedImageSize?: number;
   compressedImageSizeFormatted?: string;
+  imageSource?: string;
 }
 
 export interface AppInstanceTreeNode {
