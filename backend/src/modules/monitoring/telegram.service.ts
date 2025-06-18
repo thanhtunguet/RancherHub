@@ -161,6 +161,20 @@ export class TelegramService {
         const servicesInfo = instance.servicesCount ? 
           ` (${instance.healthyServices || 0}/${instance.servicesCount} services)` : '';
         message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
+        
+        // Add failed service details if there are any
+        if (instance.failedServices > 0 && instance.details?.workloads) {
+          const failedWorkloads = instance.details.workloads.filter((w: any) => w.status === 'failed');
+          if (failedWorkloads.length > 0) {
+            message += `  ❌ **Failed Services:**\n`;
+            failedWorkloads.slice(0, 3).forEach((workload: any) => {
+              message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
+            });
+            if (failedWorkloads.length > 3) {
+              message += `    - ... and ${failedWorkloads.length - 3} more\n`;
+            }
+          }
+        }
       });
       message += '\n';
     });
@@ -179,6 +193,7 @@ export class TelegramService {
     serviceName?: string;
     status: string;
     details?: string;
+    failedServices?: any[];
   }): string {
     const now = new Date();
     let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
@@ -195,6 +210,18 @@ export class TelegramService {
     
     if (alert.details) {
       message += `**Details:**\n${alert.details}\n\n`;
+    }
+    
+    // Add failed service details if available
+    if (alert.failedServices && alert.failedServices.length > 0) {
+      message += `**Failed Services:**\n`;
+      alert.failedServices.slice(0, 5).forEach(service => {
+        message += `• ${service.name} (${service.type}): ${service.state}${service.scale ? ` [${service.availableReplicas || 0}/${service.scale}]` : ''}\n`;
+      });
+      if (alert.failedServices.length > 5) {
+        message += `• ... and ${alert.failedServices.length - 5} more services\n`;
+      }
+      message += '\n';
     }
     
     message += `🔧 **Recommended Actions:**\n`;

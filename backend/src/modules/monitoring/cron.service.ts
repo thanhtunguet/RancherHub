@@ -165,11 +165,15 @@ export class MonitoringCronService {
         return;
       }
 
+      // Extract failed services from details
+      const failedServices = result.details?.workloads?.filter((w: any) => w.status === 'failed') || [];
+      
       const alertMessage = this.telegramService.formatCriticalAlert({
         appInstanceName: result.appInstance?.name || 'Unknown',
         environmentName: result.appInstance?.environment?.name || 'Unknown',
         status: result.status,
         details: result.error || `${result.failedServices}/${result.servicesCount} services failed`,
+        failedServices,
       });
 
       const messageId = await this.telegramService.sendMessage(

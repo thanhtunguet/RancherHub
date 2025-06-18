@@ -63,8 +63,8 @@ export class HealthCheckService {
     try {
       this.logger.log(`Checking health for instance: ${instance.appInstance?.name}`);
       
-      // Get workloads for this app instance
-      const workloads = await this.rancherApiService.getWorkloads(
+      // Get workloads for this app instance using the same method as regular service loading
+      const workloads = await this.rancherApiService.getDeploymentsFromK8sApi(
         instance.appInstance.rancherSite,
         instance.appInstance.cluster,
         instance.appInstance.namespace,

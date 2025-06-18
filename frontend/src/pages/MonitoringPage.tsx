@@ -17,6 +17,7 @@ import { MonitoringDashboard } from '../components/monitoring/MonitoringDashboar
 import { MonitoringConfigForm } from '../components/monitoring/MonitoringConfigForm';
 import { MonitoredInstanceCard } from '../components/monitoring/MonitoredInstanceCard';
 import { MonitoredInstanceForm } from '../components/monitoring/MonitoredInstanceForm';
+import { AlertDetailPage } from '../components/monitoring/AlertDetailPage';
 import { monitoringApi } from '../services/api';
 
 const { TabPane } = Tabs;
@@ -47,6 +48,7 @@ export const MonitoringPage: React.FC = () => {
   const [instances, setInstances] = useState<MonitoredInstance[]>([]);
   const [formVisible, setFormVisible] = useState(false);
   const [editingInstance, setEditingInstance] = useState<MonitoredInstance | null>(null);
+  const [showAlertDetail, setShowAlertDetail] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'instances') {
@@ -130,7 +132,11 @@ export const MonitoringPage: React.FC = () => {
           } 
           key="dashboard"
         >
-          <MonitoringDashboard />
+          {showAlertDetail ? (
+            <AlertDetailPage onBack={() => setShowAlertDetail(false)} />
+          ) : (
+            <MonitoringDashboard onNavigateToAlerts={() => setShowAlertDetail(true)} />
+          )}
         </TabPane>
         
         <TabPane 

@@ -22,6 +22,7 @@ import {
   ReloadOutlined,
   EyeOutlined,
   PlayCircleOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { monitoringApi } from '../../services/api';
 
@@ -65,7 +66,11 @@ interface Alert {
   };
 }
 
-export const MonitoringDashboard: React.FC = () => {
+interface MonitoringDashboardProps {
+  onNavigateToAlerts?: () => void;
+}
+
+export const MonitoringDashboard: React.FC<MonitoringDashboardProps> = ({ onNavigateToAlerts }) => {
   const [instances, setInstances] = useState<MonitoredInstance[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -396,7 +401,18 @@ export const MonitoringDashboard: React.FC = () => {
 
       {/* Recent Alerts */}
       {alerts.length > 0 && (
-        <Card title="Active Alerts">
+        <Card 
+          title="Active Alerts"
+          extra={onNavigateToAlerts && (
+            <Button 
+              icon={<UnorderedListOutlined />} 
+              onClick={onNavigateToAlerts}
+              size="small"
+            >
+              View All Alerts
+            </Button>
+          )}
+        >
           <Table
             columns={alertColumns}
             dataSource={alerts}
