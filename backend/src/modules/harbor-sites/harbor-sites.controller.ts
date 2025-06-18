@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -20,11 +21,15 @@ import { HarborSitesService } from './harbor-sites.service';
 import { CreateHarborSiteDto } from './dto/create-harbor-site.dto';
 import { UpdateHarborSiteDto } from './dto/update-harbor-site.dto';
 import { TestHarborConnectionDto } from './dto/test-harbor-connection.dto';
+import { HarborApiService } from '../../services/harbor-api.service';
 
 @ApiTags('harbor-sites')
 @Controller('api/harbor-sites')
 export class HarborSitesController {
-  constructor(private readonly harborSitesService: HarborSitesService) {}
+  constructor(
+    private readonly harborSitesService: HarborSitesService,
+    private readonly harborApiService: HarborApiService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new Harbor site' })
@@ -103,5 +108,46 @@ export class HarborSitesController {
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
   deactivateSite(@Param('id') id: string) {
     return this.harborSitesService.setActive(id, false);
+  }
+
+  @Get(':id/projects')
+  @ApiOperation({ summary: 'List projects in Harbor site' })
+  @ApiResponse({ status: 200, description: 'Harbor projects list' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  async getProjects(@Param('id') id: string) {
+    const site = await this.harborSitesService.findOne(id);
+    return this.harborApiService.getProjects(site);
+  }
+
+  @Get(':id/repositories/:projectName')
+  @ApiOperation({ summary: 'List repositories in Harbor project' })
+  @ApiResponse({ status: 200, description: 'Harbor repositories list' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  @ApiParam({ name: 'projectName', description: 'Project name' })
+  async getRepositories(@Param('id') id: string, @Param('projectName') projectName: string) {
+    const site = await this.harborSitesService.findOne(id);
+    return this.harborApiService.getRepositories(site, projectName);
+  }
+
+  @Get(':id/test-image-size')
+  @ApiOperation({ summary: 'Test image size retrieval' })
+  @ApiResponse({ status: 200, description: 'Image size test result' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  async testImageSize(
+    @Param('id') id: string,
+    @Query('imageTag') imageTag: string,
+  ) {
+    if (!imageTag) {
+      return { error: 'imageTag query parameter is required' };
+    }
+    
+    const site = await this.harborSitesService.findOne(id);
+    const result = await this.harborApiService.getImageSize(site, imageTag);
+    
+    return {
+      imageTag,
+      site: { id: site.id, name: site.name, url: site.url },
+      result,
+    };
   }
 }

@@ -731,7 +731,7 @@ export class ServicesService {
     const enrichedServices = await Promise.all(
       services.map(async (service) => {
         try {
-          // Extract image name and tag from imageTag
+          // Get the full image tag from service
           const imageTag = service.imageTag;
           if (!imageTag) {
             return {
@@ -741,13 +741,8 @@ export class ServicesService {
             };
           }
 
-          // Parse image name and tag
-          const [imageName, tag = 'latest'] = imageTag.includes(':') 
-            ? imageTag.split(':') 
-            : [imageTag, 'latest'];
-
-          // Get image size from Harbor
-          const sizeInfo = await this.harborApiService.getImageSize(harborSite, imageName, tag);
+          // Get image size from Harbor using the full image tag
+          const sizeInfo = await this.harborApiService.getImageSize(harborSite, imageTag);
           
           return {
             ...service,

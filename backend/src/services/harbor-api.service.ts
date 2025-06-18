@@ -138,26 +138,27 @@ export class HarborApiService {
 
   async getImageSize(
     harborSite: HarborSite,
-    imageName: string,
-    tag: string = 'latest',
+    fullImageTag: string,
   ): Promise<{ size: number; sizeFormatted: string } | null> {
     try {
-      const parts = imageName.split('/');
-      let projectName: string;
-      let repositoryName: string;
-
-      if (parts.length === 1) {
-        projectName = 'library';
-        repositoryName = parts[0];
-      } else if (parts.length === 2) {
-        projectName = parts[0];
-        repositoryName = parts[1];
-      } else {
-        projectName = parts[0];
-        repositoryName = parts.slice(1).join('/');
+      this.logger.debug(`Getting image size for: ${fullImageTag} from Harbor: ${harborSite.url}`);
+      
+      // Parse the full image tag: <siteDomain>/<project>/<repository>:<tag>
+      const { projectName, repositoryName, tag } = this.parseImageTag(fullImageTag, harborSite.url);
+      
+      if (!projectName || !repositoryName) {
+        this.logger.warn(`Could not parse image tag: ${fullImageTag}`);
+        return null;
       }
 
+      this.logger.debug(`Parsed image tag: project=${projectName}, repository=${repositoryName}, tag=${tag}`);
+
       const artifacts = await this.getArtifacts(harborSite, projectName, repositoryName);
+      this.logger.debug(`Found ${artifacts.length} artifacts for ${projectName}/${repositoryName}`);
+      
+      // Log available tags for debugging
+      const availableTags = artifacts.flatMap(a => a.tags?.map(t => t.name) || []);
+      this.logger.debug(`Available tags: ${availableTags.join(', ')}`);
       
       const artifact = artifacts.find(a => 
         a.tags?.some(t => t.name === tag) || 
@@ -165,16 +166,77 @@ export class HarborApiService {
       );
 
       if (artifact && artifact.size) {
+        this.logger.debug(`Found artifact with size: ${artifact.size} bytes`);
         return {
           size: artifact.size,
           sizeFormatted: this.formatBytes(artifact.size),
         };
       }
 
+      this.logger.warn(`No artifact found with tag '${tag}' for ${fullImageTag}`);
       return null;
     } catch (error) {
-      this.logger.error(`Failed to get image size for ${imageName}:${tag}`, error.stack);
+      this.logger.error(`Failed to get image size for ${fullImageTag}`, error.stack);
       return null;
+    }
+  }
+
+  private parseImageTag(fullImageTag: string, harborUrl: string): { projectName: string; repositoryName: string; tag: string } {
+    try {
+      this.logger.debug(`Parsing image tag: ${fullImageTag} with Harbor URL: ${harborUrl}`);
+      
+      // Remove protocol from Harbor URL for comparison
+      const harborDomain = harborUrl.replace(/^https?:\/\//, '');
+      this.logger.debug(`Harbor domain: ${harborDomain}`);
+      
+      // Split image tag by ':'
+      let imagePart: string;
+      let tag: string;
+      
+      if (fullImageTag.includes(':')) {
+        const lastColonIndex = fullImageTag.lastIndexOf(':');
+        imagePart = fullImageTag.substring(0, lastColonIndex);
+        tag = fullImageTag.substring(lastColonIndex + 1);
+      } else {
+        imagePart = fullImageTag;
+        tag = 'latest';
+      }
+      
+      this.logger.debug(`Image part: ${imagePart}, tag: ${tag}`);
+
+      // Remove harbor domain if present
+      if (imagePart.startsWith(harborDomain + '/')) {
+        imagePart = imagePart.substring(harborDomain.length + 1);
+        this.logger.debug(`Removed harbor domain, new image part: ${imagePart}`);
+      }
+
+      // Split by '/' to get project and repository
+      const parts = imagePart.split('/');
+      this.logger.debug(`Split parts: ${JSON.stringify(parts)}`);
+      
+      let result: { projectName: string; repositoryName: string; tag: string };
+      
+      if (parts.length < 2) {
+        // If only one part, assume it's repository in 'library' project
+        result = {
+          projectName: 'library',
+          repositoryName: parts[0],
+          tag: tag,
+        };
+      } else {
+        // First part is project, rest is repository
+        result = {
+          projectName: parts[0],
+          repositoryName: parts.slice(1).join('/'),
+          tag: tag,
+        };
+      }
+      
+      this.logger.debug(`Parsed result: ${JSON.stringify(result)}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error parsing image tag: ${fullImageTag}`, error);
+      return { projectName: '', repositoryName: '', tag: 'latest' };
     }
   }
 
