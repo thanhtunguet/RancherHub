@@ -68,7 +68,9 @@ export class TelegramService {
         axiosConfig,
       );
 
-      this.logger.log(`Test message sent successfully to chat ${config.telegramChatId}`);
+      this.logger.log(
+        `Test message sent successfully to chat ${config.telegramChatId}`,
+      );
       return true;
     } catch (error) {
       console.log(error);
@@ -140,9 +142,13 @@ export class TelegramService {
   formatHealthCheckSummary(results: any[]): string {
     const now = new Date();
     const totalInstances = results.length;
-    const healthyInstances = results.filter(r => r.status === 'healthy').length;
+    const healthyInstances = results.filter(
+      (r) => r.status === 'healthy',
+    ).length;
+
+    let message = `Anh @thangld19 dậy check monitor nhé
     
-    let message = `🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
+    🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
     message += `📊 **Overall Status**: ${healthyInstances === totalInstances ? '✅' : '⚠️'} `;
     message += `${healthyInstances === totalInstances ? 'All Systems Healthy' : 'Issues Detected'} (${healthyInstances}/${totalInstances} instances)\n\n`;
 
@@ -154,33 +160,40 @@ export class TelegramService {
       return acc;
     }, {});
 
-    Object.entries(byEnvironment).forEach(([envName, instances]: [string, any[]]) => {
-      message += `**Environment: ${envName}**\n`;
-      instances.forEach(instance => {
-        const statusIcon = this.getStatusIcon(instance.status);
-        const servicesInfo = instance.servicesCount ? 
-          ` (${instance.healthyServices || 0}/${instance.servicesCount} services)` : '';
-        message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
-        
-        // Add failed service details if there are any
-        if (instance.failedServices > 0 && instance.details?.workloads) {
-          const failedWorkloads = instance.details.workloads.filter((w: any) => w.status === 'failed');
-          if (failedWorkloads.length > 0) {
-            message += `  ❌ **Failed Services:**\n`;
-            failedWorkloads.slice(0, 3).forEach((workload: any) => {
-              message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
-            });
-            if (failedWorkloads.length > 3) {
-              message += `    - ... and ${failedWorkloads.length - 3} more\n`;
+    Object.entries(byEnvironment).forEach(
+      ([envName, instances]: [string, any[]]) => {
+        message += `**Environment: ${envName}**\n`;
+        instances.forEach((instance) => {
+          const statusIcon = this.getStatusIcon(instance.status);
+          const servicesInfo = instance.servicesCount
+            ? ` (${instance.healthyServices || 0}/${instance.servicesCount} services)`
+            : '';
+          message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
+
+          // Add failed service details if there are any
+          if (instance.failedServices > 0 && instance.details?.workloads) {
+            const failedWorkloads = instance.details.workloads.filter(
+              (w: any) => w.status === 'failed',
+            );
+            if (failedWorkloads.length > 0) {
+              message += `  ❌ **Failed Services:**\n`;
+              failedWorkloads.slice(0, 3).forEach((workload: any) => {
+                message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
+              });
+              if (failedWorkloads.length > 3) {
+                message += `    - ... and ${failedWorkloads.length - 3} more\n`;
+              }
             }
           }
-        }
-      });
-      message += '\n';
-    });
+        });
+        message += '\n';
+      },
+    );
 
     // Performance summary
-    const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / results.length;
+    const avgResponseTime =
+      results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) /
+      results.length;
     message += `📈 **Performance**: Avg response time ${(avgResponseTime / 1000).toFixed(1)}s\n`;
     message += `⏰ Next check: Tomorrow 06:00`;
 
@@ -197,25 +210,25 @@ export class TelegramService {
   }): string {
     const now = new Date();
     let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
-    
+
     message += `**Service Failure Detected**\n`;
     message += `• Environment: ${alert.environmentName}\n`;
     message += `• Instance: ${alert.appInstanceName}\n`;
-    
+
     if (alert.serviceName) {
       message += `• Service: ${alert.serviceName}\n`;
     }
-    
+
     message += `• Status: ❌ ${alert.status}\n\n`;
-    
+
     if (alert.details) {
       message += `**Details:**\n${alert.details}\n\n`;
     }
-    
+
     // Add failed service details if available
     if (alert.failedServices && alert.failedServices.length > 0) {
       message += `**Failed Services:**\n`;
-      alert.failedServices.slice(0, 5).forEach(service => {
+      alert.failedServices.slice(0, 5).forEach((service) => {
         message += `• ${service.name} (${service.type}): ${service.state}${service.scale ? ` [${service.availableReplicas || 0}/${service.scale}]` : ''}\n`;
       });
       if (alert.failedServices.length > 5) {
@@ -223,7 +236,7 @@ export class TelegramService {
       }
       message += '\n';
     }
-    
+
     message += `🔧 **Recommended Actions:**\n`;
     message += `1. Check service logs\n`;
     message += `2. Verify resource limits\n`;

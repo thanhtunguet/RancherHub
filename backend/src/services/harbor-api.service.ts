@@ -213,6 +213,33 @@ export class HarborApiService {
     }
   }
 
+  async getArtifactByTag(
+    harborSite: HarborSite,
+    projectName: string,
+    repositoryName: string,
+    tag: string
+  ): Promise<HarborArtifact | null> {
+    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedTag = encodeURIComponent(tag);
+    try {
+      return await this.makeRequest<HarborArtifact>(
+        harborSite,
+        `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedTag}`,
+        {
+          with_tag: true,
+          with_label: true,
+          with_scan_overview: false,
+          with_signature: false,
+          with_immutable_status: false,
+          with_accessory: false,
+        }
+      );
+    } catch (error) {
+      this.logger.warn(`No artifact found with tag '${tag}' for ${projectName}/${repositoryName}: ${error.message}`);
+      return null;
+    }
+  }
+
   async getImageSize(
     harborSite: HarborSite,
     fullImageTag: string,
@@ -230,18 +257,8 @@ export class HarborApiService {
 
       this.logger.debug(`Parsed image tag: project=${projectName}, repository=${repositoryName}, tag=${tag}`);
 
-      const artifacts = await this.getArtifacts(harborSite, projectName, repositoryName);
-      this.logger.debug(`Found ${artifacts.length} artifacts for ${projectName}/${repositoryName}`);
-      
-      // Log available tags for debugging
-      const availableTags = artifacts.flatMap(a => a.tags?.map(t => t.name) || []);
-      this.logger.debug(`Available tags: ${availableTags.join(', ')}`);
-      
-      const artifact = artifacts.find(a => 
-        a.tags?.some(t => t.name === tag) || 
-        (tag === 'latest' && a.tags?.some(t => t.name === 'latest'))
-      );
-
+      // Fetch artifact by tag directly
+      const artifact = await this.getArtifactByTag(harborSite, projectName, repositoryName, tag);
       if (!artifact) {
         this.logger.warn(`No artifact found with tag '${tag}' for ${fullImageTag}`);
         return null;
