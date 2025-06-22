@@ -2,6 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { MonitoringConfig } from '../../entities/monitoring-config.entity';
+import {
+  HealthCheckResult,
+  TelegramTestConfig,
+  CriticalAlert,
+  EnvironmentGroupedResults,
+  WorkloadDetails,
+} from './types/monitoring.types';
 
 @Injectable()
 export class TelegramService {
@@ -39,14 +46,7 @@ export class TelegramService {
     }
   }
 
-  async testConnection(config: {
-    telegramBotToken: string;
-    telegramChatId: string;
-    proxyHost?: string;
-    proxyPort?: number;
-    proxyUsername?: string;
-    proxyPassword?: string;
-  }): Promise<boolean> {
+  async testConnection(config: TelegramTestConfig): Promise<boolean> {
     const axiosConfig = this.createAxiosConfigFromDto(config);
     axiosConfig.headers = {
       ...axiosConfig.headers,
@@ -68,7 +68,9 @@ export class TelegramService {
         axiosConfig,
       );
 
-      this.logger.log(`Test message sent successfully to chat ${config.telegramChatId}`);
+      this.logger.log(
+        `Test message sent successfully to chat ${config.telegramChatId}`,
+      );
       return true;
     } catch (error) {
       console.log(error);
@@ -137,85 +139,87 @@ export class TelegramService {
     return proxyUrl;
   }
 
-  formatHealthCheckSummary(results: any[]): string {
+  formatHealthCheckSummary(results: HealthCheckResult[]): string {
     const now = new Date();
     const totalInstances = results.length;
-    const healthyInstances = results.filter(r => r.status === 'healthy').length;
-    
+    const healthyInstances = results.filter(
+      (r) => r.status === 'healthy',
+    ).length;
+
     let message = `🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
     message += `📊 **Overall Status**: ${healthyInstances === totalInstances ? '✅' : '⚠️'} `;
     message += `${healthyInstances === totalInstances ? 'All Systems Healthy' : 'Issues Detected'} (${healthyInstances}/${totalInstances} instances)\n\n`;
 
     // Group by environment
-    const byEnvironment = results.reduce((acc, result) => {
+    const byEnvironment = results.reduce<EnvironmentGroupedResults>((acc, result) => {
       const envName = result.appInstance?.environment?.name || 'Unknown';
       if (!acc[envName]) acc[envName] = [];
       acc[envName].push(result);
       return acc;
     }, {});
 
-    Object.entries(byEnvironment).forEach(([envName, instances]: [string, any[]]) => {
-      message += `**Environment: ${envName}**\n`;
-      instances.forEach(instance => {
-        const statusIcon = this.getStatusIcon(instance.status);
-        const servicesInfo = instance.servicesCount ? 
-          ` (${instance.healthyServices || 0}/${instance.servicesCount} services)` : '';
-        message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
-        
-        // Add failed service details if there are any
-        if (instance.failedServices > 0 && instance.details?.workloads) {
-          const failedWorkloads = instance.details.workloads.filter((w: any) => w.status === 'failed');
-          if (failedWorkloads.length > 0) {
-            message += `  ❌ **Failed Services:**\n`;
-            failedWorkloads.slice(0, 3).forEach((workload: any) => {
-              message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
-            });
-            if (failedWorkloads.length > 3) {
-              message += `    - ... and ${failedWorkloads.length - 3} more\n`;
+    Object.entries(byEnvironment).forEach(
+      ([envName, instances]: [string, HealthCheckResult[]]) => {
+        message += `**Environment: ${envName}**\n`;
+        instances.forEach((instance) => {
+          const statusIcon = this.getStatusIcon(instance.status);
+          const servicesInfo = instance.servicesCount
+            ? ` (${instance.healthyServices || 0}/${instance.servicesCount} services)`
+            : '';
+          message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
+
+          // Add failed service details if there are any
+          if (instance.failedServices > 0 && instance.details?.workloads) {
+            const failedWorkloads = instance.details.workloads.filter(
+              (w) => w.status === 'failed',
+            );
+            if (failedWorkloads.length > 0) {
+              message += `  ❌ **Failed Services:**\n`;
+              failedWorkloads.slice(0, 3).forEach((workload: WorkloadDetails) => {
+                message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
+              });
+              if (failedWorkloads.length > 3) {
+                message += `    - ... and ${failedWorkloads.length - 3} more\n`;
+              }
             }
           }
-        }
-      });
-      message += '\n';
-    });
+        });
+        message += '\n';
+      },
+    );
 
     // Performance summary
-    const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / results.length;
+    const avgResponseTime =
+      results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) /
+      results.length;
     message += `📈 **Performance**: Avg response time ${(avgResponseTime / 1000).toFixed(1)}s\n`;
     message += `⏰ Next check: Tomorrow 06:00`;
 
     return message;
   }
 
-  formatCriticalAlert(alert: {
-    appInstanceName: string;
-    environmentName: string;
-    serviceName?: string;
-    status: string;
-    details?: string;
-    failedServices?: any[];
-  }): string {
+  formatCriticalAlert(alert: CriticalAlert): string {
     const now = new Date();
     let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
-    
+
     message += `**Service Failure Detected**\n`;
     message += `• Environment: ${alert.environmentName}\n`;
     message += `• Instance: ${alert.appInstanceName}\n`;
-    
+
     if (alert.serviceName) {
       message += `• Service: ${alert.serviceName}\n`;
     }
-    
+
     message += `• Status: ❌ ${alert.status}\n\n`;
-    
+
     if (alert.details) {
       message += `**Details:**\n${alert.details}\n\n`;
     }
-    
+
     // Add failed service details if available
     if (alert.failedServices && alert.failedServices.length > 0) {
       message += `**Failed Services:**\n`;
-      alert.failedServices.slice(0, 5).forEach(service => {
+      alert.failedServices.slice(0, 5).forEach((service: WorkloadDetails) => {
         message += `• ${service.name} (${service.type}): ${service.state}${service.scale ? ` [${service.availableReplicas || 0}/${service.scale}]` : ''}\n`;
       });
       if (alert.failedServices.length > 5) {
@@ -223,7 +227,7 @@ export class TelegramService {
       }
       message += '\n';
     }
-    
+
     message += `🔧 **Recommended Actions:**\n`;
     message += `1. Check service logs\n`;
     message += `2. Verify resource limits\n`;

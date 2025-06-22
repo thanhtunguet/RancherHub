@@ -2,18 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MonitoredInstance } from '../../entities/monitored-instance.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
 import { MonitoringService } from './monitoring.service';
-
-interface HealthCheckResult {
-  monitoredInstanceId: string;
-  appInstance: any;
-  status: 'healthy' | 'warning' | 'critical' | 'error';
-  responseTimeMs: number;
-  servicesCount: number;
-  healthyServices: number;
-  failedServices: number;
-  details: any;
-  error?: string;
-}
+import {
+  HealthCheckResult,
+  WorkloadDetails,
+  HealthStatus,
+  RancherWorkload,
+} from './types/monitoring.types';
 
 @Injectable()
 export class HealthCheckService {
@@ -48,7 +42,12 @@ export class HealthCheckService {
           servicesCount: 0,
           healthyServices: 0,
           failedServices: 0,
-          details: {},
+          details: {
+            workloads: [],
+            cluster: instance.appInstance?.cluster || 'unknown',
+            namespace: instance.appInstance?.namespace || 'unknown',
+            checkTime: new Date().toISOString(),
+          },
           error: error.message,
         });
       }
@@ -76,7 +75,7 @@ export class HealthCheckService {
       const workloadsCount = workloads.length;
       let healthyWorkloads = 0;
       let failedWorkloads = 0;
-      const workloadDetails: any[] = [];
+      const workloadDetails: WorkloadDetails[] = [];
 
       for (const workload of workloads) {
         const isHealthy = this.isWorkloadHealthy(workload);
@@ -98,7 +97,7 @@ export class HealthCheckService {
       }
 
       // Determine overall status
-      let status: 'healthy' | 'warning' | 'critical' | 'error' = 'healthy';
+      let status: HealthStatus = 'healthy';
       
       if (failedWorkloads > 0) {
         if (failedWorkloads >= workloadsCount * 0.5) {
@@ -176,7 +175,7 @@ export class HealthCheckService {
     }
   }
 
-  private isWorkloadHealthy(workload: any): boolean {
+  private isWorkloadHealthy(workload: RancherWorkload): boolean {
     // Check workload state first
     if (workload.state === 'active') {
       return workload.availableReplicas >= workload.scale;
