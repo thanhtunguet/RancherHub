@@ -146,17 +146,22 @@ export class TelegramService {
       (r) => r.status === 'healthy',
     ).length;
 
-    let message = `🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
+    let message = `Anh @thangld19 dậy check monitor nhé
+    
+    🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
     message += `📊 **Overall Status**: ${healthyInstances === totalInstances ? '✅' : '⚠️'} `;
     message += `${healthyInstances === totalInstances ? 'All Systems Healthy' : 'Issues Detected'} (${healthyInstances}/${totalInstances} instances)\n\n`;
 
     // Group by environment
-    const byEnvironment = results.reduce<EnvironmentGroupedResults>((acc, result) => {
-      const envName = result.appInstance?.environment?.name || 'Unknown';
-      if (!acc[envName]) acc[envName] = [];
-      acc[envName].push(result);
-      return acc;
-    }, {});
+    const byEnvironment = results.reduce<EnvironmentGroupedResults>(
+      (acc, result) => {
+        const envName = result.appInstance?.environment?.name || 'Unknown';
+        if (!acc[envName]) acc[envName] = [];
+        acc[envName].push(result);
+        return acc;
+      },
+      {},
+    );
 
     Object.entries(byEnvironment).forEach(
       ([envName, instances]: [string, HealthCheckResult[]]) => {
@@ -175,9 +180,11 @@ export class TelegramService {
             );
             if (failedWorkloads.length > 0) {
               message += `  ❌ **Failed Services:**\n`;
-              failedWorkloads.slice(0, 3).forEach((workload: WorkloadDetails) => {
-                message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
-              });
+              failedWorkloads
+                .slice(0, 3)
+                .forEach((workload: WorkloadDetails) => {
+                  message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
+                });
               if (failedWorkloads.length > 3) {
                 message += `    - ... and ${failedWorkloads.length - 3} more\n`;
               }
