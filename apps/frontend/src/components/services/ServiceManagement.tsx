@@ -2,7 +2,7 @@ import Alert from "antd/es/alert";
 import Button from "antd/es/button";
 import Spin from "antd/es/spin";
 import Tabs from "antd/es/tabs";
-import { RefreshCwIcon, GitBranchIcon, GitCompareIcon, DatabaseIcon } from "lucide-react";
+import { RefreshCwIcon, GitBranchIcon, GitCompareIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
 import { ServiceFilters } from "./ServiceFilters";
@@ -11,8 +11,6 @@ import { ServiceTable } from "./ServiceTable";
 import { ServiceEmptyState } from "./ServiceEmptyState";
 import { SyncHistoryModal } from "./SyncHistoryModal";
 import { ServiceComparison } from "./ServiceComparison";
-import ConfigMapComparison from "../configmaps/ConfigMapComparison";
-import { StorageView } from "./StorageView";
 import { useServiceManagement } from "../../hooks/useServiceManagement";
 
 export function ServiceManagement() {
@@ -188,26 +186,6 @@ export function ServiceManagement() {
         </span>
       ),
       children: <ServiceComparison />,
-    },
-    {
-      key: "3",
-      label: (
-        <span className="flex items-center space-x-2">
-          <GitCompareIcon size={16} />
-          <span>ConfigMap Diffs</span>
-        </span>
-      ),
-      children: <ConfigMapComparison />,
-    },
-    {
-      key: "4",
-      label: (
-        <span className="flex items-center space-x-2">
-          <DatabaseIcon size={16} />
-          <span>Storage View</span>
-        </span>
-      ),
-      children: <StorageView />,
     },
   ];
 

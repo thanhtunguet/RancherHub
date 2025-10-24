@@ -10,12 +10,15 @@ import {
   HistoryIcon,
   HardDriveIcon,
   ActivityIcon,
+  GitCompareIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { SiteManagement } from "./components/sites/SiteManagement";
 import { EnvironmentManagement } from "./components/environments/EnvironmentManagement";
 import { AppInstanceManagement } from "./components/app-instances/AppInstanceManagement";
 import { ServiceManagement } from "./components/services/ServiceManagement";
+import { ConfigMapDiffPage } from "./pages/ConfigMapDiffPage";
+import { StorageViewPage } from "./pages/StorageViewPage";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
@@ -72,6 +75,16 @@ function App() {
                   label: <a href="/services">Services</a>,
                 },
                 {
+                  key: "/configmap-diffs",
+                  icon: <GitCompareIcon size={16} />,
+                  label: <a href="/configmap-diffs">ConfigMap Diffs</a>,
+                },
+                {
+                  key: "/storage",
+                  icon: <DatabaseIcon size={16} />,
+                  label: <a href="/storage">Storage View</a>,
+                },
+                {
                   key: "/monitoring",
                   icon: <ActivityIcon size={16} />,
                   label: <a href="/monitoring">Monitoring</a>,
@@ -95,6 +108,8 @@ function App() {
                 element={<AppInstanceManagement />}
               />
               <Route path="/services" element={<ServiceManagement />} />
+              <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
+              <Route path="/storage" element={<StorageViewPage />} />
               <Route path="/harbor-sites" element={<HarborSiteManagement />} />
               <Route path="/monitoring" element={<MonitoringPage />} />
               <Route path="/sync-history" element={<SyncHistoryPage />} />
