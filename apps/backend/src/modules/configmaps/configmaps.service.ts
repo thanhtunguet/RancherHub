@@ -241,4 +241,133 @@ export class ConfigMapsService {
     }
     return 'identical';
   }
+
+  async getConfigMapDetails(
+    configMapName: string,
+    sourceAppInstanceId: string,
+    targetAppInstanceId: string,
+  ) {
+    this.logger.debug(`Getting detailed comparison for ConfigMap: ${configMapName}`);
+
+    // Get ConfigMaps from both app instances
+    const [sourceConfigMaps, targetConfigMaps] = await Promise.all([
+      this.getConfigMapsByAppInstance(sourceAppInstanceId),
+      this.getConfigMapsByAppInstance(targetAppInstanceId),
+    ]);
+
+    const sourceConfigMap = sourceConfigMaps.find(cm => cm.name === configMapName);
+    const targetConfigMap = targetConfigMaps.find(cm => cm.name === configMapName);
+
+    if (!sourceConfigMap && !targetConfigMap) {
+      throw new NotFoundException(`ConfigMap '${configMapName}' not found in either app instance`);
+    }
+
+    // Get all unique keys from both ConfigMaps
+    const sourceKeys = Object.keys(sourceConfigMap?.data || {});
+    const targetKeys = Object.keys(targetConfigMap?.data || {});
+    const allKeys = new Set([...sourceKeys, ...targetKeys]);
+
+    const keyComparisons = Array.from(allKeys).map(key => {
+      const sourceValue = sourceConfigMap?.data?.[key];
+      const targetValue = targetConfigMap?.data?.[key];
+      
+      return {
+        key,
+        sourceValue: sourceValue || null,
+        targetValue: targetValue || null,
+        isDifferent: sourceValue !== targetValue,
+        missingInSource: !sourceValue && !!targetValue,
+        missingInTarget: !!sourceValue && !targetValue,
+        identical: sourceValue === targetValue,
+      };
+    });
+
+    return {
+      configMapName,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+      sourceConfigMap: sourceConfigMap || null,
+      targetConfigMap: targetConfigMap || null,
+      keyComparisons,
+      summary: {
+        totalKeys: allKeys.size,
+        identical: keyComparisons.filter(k => k.identical).length,
+        different: keyComparisons.filter(k => k.isDifferent && !k.missingInSource && !k.missingInTarget).length,
+        missingInSource: keyComparisons.filter(k => k.missingInSource).length,
+        missingInTarget: keyComparisons.filter(k => k.missingInTarget).length,
+      },
+    };
+  }
+
+  async syncConfigMapKey(syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    key: string;
+    value: string;
+  }) {
+    this.logger.debug(`Syncing single ConfigMap key: ${syncData.key} in ${syncData.configMapName}`);
+
+    // Get target app instance
+    const targetAppInstance = await this.appInstanceRepository.findOne({
+      where: { id: syncData.targetAppInstanceId },
+      relations: ['rancherSite'],
+    });
+
+    if (!targetAppInstance) {
+      throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
+    }
+
+    // Update the ConfigMap key
+    await this.rancherApiService.updateConfigMapKey(
+      targetAppInstance.rancherSite,
+      targetAppInstance.cluster,
+      targetAppInstance.namespace,
+      syncData.configMapName,
+      syncData.key,
+      syncData.value,
+    );
+
+    return {
+      success: true,
+      message: `Successfully synced key '${syncData.key}' in ConfigMap '${syncData.configMapName}'`,
+      syncedKey: syncData.key,
+      syncedValue: syncData.value,
+    };
+  }
+
+  async syncConfigMapKeys(syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    keys: Record<string, string>;
+  }) {
+    this.logger.debug(`Syncing multiple ConfigMap keys in ${syncData.configMapName}:`, Object.keys(syncData.keys));
+
+    // Get target app instance
+    const targetAppInstance = await this.appInstanceRepository.findOne({
+      where: { id: syncData.targetAppInstanceId },
+      relations: ['rancherSite'],
+    });
+
+    if (!targetAppInstance) {
+      throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
+    }
+
+    // Update multiple ConfigMap keys
+    await this.rancherApiService.syncConfigMapKeys(
+      targetAppInstance.rancherSite,
+      targetAppInstance.cluster,
+      targetAppInstance.namespace,
+      syncData.configMapName,
+      syncData.keys,
+    );
+
+    return {
+      success: true,
+      message: `Successfully synced ${Object.keys(syncData.keys).length} keys in ConfigMap '${syncData.configMapName}'`,
+      syncedKeys: Object.keys(syncData.keys),
+      syncedCount: Object.keys(syncData.keys).length,
+    };
+  }
 }

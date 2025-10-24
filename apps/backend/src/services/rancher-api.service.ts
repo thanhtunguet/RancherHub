@@ -720,6 +720,96 @@ export class RancherApiService {
     }));
   }
 
+  async updateConfigMapKey(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+    configMapName: string,
+    key: string,
+    value: string,
+  ): Promise<any> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    // First, get the current ConfigMap
+    const getEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
+    this.logger.debug(
+      `Getting ConfigMap for update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
+    );
+
+    const getResponse = await client.get(getEndpoint);
+    const configMap = getResponse.data;
+
+    // Update the specific key
+    if (!configMap.data) {
+      configMap.data = {};
+    }
+    configMap.data[key] = value;
+
+    // Update the ConfigMap
+    const putEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
+    this.logger.debug(
+      `Updating ConfigMap: ${site.url}/k8s/clusters/${clusterId}${putEndpoint}`,
+    );
+
+    const response = await client.put(putEndpoint, configMap);
+    this.logger.debug(`ConfigMap key updated successfully: ${key}`);
+
+    return response.data;
+  }
+
+  async syncConfigMapKeys(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+    configMapName: string,
+    keysToSync: Record<string, string>,
+  ): Promise<any> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    // First, get the current ConfigMap
+    const getEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
+    this.logger.debug(
+      `Getting ConfigMap for bulk sync: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
+    );
+
+    const getResponse = await client.get(getEndpoint);
+    const configMap = getResponse.data;
+
+    // Update multiple keys
+    if (!configMap.data) {
+      configMap.data = {};
+    }
+    
+    Object.entries(keysToSync).forEach(([key, value]) => {
+      configMap.data[key] = value;
+    });
+
+    // Update the ConfigMap
+    const putEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
+    this.logger.debug(
+      `Bulk updating ConfigMap: ${site.url}/k8s/clusters/${clusterId}${putEndpoint}`,
+    );
+
+    const response = await client.put(putEndpoint, configMap);
+    this.logger.debug(`ConfigMap keys synced successfully: ${Object.keys(keysToSync).join(', ')}`);
+
+    return response.data;
+  }
+
   private mapWorkloadData(
     workload: any,
     expectedType: string | null,

@@ -220,3 +220,29 @@ export interface ConfigMapComparisonResult {
   };
   comparisons: ConfigMapComparison[];
 }
+
+export interface ConfigMapKeyComparison {
+  key: string;
+  sourceValue: string | null;
+  targetValue: string | null;
+  isDifferent: boolean;
+  missingInSource: boolean;
+  missingInTarget: boolean;
+  identical: boolean;
+}
+
+export interface ConfigMapDetailedComparison {
+  configMapName: string;
+  sourceAppInstanceId: string;
+  targetAppInstanceId: string;
+  sourceConfigMap: ConfigMapData | null;
+  targetConfigMap: ConfigMapData | null;
+  keyComparisons: ConfigMapKeyComparison[];
+  summary: {
+    totalKeys: number;
+    identical: number;
+    different: number;
+    missingInSource: number;
+    missingInTarget: number;
+  };
+}

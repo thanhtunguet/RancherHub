@@ -12,7 +12,8 @@ import {
   Tooltip,
   Collapse
 } from 'antd';
-import { GitCompareIcon } from 'lucide-react';
+import { GitCompareIcon, EyeIcon } from 'lucide-react';
+import ConfigMapDetailModal from './ConfigMapDetailModal';
 import { useEnvironments } from '../../hooks/useEnvironments';
 import { useAppInstances } from '../../hooks/useAppInstances';
 import { useConfigMapComparison } from '../../hooks/useConfigMaps';
@@ -24,6 +25,8 @@ const { Panel } = Collapse;
 const ConfigMapComparison: React.FC = () => {
   const [sourceAppInstanceId, setSourceAppInstanceId] = useState<string>();
   const [targetAppInstanceId, setTargetAppInstanceId] = useState<string>();
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedConfigMapName, setSelectedConfigMapName] = useState<string>();
 
   const { data: environments, isLoading: isLoadingEnvironments } = useEnvironments();
   const { data: allAppInstances, isLoading: isLoadingAppInstances } = useAppInstances();
@@ -59,6 +62,11 @@ const ConfigMapComparison: React.FC = () => {
     if (sourceAppInstanceId && targetAppInstanceId) {
       refetchComparison();
     }
+  };
+
+  const handleViewDetails = (configMapName: string) => {
+    setSelectedConfigMapName(configMapName);
+    setDetailModalOpen(true);
   };
 
   const getDifferentStatus = (record: ConfigMapComparison) => {
@@ -227,6 +235,25 @@ const ConfigMapComparison: React.FC = () => {
       width: 300,
       render: (record: ConfigMapComparison) => renderConfigMapData(record.target),
     },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      render: (record: ConfigMapComparison) => (
+        <Space direction="vertical" size="small">
+          <Tooltip title="View detailed comparison">
+            <Button
+              size="small"
+              icon={<EyeIcon size={14} />}
+              onClick={() => handleViewDetails(record.configMapName)}
+              disabled={!record.source && !record.target}
+            >
+              Details
+            </Button>
+          </Tooltip>
+        </Space>
+      ),
+    },
   ];
 
   const sourceInstance = allAppInstances?.find(instance => instance.id === sourceAppInstanceId);
@@ -373,12 +400,28 @@ const ConfigMapComparison: React.FC = () => {
               dataSource={comparison.comparisons}
               rowKey="configMapName"
               pagination={false}
-              scroll={{ x: 1400 }}
+              scroll={{ x: 1520 }}
               size="middle"
             />
           </>
         )}
       </Card>
+
+      {/* Detail Modal */}
+      {selectedConfigMapName && sourceAppInstanceId && targetAppInstanceId && (
+        <ConfigMapDetailModal
+          open={detailModalOpen}
+          onClose={() => {
+            setDetailModalOpen(false);
+            setSelectedConfigMapName(undefined);
+          }}
+          configMapName={selectedConfigMapName}
+          sourceAppInstanceId={sourceAppInstanceId}
+          targetAppInstanceId={targetAppInstanceId}
+          sourceInstanceName={sourceInstanceDisplay}
+          targetInstanceName={targetInstanceDisplay}
+        />
+      )}
     </div>
   );
 };

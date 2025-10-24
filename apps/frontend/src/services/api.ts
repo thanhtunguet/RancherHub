@@ -215,6 +215,30 @@ export const configMapsApi = {
         params: { source: sourceAppInstanceId, target: targetAppInstanceId },
       })
       .then((res) => res.data),
+
+  getConfigMapDetails: (configMapName: string, sourceAppInstanceId: string, targetAppInstanceId: string): Promise<any> =>
+    api
+      .get(`/api/configmaps/${configMapName}/details`, {
+        params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
+
+  syncConfigMapKey: (syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    key: string;
+    value: string;
+  }): Promise<any> =>
+    api.post("/api/configmaps/sync-key", syncData).then((res) => res.data),
+
+  syncConfigMapKeys: (syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    keys: Record<string, string>;
+  }): Promise<any> =>
+    api.post("/api/configmaps/sync-keys", syncData).then((res) => res.data),
 };
 
 export const monitoringApi = {

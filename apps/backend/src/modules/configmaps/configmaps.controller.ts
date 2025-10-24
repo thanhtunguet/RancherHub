@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Query,
+  Post,
+  Body,
   Param,
   Logger,
 } from '@nestjs/common';
@@ -90,5 +92,68 @@ export class ConfigMapsController {
     });
 
     return this.configMapsService.compareConfigMapsByInstance(sourceAppInstanceId, targetAppInstanceId);
+  }
+
+  @Get(':configMapName/details')
+  @ApiOperation({ summary: 'Get detailed comparison of a specific ConfigMap between two app instances' })
+  @ApiResponse({
+    status: 200,
+    description: 'Detailed ConfigMap comparison with key-by-key differences',
+  })
+  @ApiQuery({
+    name: 'source',
+    required: true,
+    description: 'Source app instance ID',
+  })
+  @ApiQuery({
+    name: 'target',
+    required: true,
+    description: 'Target app instance ID',
+  })
+  async getConfigMapDetails(
+    @Param('configMapName') configMapName: string,
+    @Query('source') sourceAppInstanceId: string,
+    @Query('target') targetAppInstanceId: string,
+  ) {
+    this.logger.debug(`getConfigMapDetails called with:`, {
+      configMapName,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    });
+
+    return this.configMapsService.getConfigMapDetails(configMapName, sourceAppInstanceId, targetAppInstanceId);
+  }
+
+  @Post('sync-key')
+  @ApiOperation({ summary: 'Sync a single key from source ConfigMap to target ConfigMap' })
+  @ApiResponse({
+    status: 200,
+    description: 'Key synced successfully',
+  })
+  async syncConfigMapKey(@Body() syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    key: string;
+    value: string;
+  }) {
+    this.logger.debug(`syncConfigMapKey called with:`, syncData);
+    return this.configMapsService.syncConfigMapKey(syncData);
+  }
+
+  @Post('sync-keys')
+  @ApiOperation({ summary: 'Sync multiple keys from source ConfigMap to target ConfigMap' })
+  @ApiResponse({
+    status: 200,
+    description: 'Keys synced successfully',
+  })
+  async syncConfigMapKeys(@Body() syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    configMapName: string;
+    keys: Record<string, string>;
+  }) {
+    this.logger.debug(`syncConfigMapKeys called with:`, syncData);
+    return this.configMapsService.syncConfigMapKeys(syncData);
   }
 }
