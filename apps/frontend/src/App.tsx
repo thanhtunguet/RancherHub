@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import {
@@ -26,97 +26,111 @@ import "./App.css";
 
 const { Header, Content, Sider } = Layout;
 
+function AppContent() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleMenuClick = (key: string) => {
+    navigate(key);
+  };
+
+  return (
+    <Layout className="min-h-screen">
+      <Header className="bg-white border-b border-gray-200 px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ServerIcon size={32} className="text-blue-500" />
+          <h1 className="text-xl font-bold text-gray-900 m-0">Rancher Hub</h1>
+        </div>
+      </Header>
+
+      <Layout>
+        <Sider width={200} className="bg-white border-r border-gray-200">
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            className="h-full border-r-0"
+            onClick={({ key }) => handleMenuClick(key)}
+            items={[
+              {
+                key: "/",
+                icon: <HomeIcon size={16} />,
+                label: "Dashboard",
+              },
+              {
+                key: "/sites",
+                icon: <ServerIcon size={16} />,
+                label: "Rancher Sites",
+              },
+              {
+                key: "/harbor-sites",
+                icon: <HardDriveIcon size={16} />,
+                label: "Harbor Sites",
+              },
+              {
+                key: "/environments",
+                icon: <LayersIcon size={16} />,
+                label: "Environments",
+              },
+              {
+                key: "/app-instances",
+                icon: <DatabaseIcon size={16} />,
+                label: "App Instances",
+              },
+              {
+                key: "/services",
+                icon: <GitBranchIcon size={16} />,
+                label: "Services",
+              },
+              {
+                key: "/configmap-diffs",
+                icon: <GitCompareIcon size={16} />,
+                label: "ConfigMap Diffs",
+              },
+              {
+                key: "/storage",
+                icon: <DatabaseIcon size={16} />,
+                label: "Storage View",
+              },
+              {
+                key: "/monitoring",
+                icon: <ActivityIcon size={16} />,
+                label: "Monitoring",
+              },
+              {
+                key: "/sync-history",
+                icon: <HistoryIcon size={16} />,
+                label: "Sync History",
+              },
+            ]}
+          />
+        </Sider>
+
+        <Content className="bg-gray-50">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/sites" element={<SiteManagement />} />
+            <Route path="/environments" element={<EnvironmentManagement />} />
+            <Route
+              path="/app-instances"
+              element={<AppInstanceManagement />}
+            />
+            <Route path="/services" element={<ServiceManagement />} />
+            <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
+            <Route path="/storage" element={<StorageViewPage />} />
+            <Route path="/harbor-sites" element={<HarborSiteManagement />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/sync-history" element={<SyncHistoryPage />} />
+          </Routes>
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <Layout className="min-h-screen">
-        <Header className="bg-white border-b border-gray-200 px-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ServerIcon size={32} className="text-blue-500" />
-            <h1 className="text-xl font-bold text-gray-900 m-0">Rancher Hub</h1>
-          </div>
-        </Header>
-
-        <Layout>
-          <Sider width={200} className="bg-white border-r border-gray-200">
-            <Menu
-              mode="inline"
-              defaultSelectedKeys={["/"]}
-              className="h-full border-r-0"
-              items={[
-                {
-                  key: "/",
-                  icon: <HomeIcon size={16} />,
-                  label: <a href="/">Dashboard</a>,
-                },
-                {
-                  key: "/sites",
-                  icon: <ServerIcon size={16} />,
-                  label: <a href="/sites">Rancher Sites</a>,
-                },
-                {
-                  key: "/harbor-sites",
-                  icon: <HardDriveIcon size={16} />,
-                  label: <a href="/harbor-sites">Harbor Sites</a>,
-                },
-                {
-                  key: "/environments",
-                  icon: <LayersIcon size={16} />,
-                  label: <a href="/environments">Environments</a>,
-                },
-                {
-                  key: "/app-instances",
-                  icon: <DatabaseIcon size={16} />,
-                  label: <a href="/app-instances">App Instances</a>,
-                },
-                {
-                  key: "/services",
-                  icon: <GitBranchIcon size={16} />,
-                  label: <a href="/services">Services</a>,
-                },
-                {
-                  key: "/configmap-diffs",
-                  icon: <GitCompareIcon size={16} />,
-                  label: <a href="/configmap-diffs">ConfigMap Diffs</a>,
-                },
-                {
-                  key: "/storage",
-                  icon: <DatabaseIcon size={16} />,
-                  label: <a href="/storage">Storage View</a>,
-                },
-                {
-                  key: "/monitoring",
-                  icon: <ActivityIcon size={16} />,
-                  label: <a href="/monitoring">Monitoring</a>,
-                },
-                {
-                  key: "/sync-history",
-                  icon: <HistoryIcon size={16} />,
-                  label: <a href="/sync-history">Sync History</a>,
-                },
-              ]}
-            />
-          </Sider>
-
-          <Content className="bg-gray-50">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/sites" element={<SiteManagement />} />
-              <Route path="/environments" element={<EnvironmentManagement />} />
-              <Route
-                path="/app-instances"
-                element={<AppInstanceManagement />}
-              />
-              <Route path="/services" element={<ServiceManagement />} />
-              <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
-              <Route path="/storage" element={<StorageViewPage />} />
-              <Route path="/harbor-sites" element={<HarborSiteManagement />} />
-              <Route path="/monitoring" element={<MonitoringPage />} />
-              <Route path="/sync-history" element={<SyncHistoryPage />} />
-            </Routes>
-          </Content>
-        </Layout>
-      </Layout>
+      <AppContent />
     </Router>
   );
 }
