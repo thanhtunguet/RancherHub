@@ -11,6 +11,7 @@ import { ServiceTable } from "./ServiceTable";
 import { ServiceEmptyState } from "./ServiceEmptyState";
 import { SyncHistoryModal } from "./SyncHistoryModal";
 import { ServiceComparison } from "./ServiceComparison";
+import ConfigMapComparison from "../configmaps/ConfigMapComparison";
 import { StorageView } from "./StorageView";
 import { useServiceManagement } from "../../hooks/useServiceManagement";
 
@@ -190,6 +191,16 @@ export function ServiceManagement() {
     },
     {
       key: "3",
+      label: (
+        <span className="flex items-center space-x-2">
+          <GitCompareIcon size={16} />
+          <span>ConfigMap Diffs</span>
+        </span>
+      ),
+      children: <ConfigMapComparison />,
+    },
+    {
+      key: "4",
       label: (
         <span className="flex items-center space-x-2">
           <DatabaseIcon size={16} />

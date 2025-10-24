@@ -205,6 +205,18 @@ export const servicesApi = {
       .then((res) => res.data),
 };
 
+export const configMapsApi = {
+  getByAppInstance: (appInstanceId: string): Promise<any[]> =>
+    api.get(`/api/configmaps/by-app-instance/${appInstanceId}`).then((res) => res.data),
+
+  compareConfigMapsByInstance: (sourceAppInstanceId: string, targetAppInstanceId: string): Promise<any> =>
+    api
+      .get("/api/configmaps/compare/by-instance", {
+        params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
+};
+
 export const monitoringApi = {
   // Configuration
   getConfig: (): Promise<any> =>

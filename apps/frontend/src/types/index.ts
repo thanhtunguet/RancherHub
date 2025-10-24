@@ -176,3 +176,47 @@ export interface AppInstanceTreeNode {
     };
   }>;
 }
+
+export interface ConfigMapData {
+  id: string;
+  name: string;
+  namespace: string;
+  data: Record<string, string>;
+  binaryData: Record<string, string>;
+  labels: Record<string, string>;
+  annotations: Record<string, string>;
+  creationTimestamp: string;
+  resourceVersion: string;
+  dataKeys: string[];
+  dataSize: number;
+  appInstanceId: string;
+}
+
+export interface ConfigMapComparison {
+  configMapName: string;
+  source: ConfigMapData | null;
+  target: ConfigMapData | null;
+  differences: {
+    existence: boolean;
+    data: boolean;
+    labels: boolean;
+    annotations: boolean;
+    dataKeys: string[];
+    changedKeys: string[];
+  };
+  status: string;
+  differenceType: string;
+}
+
+export interface ConfigMapComparisonResult {
+  sourceAppInstanceId: string;
+  targetAppInstanceId: string;
+  summary: {
+    totalConfigMaps: number;
+    identical: number;
+    different: number;
+    missingInSource: number;
+    missingInTarget: number;
+  };
+  comparisons: ConfigMapComparison[];
+}

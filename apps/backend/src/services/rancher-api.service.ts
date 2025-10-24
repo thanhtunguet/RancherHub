@@ -665,6 +665,61 @@ export class RancherApiService {
     }));
   }
 
+  async getConfigMapsFromK8sApi(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+  ): Promise<any[]> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    const endpoint = `/v1/configmaps?exclude=metadata.managedFields&namespace=${namespace}`;
+    this.logger.debug(
+      `Fetching ConfigMaps from: ${site.url}/k8s/clusters/${clusterId}${endpoint}`,
+    );
+
+    const response = await client.get(endpoint);
+    this.logger.debug(
+      `Raw ConfigMaps response: ${JSON.stringify(response.data).slice(0, 1000)}`,
+    );
+
+    let items: any[] = [];
+    if (Array.isArray(response.data.items)) {
+      items = response.data.items;
+    } else if (Array.isArray(response.data.data)) {
+      items = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      items = response.data;
+    }
+
+    // Filter by namespace in case Rancher returns all ConfigMaps
+    items = items.filter((cm: any) => cm.metadata?.namespace === namespace);
+
+    this.logger.debug(
+      `Found ${items.length} ConfigMaps in response for namespace: ${namespace}`,
+    );
+
+    return items.map((cm: any) => ({
+      id: cm.metadata?.uid || cm.metadata?.name,
+      name: cm.metadata?.name,
+      namespace: cm.metadata?.namespace || namespace,
+      data: cm.data || {},
+      binaryData: cm.binaryData || {},
+      labels: cm.metadata?.labels || {},
+      annotations: cm.metadata?.annotations || {},
+      creationTimestamp: cm.metadata?.creationTimestamp,
+      resourceVersion: cm.metadata?.resourceVersion,
+      dataKeys: Object.keys(cm.data || {}),
+      dataSize: Object.keys(cm.data || {}).length,
+    }));
+  }
+
   private mapWorkloadData(
     workload: any,
     expectedType: string | null,
