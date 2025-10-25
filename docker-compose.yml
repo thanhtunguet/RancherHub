@@ -40,6 +40,7 @@ services:
       DATABASE_NAME: rancher_hub
       DATABASE_USERNAME: rancher_hub
       DATABASE_PASSWORD: rancher_hub_password
+      DATABASE_SSL: false
       FRONTEND_URL: http://localhost:8080
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
     depends_on:

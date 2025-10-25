@@ -45,7 +45,7 @@ import { HarborApiService } from './services/harbor-api.service';
           username: process.env.DATABASE_USERNAME || 'rancher_hub',
           password: process.env.DATABASE_PASSWORD || 'rancher_hub_password',
           database: process.env.DATABASE_NAME || 'rancher_hub',
-          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+          ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
           entities: [
             RancherSite,
             HarborSite,
