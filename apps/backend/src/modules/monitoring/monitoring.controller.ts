@@ -9,8 +9,9 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { MonitoringService } from './monitoring.service';
 import { MonitoringCronService } from './cron.service';
 import { CreateMonitoringConfigDto } from './dto/create-monitoring-config.dto';
@@ -18,9 +19,13 @@ import { UpdateMonitoringConfigDto } from './dto/update-monitoring-config.dto';
 import { CreateMonitoredInstanceDto } from './dto/create-monitored-instance.dto';
 import { UpdateMonitoredInstanceDto } from './dto/update-monitored-instance.dto';
 import { TestTelegramConnectionDto } from './dto/test-telegram-connection.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('monitoring')
 @Controller('api/monitoring')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
+@ApiBearerAuth()
 export class MonitoringController {
   constructor(
     private readonly monitoringService: MonitoringService,

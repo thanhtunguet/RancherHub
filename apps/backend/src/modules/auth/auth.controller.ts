@@ -17,9 +17,12 @@ import { Verify2FADto } from './dto/verify-2fa.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Disable2FADto } from './dto/disable-2fa.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Require2FAGuard } from './guards/require-2fa.guard';
+import { AllowWithout2FA } from './decorators/allow-without-2fa.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -41,7 +44,7 @@ export class AuthController {
   }
 
   @Post('setup-2fa')
-  @UseGuards(JwtAuthGuard)
+  @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Setup 2FA for authenticated user' })
   @ApiResponse({ status: 200, description: '2FA setup initiated' })
@@ -51,7 +54,7 @@ export class AuthController {
   }
 
   @Post('verify-2fa')
-  @UseGuards(JwtAuthGuard)
+  @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify and enable 2FA' })
   @ApiResponse({ status: 200, description: '2FA verified and enabled' })
@@ -76,7 +79,7 @@ export class AuthController {
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
@@ -91,7 +94,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved' })

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +17,7 @@ import {
   ApiQuery,
   ApiBody,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ServicesService } from './services.service';
 import { SyncServicesDto } from './dto/sync-services.dto';
@@ -23,9 +25,13 @@ import { RancherApiService } from '../../services/rancher-api.service';
 import { RancherSite } from '../../entities/rancher-site.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('services')
 @Controller('api/services')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
+@ApiBearerAuth()
 export class ServicesController {
   private readonly logger = new Logger(ServicesController.name);
 

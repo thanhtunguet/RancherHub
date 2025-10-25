@@ -102,13 +102,13 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
               </Paragraph>
             </div>
 
-            <Space style={{ width: '100%' }}>
-              <Button onClick={onCancel}>Cancel</Button>
+            <Space style={{ width: '100%', justifyContent: onCancel ? 'space-between' : 'center' }}>
+              {onCancel && <Button onClick={onCancel}>Cancel</Button>}
               <Button
                 type="primary"
                 onClick={handleSetup}
                 loading={loading}
-                style={{ flex: 1 }}
+                style={{ flex: onCancel ? 1 : undefined, minWidth: onCancel ? undefined : 200 }}
               >
                 Start Setup
               </Button>

@@ -9,6 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,15 +17,20 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { HarborSitesService } from './harbor-sites.service';
 import { CreateHarborSiteDto } from './dto/create-harbor-site.dto';
 import { UpdateHarborSiteDto } from './dto/update-harbor-site.dto';
 import { TestHarborConnectionDto } from './dto/test-harbor-connection.dto';
 import { HarborApiService } from '../../services/harbor-api.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('harbor-sites')
 @Controller('api/harbor-sites')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
+@ApiBearerAuth()
 export class HarborSitesController {
   constructor(
     private readonly harborSitesService: HarborSitesService,

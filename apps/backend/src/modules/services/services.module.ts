@@ -13,6 +13,7 @@ import { RancherApiService } from '../../services/rancher-api.service';
 import { HarborApiService } from '../../services/harbor-api.service';
 import { DockerHubApiService } from '../../services/dockerhub-api.service';
 import { HarborSitesModule } from '../harbor-sites/harbor-sites.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { HarborSitesModule } from '../harbor-sites/harbor-sites.module';
       SyncHistory,
     ]),
     HarborSitesModule,
+    AuthModule,
   ],
   controllers: [ServicesController],
   providers: [ServicesService, RancherApiService, HarborApiService, DockerHubApiService],

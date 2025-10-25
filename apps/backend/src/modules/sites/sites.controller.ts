@@ -25,10 +25,11 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { TestConnectionResponseDto } from './dto/test-connection.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('sites')
 @Controller('api/sites')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, Require2FAGuard)
 @ApiBearerAuth()
 export class SitesController {
   constructor(private readonly sitesService: SitesService) {}

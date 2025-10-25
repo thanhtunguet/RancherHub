@@ -6,17 +6,23 @@ import {
   Body,
   Param,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ConfigMapsService } from './configmaps.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('configmaps')
 @Controller('api/configmaps')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
+@ApiBearerAuth()
 export class ConfigMapsController {
   private readonly logger = new Logger(ConfigMapsController.name);
 

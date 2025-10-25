@@ -11,6 +11,7 @@ import { MonitoringHistory } from '../../entities/monitoring-history.entity';
 import { AlertHistory } from '../../entities/alert-history.entity';
 import { AppInstance } from '../../entities/app-instance.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RancherApiService } from '../../services/rancher-api.service';
       AlertHistory,
       AppInstance,
     ]),
+    AuthModule,
   ],
   controllers: [MonitoringController],
   providers: [

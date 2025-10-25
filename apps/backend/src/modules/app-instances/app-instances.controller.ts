@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,13 +19,18 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AppInstancesService } from './app-instances.service';
 import { CreateAppInstanceDto } from './dto/create-app-instance.dto';
 import { UpdateAppInstanceDto } from './dto/update-app-instance.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @ApiTags('app-instances')
 @Controller('api/app-instances')
+@UseGuards(JwtAuthGuard, Require2FAGuard)
+@ApiBearerAuth()
 export class AppInstancesController {
   private readonly logger = new Logger(AppInstancesController.name);
 

@@ -30,6 +30,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { Disable2FAConfirm } from "./components/auth/Disable2FAConfirm";
+import { Require2FA } from "./components/auth/Require2FA";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -243,7 +244,9 @@ function App() {
     <AuthProvider>
       <Router>
         <ProtectedRoute>
-          <AppContent />
+          <Require2FA>
+            <AppContent />
+          </Require2FA>
         </ProtectedRoute>
       </Router>
     </AuthProvider>
