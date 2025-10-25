@@ -65,8 +65,8 @@ export const authService = {
     return response.data;
   },
 
-  async disable2FA(): Promise<{ success: boolean; message: string }> {
-    const response = await authApi.delete('/disable-2fa');
+  async disable2FA(token: string): Promise<{ success: boolean; message: string }> {
+    const response = await authApi.post('/disable-2fa', { token });
     return response.data;
   },
 

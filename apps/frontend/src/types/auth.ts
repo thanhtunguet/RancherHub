@@ -45,6 +45,6 @@ export interface AuthContextType {
   register: (userData: RegisterRequest) => Promise<User>;
   setup2FA: () => Promise<Setup2FAResponse>;
   verify2FA: (token: string) => Promise<boolean>;
-  disable2FA: () => Promise<void>;
+  disable2FA: (token: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }

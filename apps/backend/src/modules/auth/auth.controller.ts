@@ -15,6 +15,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Disable2FADto } from './dto/disable-2fa.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -60,14 +61,16 @@ export class AuthController {
     return { success: isValid, message: isValid ? '2FA enabled successfully' : 'Invalid token' };
   }
 
-  @Delete('disable-2fa')
+  @Post('disable-2fa')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Disable 2FA for authenticated user' })
+  @ApiOperation({ summary: 'Disable 2FA for authenticated user (requires 2FA token verification)' })
   @ApiResponse({ status: 200, description: '2FA disabled successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async disable2FA(@Request() req) {
-    await this.authService.disable2FA(req.user.userId);
+  @ApiResponse({ status: 401, description: 'Unauthorized or invalid 2FA token' })
+  @ApiResponse({ status: 400, description: '2FA not enabled or invalid token' })
+  async disable2FA(@Request() req, @Body() disable2FADto: Disable2FADto) {
+    await this.authService.disable2FA(req.user.userId, disable2FADto.token);
     return { success: true, message: '2FA disabled successfully' };
   }
 

@@ -10,6 +10,7 @@ import { RegisterDto } from './dto/register.dto';
 import { Setup2FADto } from './dto/setup-2fa.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Disable2FADto } from './dto/disable-2fa.dto';
 
 @Injectable()
 export class AuthService {
@@ -160,7 +161,30 @@ export class AuthService {
     return isValid;
   }
 
-  async disable2FA(userId: string): Promise<void> {
+  async disable2FA(userId: string, token: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      throw new BadRequestException('2FA is not enabled for this account');
+    }
+
+    // Verify the 2FA token before disabling
+    const isValid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: token,
+      window: 2,
+    });
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid 2FA token. Please enter the correct code from your authenticator app.');
+    }
+
+    // Token is valid, disable 2FA
     await this.userRepository.update(userId, {
       twoFactorEnabled: false,
       twoFactorSecret: null,

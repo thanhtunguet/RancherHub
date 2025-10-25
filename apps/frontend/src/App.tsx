@@ -29,6 +29,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import { ChangePassword } from "./components/auth/ChangePassword";
+import { Disable2FAConfirm } from "./components/auth/Disable2FAConfirm";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -36,9 +37,10 @@ const { Header, Content, Sider } = Layout;
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, disable2FA } = useAuth();
+  const { user, logout } = useAuth();
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDisable2FA, setShowDisable2FA] = useState(false);
 
   const handleMenuClick = (key: string) => {
     navigate(key);
@@ -49,9 +51,9 @@ function AppContent() {
     navigate('/');
   };
 
-  const handle2FAToggle = async () => {
+  const handle2FAToggle = () => {
     if (user?.twoFactorEnabled) {
-      await disable2FA();
+      setShowDisable2FA(true);
     } else {
       setShow2FASetup(true);
     }
@@ -216,6 +218,20 @@ function AppContent() {
         <ChangePassword
           onComplete={() => setShowChangePassword(false)}
           onCancel={() => setShowChangePassword(false)}
+        />
+      </Modal>
+
+      <Modal
+        title="Disable Two-Factor Authentication"
+        open={showDisable2FA}
+        onCancel={() => setShowDisable2FA(false)}
+        footer={null}
+        width={600}
+        centered
+      >
+        <Disable2FAConfirm
+          onComplete={() => setShowDisable2FA(false)}
+          onCancel={() => setShowDisable2FA(false)}
         />
       </Modal>
     </Layout>

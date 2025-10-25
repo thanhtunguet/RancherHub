@@ -98,8 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return response.success;
   };
 
-  const disable2FA = async (): Promise<void> => {
-    const response = await authService.disable2FA();
+  const disable2FA = async (token: string): Promise<void> => {
+    const response = await authService.disable2FA(token);
 
     if (response.success && user) {
       // Update user's 2FA status
