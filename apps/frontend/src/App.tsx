@@ -185,7 +185,8 @@ function AppContent() {
         open={show2FASetup}
         onCancel={() => setShow2FASetup(false)}
         footer={null}
-        width={600}
+        width={900}
+        centered
       >
         <TwoFactorSetup
           onComplete={() => setShow2FASetup(false)}

@@ -16,6 +16,7 @@ export interface LoginResponse {
   access_token?: string;
   user?: User;
   requiresTwoFactor?: boolean;
+  message?: string;
   tempToken?: string;
 }
 

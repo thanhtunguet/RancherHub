@@ -77,10 +77,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
   ];
 
   return (
-    <Card style={{ maxWidth: 500, margin: '0 auto' }}>
+    <Card style={{ maxWidth: 800, margin: '0 auto', padding: '24px' }}>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <div style={{ textAlign: 'center' }}>
-          <SafetyOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+          <SafetyOutlined style={{ fontSize: 64, color: '#1890ff' }} />
           <Title level={3}>Two-Factor Authentication Setup</Title>
           <Text type="secondary">
             Enhance your account security with 2FA
@@ -129,7 +129,8 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ onComplete, onCa
               <Image
                 src={qrCode}
                 alt="2FA QR Code"
-                style={{ maxWidth: 200, border: '1px solid #d9d9d9' }}
+                style={{ maxWidth: 300, border: '1px solid #d9d9d9', borderRadius: '8px' }}
+                preview={false}
               />
             </div>
 

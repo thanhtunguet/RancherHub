@@ -45,6 +45,7 @@ export class AuthService {
     if (user.twoFactorEnabled && !loginDto.twoFactorToken) {
       return {
         requiresTwoFactor: true,
+        message: 'Please enter your 2FA token to complete login',
         tempToken: this.jwtService.sign(
           { sub: user.id, username: user.username, temp: true },
           { expiresIn: '5m' }
@@ -62,7 +63,7 @@ export class AuthService {
       });
 
       if (!isValid) {
-        throw new UnauthorizedException('Invalid 2FA token');
+        throw new UnauthorizedException('Invalid 2FA token. Please check the code from your authenticator app and try again.');
       }
     }
 

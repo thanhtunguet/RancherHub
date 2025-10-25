@@ -28,7 +28,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       if (response.requiresTwoFactor) {
         setRequiresTwoFactor(true);
         setTempToken(response.tempToken || null);
-        setError('Please enter your 2FA token to complete login');
+        // Don't set this as an error, just show the 2FA form
         return;
       }
 
@@ -36,7 +36,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         onSuccess?.();
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }
@@ -69,10 +70,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <Card style={{ maxWidth: 400, margin: '0 auto' }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div style={{ textAlign: 'center' }}>
-            <SafetyOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+            <SafetyOutlined style={{ fontSize: 64, color: '#1890ff' }} />
             <Title level={3}>Two-Factor Authentication</Title>
             <Text type="secondary">
-              Enter the 6-digit code from your authenticator app
+              Your account is protected with 2FA.
+            </Text>
+            <br />
+            <Text type="secondary">
+              Enter the 6-digit code from your authenticator app to continue.
             </Text>
           </div>
 
