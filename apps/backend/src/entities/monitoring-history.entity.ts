@@ -16,7 +16,7 @@ export class MonitoringHistory {
   @Column({ name: 'monitored_instance_id' })
   monitoredInstanceId: string;
 
-  @Column({ name: 'check_time', type: 'datetime' })
+  @Column({ name: 'check_time', type: 'timestamp' })
   checkTime: Date;
 
   @Column({ length: 50 })

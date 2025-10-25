@@ -35,7 +35,7 @@ export class User {
   @Column({ default: false })
   isFirstLogin: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastLoginAt: Date | null;
 
   @CreateDateColumn()

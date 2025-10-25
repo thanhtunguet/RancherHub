@@ -70,7 +70,7 @@ export class SyncHistory {
   @Column({ name: 'duration_ms', type: 'integer', nullable: true })
   durationMs: number;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   timestamp: Date;
 
   @CreateDateColumn()

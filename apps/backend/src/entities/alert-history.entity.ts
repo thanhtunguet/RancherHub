@@ -34,7 +34,7 @@ export class AlertHistory {
   @Column({ name: 'resolved', default: false })
   resolved: boolean;
 
-  @Column({ name: 'resolved_at', type: 'datetime', nullable: true })
+  @Column({ name: 'resolved_at', type: 'timestamp', nullable: true })
   resolvedAt: Date;
 
   @CreateDateColumn()

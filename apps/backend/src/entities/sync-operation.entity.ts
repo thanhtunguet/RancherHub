@@ -24,10 +24,10 @@ export class SyncOperation {
   @Column({ length: 50, default: 'pending' })
   status: string;
 
-  @Column({ name: 'start_time', type: 'datetime' })
+  @Column({ name: 'start_time', type: 'timestamp' })
   startTime: Date;
 
-  @Column({ name: 'end_time', type: 'datetime', nullable: true })
+  @Column({ name: 'end_time', type: 'timestamp', nullable: true })
   endTime: Date;
 
   @Column({ name: 'initiated_by', length: 255 })

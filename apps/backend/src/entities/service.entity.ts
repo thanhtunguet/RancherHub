@@ -35,7 +35,7 @@ export class Service {
   @Column({ name: 'workload_type', length: 50, default: 'Deployment' })
   workloadType: string;
 
-  @Column({ name: 'last_synced', type: 'datetime', nullable: true })
+  @Column({ name: 'last_synced', type: 'timestamp', nullable: true })
   lastSynced: Date;
 
   @CreateDateColumn()

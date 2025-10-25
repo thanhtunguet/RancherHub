@@ -26,7 +26,7 @@ export class MonitoredInstance {
   @Column({ name: 'check_interval_minutes', type: 'integer', default: 60 })
   checkIntervalMinutes: number;
 
-  @Column({ name: 'last_check_time', type: 'datetime', nullable: true })
+  @Column({ name: 'last_check_time', type: 'timestamp', nullable: true })
   lastCheckTime: Date;
 
   @Column({ name: 'last_status', length: 50, nullable: true })
