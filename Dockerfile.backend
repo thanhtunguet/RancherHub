@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app user with UID within system limits
-RUN groupadd -g 1000 nodejs && useradd -r -u 1000 -g nodejs nestjs
+RUN groupadd -g 1001 nodejs || true && useradd -r -u 1001 -g nodejs nestjs
 
 # Copy the built application from the builder stage
 COPY --from=builder --chown=nestjs:nodejs /app/apps/backend/dist ./dist
