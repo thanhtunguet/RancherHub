@@ -16,10 +16,8 @@ COPY package.json package-lock.json* ./
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
 
-# Install all dependencies for the workspace
-# Disable Nx native module installation to avoid musl libc issues
-ENV NX_SKIP_NATIVE_DEPS=true
-RUN npm install
+# Install all dependencies for the workspace including optional dependencies
+RUN npm install --include=optional
 
 # Copy the rest of the source code
 COPY . .
