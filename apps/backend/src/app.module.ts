@@ -60,10 +60,8 @@ import { HarborApiService } from './services/harbor-api.service';
             AlertHistory,
             User,
           ],
-          synchronize: process.env.NODE_ENV !== 'production',
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
           logging: process.env.NODE_ENV === 'development',
-          migrations: ['dist/migrations/*.js'],
-          migrationsRun: process.env.NODE_ENV === 'production',
         }
         : {
           type: 'sqlite',
@@ -82,7 +80,7 @@ import { HarborApiService } from './services/harbor-api.service';
             AlertHistory,
             User,
           ],
-          synchronize: process.env.NODE_ENV !== 'production',
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
           logging: process.env.NODE_ENV === 'development',
         }
     ),
