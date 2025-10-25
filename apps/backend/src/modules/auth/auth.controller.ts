@@ -22,7 +22,6 @@ import { AllowWithout2FA } from './decorators/allow-without-2fa.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
-@UseGuards(JwtAuthGuard, Require2FAGuard)
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -44,6 +43,7 @@ export class AuthController {
   }
 
   @Post('setup-2fa')
+  @UseGuards(JwtAuthGuard, Require2FAGuard)
   @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Setup 2FA for authenticated user' })
@@ -54,6 +54,7 @@ export class AuthController {
   }
 
   @Post('verify-2fa')
+  @UseGuards(JwtAuthGuard, Require2FAGuard)
   @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify and enable 2FA' })
@@ -79,6 +80,7 @@ export class AuthController {
 
   @Post('change-password')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, Require2FAGuard)
   @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change user password' })
@@ -94,6 +96,7 @@ export class AuthController {
   }
 
   @Get('profile')
+  @UseGuards(JwtAuthGuard, Require2FAGuard)
   @AllowWithout2FA()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user profile' })

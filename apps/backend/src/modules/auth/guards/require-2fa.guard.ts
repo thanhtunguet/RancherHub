@@ -18,7 +18,10 @@ export class Require2FAGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if the endpoint is marked as allowing access without 2FA
-    const allowWithout2FA = this.reflector.get<boolean>('allowWithout2FA', context.getHandler());
+    const allowWithout2FA = this.reflector.getAllAndOverride<boolean>('allowWithout2FA', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (allowWithout2FA) {
       return true;
     }

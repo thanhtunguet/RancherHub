@@ -2,8 +2,12 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  active: boolean;
   twoFactorEnabled: boolean;
   isFirstLogin: boolean;
+  lastLoginAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface LoginRequest {

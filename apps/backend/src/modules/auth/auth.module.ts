@@ -9,6 +9,7 @@ import { User } from '../../entities/user.entity';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthSeederService } from './auth-seeder.service';
+import { Require2FAGuard } from './guards/require-2fa.guard';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { AuthSeederService } from './auth-seeder.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, AuthSeederService],
-  exports: [AuthService, AuthSeederService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, AuthSeederService, Require2FAGuard],
+  exports: [AuthService, AuthSeederService, Require2FAGuard],
 })
 export class AuthModule {}

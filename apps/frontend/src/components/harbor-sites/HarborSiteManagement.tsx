@@ -21,6 +21,7 @@ import {
 import { HarborSiteCard } from './HarborSiteCard';
 import { HarborSiteForm } from './HarborSiteForm';
 import { HarborSite, CreateHarborSiteRequest } from '../../types';
+import { harborSitesApi } from '../../services/api';
 
 const { Title, Text } = Typography;
 
@@ -40,15 +41,12 @@ export const HarborSiteManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/harbor-sites');
-      if (!response.ok) {
-        throw new Error('Failed to fetch Harbor sites');
-      }
-      
-      const data = await response.json();
+      const data = await harborSitesApi.getAll();
       setSites(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || 'An error occurred';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -65,56 +63,41 @@ export const HarborSiteManagement: React.FC = () => {
   };
 
   const handleFormSubmit = async (data: CreateHarborSiteRequest) => {
-    const url = editingSite ? `/api/harbor-sites/${editingSite.id}` : '/api/harbor-sites';
-    const method = editingSite ? 'PATCH' : 'POST';
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to save Harbor site');
+    try {
+      if (editingSite) {
+        await harborSitesApi.update(editingSite.id, data);
+      } else {
+        await harborSitesApi.create(data);
+      }
+      await fetchSites();
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || 'Failed to save Harbor site';
+      throw new Error(message);
     }
-
-    await fetchSites();
   };
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/harbor-sites/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete Harbor site');
-      }
-
+      await harborSitesApi.remove(id);
       message.success('Harbor site deleted successfully');
       await fetchSites();
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Failed to delete Harbor site');
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || err?.message || 'Failed to delete Harbor site';
+      message.error(errorMessage);
     }
   };
 
   const handleActivate = async (id: string) => {
     try {
-      const response = await fetch(`/api/harbor-sites/${id}/activate`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to activate Harbor site');
-      }
-
+      await harborSitesApi.activate(id);
       message.success('Harbor site activated successfully');
       await fetchSites();
-    } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Failed to activate Harbor site');
+    } catch (err: any) {
+      const errorMessage =
+        err?.response?.data?.message || err?.message || 'Failed to activate Harbor site';
+      message.error(errorMessage);
     }
   };
 

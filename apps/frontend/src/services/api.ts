@@ -12,6 +12,18 @@ import type {
   SyncOperation,
   RancherCluster,
   RancherNamespace,
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  DeleteUserRequest,
+  QueryUserParams,
+  UserListResponse,
+  UserStats,
+  HarborSite,
+  CreateHarborSiteRequest,
+  TestHarborConnectionRequest,
+  ServiceWithImageSize,
+  AppInstanceTreeNode,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -180,6 +192,12 @@ export const servicesApi = {
       })
       .then((res) => res.data),
 
+  getServicesWithImageSizes: (appInstanceId: string): Promise<ServiceWithImageSize[]> =>
+    api.get(`/api/services/with-image-sizes/${appInstanceId}`).then((res) => res.data),
+
+  getAppInstanceTree: (): Promise<AppInstanceTreeNode[]> =>
+    api.get("/api/services/app-instances/tree").then((res) => res.data),
+
   testApiEndpoints: (siteId: string): Promise<any> =>
     api.get(`/api/services/test-api/${siteId}`).then((res) => res.data),
 
@@ -215,6 +233,39 @@ export const servicesApi = {
     api
       .get("/api/services/compare/by-instance", {
         params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
+};
+
+export const harborSitesApi = {
+  getAll: (): Promise<HarborSite[]> =>
+    api.get("/api/harbor-sites").then((res) => res.data),
+
+  getActive: (): Promise<HarborSite | null> =>
+    api.get("/api/harbor-sites/active").then((res) => res.data),
+
+  create: (data: CreateHarborSiteRequest): Promise<HarborSite> =>
+    api.post("/api/harbor-sites", data).then((res) => res.data),
+
+  update: (id: string, data: Partial<CreateHarborSiteRequest>): Promise<HarborSite> =>
+    api.patch(`/api/harbor-sites/${id}`, data).then((res) => res.data),
+
+  remove: (id: string): Promise<void> =>
+    api.delete(`/api/harbor-sites/${id}`).then(() => undefined),
+
+  activate: (id: string): Promise<HarborSite> =>
+    api.post(`/api/harbor-sites/${id}/activate`).then((res) => res.data),
+
+  deactivate: (id: string): Promise<HarborSite> =>
+    api.post(`/api/harbor-sites/${id}/deactivate`).then((res) => res.data),
+
+  testConnection: (data: TestHarborConnectionRequest): Promise<{ success: boolean; message: string }> =>
+    api.post("/api/harbor-sites/test-connection", data).then((res) => res.data),
+
+  testImageSize: (id: string, imageTag: string): Promise<any> =>
+    api
+      .get(`/api/harbor-sites/${id}/test-image-size`, {
+        params: { imageTag },
       })
       .then((res) => res.data),
 };
@@ -306,6 +357,26 @@ export const monitoringApi = {
 
   triggerHourlyCheck: (): Promise<{ message: string }> =>
     api.post("/api/monitoring/trigger/hourly-check").then((res) => res.data),
+};
+
+export const usersApi = {
+  getAll: (params?: QueryUserParams): Promise<UserListResponse> =>
+    api.get("/api/users", { params }).then((res) => res.data),
+
+  getOne: (id: string): Promise<User> =>
+    api.get(`/api/users/${id}`).then((res) => res.data),
+
+  create: (data: CreateUserRequest): Promise<User> =>
+    api.post("/api/users", data).then((res) => res.data),
+
+  update: (id: string, data: UpdateUserRequest): Promise<User> =>
+    api.patch(`/api/users/${id}`, data).then((res) => res.data),
+
+  delete: (id: string, data: DeleteUserRequest): Promise<void> =>
+    api.delete(`/api/users/${id}`, { data }).then(() => undefined),
+
+  getStats: (): Promise<UserStats> =>
+    api.get("/api/users/stats").then((res) => res.data),
 };
 
 export default api;

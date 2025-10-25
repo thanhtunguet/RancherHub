@@ -26,6 +26,7 @@ import { ServicesModule } from './modules/services/services.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { ConfigMapsModule } from './modules/configmaps/configmaps.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { RancherApiService } from './services/rancher-api.service';
 import { HarborApiService } from './services/harbor-api.service';
 
@@ -63,6 +64,7 @@ import { HarborApiService } from './services/harbor-api.service';
     MonitoringModule,
     ConfigMapsModule,
     AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],

@@ -1,5 +1,6 @@
 // Re-export auth types
 export * from './auth';
+export * from './user';
 
 export interface RancherSite {
   id: string;
@@ -149,6 +150,7 @@ export interface CreateHarborSiteRequest {
   url: string;
   username: string;
   password: string;
+  active?: boolean;
 }
 
 export interface TestHarborConnectionRequest {

@@ -16,6 +16,7 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 import { HarborSite, CreateHarborSiteRequest, TestHarborConnectionRequest } from '../../types';
+import { harborSitesApi } from '../../services/api';
 
 interface HarborSiteFormProps {
   visible: boolean;
@@ -82,15 +83,7 @@ export const HarborSiteForm: React.FC<HarborSiteFormProps> = ({
         password: values.password,
       };
 
-      const response = await fetch('/api/harbor-sites/test-connection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(testData),
-      });
-
-      const result = await response.json();
+      const result = await harborSitesApi.testConnection(testData);
       setTestResult(result);
 
       if (result.success) {
@@ -99,13 +92,17 @@ export const HarborSiteForm: React.FC<HarborSiteFormProps> = ({
         message.error(`Connection test failed: ${result.message}`);
       }
     } catch (error: any) {
-      if (error.errorFields) {
+      if (error?.errorFields) {
         message.error('Please fill in all required fields before testing');
         return;
       }
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Network error occurred during connection test';
       setTestResult({
         success: false,
-        message: 'Network error occurred during connection test',
+        message: errorMessage,
       });
       message.error('Connection test failed');
     } finally {

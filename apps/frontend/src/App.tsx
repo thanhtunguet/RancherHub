@@ -14,6 +14,7 @@ import {
   HardDriveIcon,
   ActivityIcon,
   GitCompareIcon,
+  UsersIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { SiteManagement } from "./components/sites/SiteManagement";
@@ -25,6 +26,7 @@ import { StorageViewPage } from "./pages/StorageViewPage";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
+import UserManagement from "./pages/users/UserManagement";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
@@ -171,6 +173,11 @@ function AppContent() {
                 icon: <HistoryIcon size={16} />,
                 label: "Sync History",
               },
+              {
+                key: "/users",
+                icon: <UsersIcon size={16} />,
+                label: "User Management",
+              },
             ]}
           />
         </Sider>
@@ -190,6 +197,7 @@ function AppContent() {
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/sync-history" element={<SyncHistoryPage />} />
+            <Route path="/users" element={<UserManagement />} />
           </Routes>
         </Content>
       </Layout>

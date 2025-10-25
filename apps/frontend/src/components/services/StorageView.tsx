@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { ServiceWithImageSize, AppInstanceTreeNode } from "../../types";
+import { servicesApi, harborSitesApi } from "../../services/api";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -55,16 +56,14 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
   const fetchAppInstanceTree = async () => {
     try {
       setTreeLoading(true);
-      const response = await fetch("/api/services/app-instances/tree");
-      if (!response.ok) {
-        throw new Error("Failed to fetch app instances");
-      }
-      const data: AppInstanceTreeNode[] = await response.json();
+      const data = await servicesApi.getAppInstanceTree();
       setAppInstanceTree(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load app instances"
-      );
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load app instances";
+      setError(message);
     } finally {
       setTreeLoading(false);
     }
@@ -77,21 +76,15 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/services/with-image-sizes/${selectedAppInstance}`
+      const data = await servicesApi.getServicesWithImageSizes(
+        selectedAppInstance
       );
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to fetch services with image sizes: ${response.status} ${errorText}`
-        );
-      }
-
-      const data: ServiceWithImageSize[] = await response.json();
       console.log("Received services with image sizes:", data);
       setServices(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || "An error occurred";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -104,13 +97,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       setDebugLoading(true);
 
       // First, check if Harbor site is configured
-      const harborResponse = await fetch("/api/harbor-sites/active");
-      if (!harborResponse.ok) {
-        message.error("No active Harbor site configured");
-        return;
-      }
-
-      const harborSite = await harborResponse.json();
+      const harborSite = await harborSitesApi.getActive();
       if (!harborSite) {
         message.error("No active Harbor site found");
         return;
@@ -124,10 +111,10 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       if (services.length > 0) {
         const sampleService = services[0];
         if (sampleService.imageTag) {
-          const testResponse = await fetch(
-            `/api/harbor-sites/${harborSite.id}/test-image-size?imageTag=${encodeURIComponent(sampleService.imageTag)}`
+          const testResult = await harborSitesApi.testImageSize(
+            harborSite.id,
+            sampleService.imageTag
           );
-          const testResult = await testResponse.json();
 
           console.log("Harbor API test result:", testResult);
 
