@@ -70,6 +70,14 @@ export const authService = {
     return response.data;
   },
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    const response = await authApi.post('/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  },
+
   setToken(token: string): void {
     localStorage.setItem('auth_token', token);
   },

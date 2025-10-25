@@ -3,7 +3,7 @@ import { useState } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import { Button, Dropdown, Avatar, Space, Modal } from "antd";
-import { UserOutlined, LogoutOutlined, SafetyOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined } from "@ant-design/icons";
 import {
   ServerIcon,
   LayersIcon,
@@ -28,6 +28,7 @@ import { MonitoringPage } from "./pages/MonitoringPage";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
+import { ChangePassword } from "./components/auth/ChangePassword";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -37,6 +38,7 @@ function AppContent() {
   const navigate = useNavigate();
   const { user, logout, disable2FA } = useAuth();
   const [show2FASetup, setShow2FASetup] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleMenuClick = (key: string) => {
     navigate(key);
@@ -66,10 +68,19 @@ function AppContent() {
       type: 'divider' as const,
     },
     {
+      key: 'change-password',
+      icon: <KeyOutlined />,
+      label: 'Change Password',
+      onClick: () => setShowChangePassword(true),
+    },
+    {
       key: '2fa',
       icon: <SafetyOutlined />,
       label: user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA',
       onClick: handle2FAToggle,
+    },
+    {
+      type: 'divider' as const,
     },
     {
       key: 'logout',
@@ -191,6 +202,20 @@ function AppContent() {
         <TwoFactorSetup
           onComplete={() => setShow2FASetup(false)}
           onCancel={() => setShow2FASetup(false)}
+        />
+      </Modal>
+
+      <Modal
+        title="Change Password"
+        open={showChangePassword}
+        onCancel={() => setShowChangePassword(false)}
+        footer={null}
+        width={600}
+        centered
+      >
+        <ChangePassword
+          onComplete={() => setShowChangePassword(false)}
+          onCancel={() => setShowChangePassword(false)}
         />
       </Modal>
     </Layout>

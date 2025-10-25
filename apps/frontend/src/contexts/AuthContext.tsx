@@ -100,13 +100,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const disable2FA = async (): Promise<void> => {
     const response = await authService.disable2FA();
-    
+
     if (response.success && user) {
       // Update user's 2FA status
       const updatedUser = { ...user, twoFactorEnabled: false };
       setUser(updatedUser);
       authService.setUser(updatedUser);
     }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    await authService.changePassword(currentPassword, newPassword);
   };
 
   const value: AuthContextType = {
@@ -120,6 +124,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setup2FA,
     verify2FA,
     disable2FA,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

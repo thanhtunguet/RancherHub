@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Setup2FADto } from './dto/setup-2fa.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -164,6 +165,24 @@ export class AuthService {
       twoFactorEnabled: false,
       twoFactorSecret: null,
     });
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Verify current password
+    const isValidPassword = await user.validatePassword(currentPassword);
+    if (!isValidPassword) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Update to new password
+    user.password = newPassword;
+    await this.userRepository.save(user);
   }
 
   async findById(id: string): Promise<User | null> {

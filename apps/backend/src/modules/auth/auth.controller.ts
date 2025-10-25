@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Authentication')
@@ -68,6 +69,22 @@ export class AuthController {
   async disable2FA(@Request() req) {
     await this.authService.disable2FA(req.user.userId);
     return { success: true, message: '2FA disabled successfully' };
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized or incorrect current password' })
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+    await this.authService.changePassword(
+      req.user.userId,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword
+    );
+    return { success: true, message: 'Password changed successfully' };
   }
 
   @Get('profile')
