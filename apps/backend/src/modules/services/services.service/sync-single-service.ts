@@ -30,9 +30,8 @@ export async function syncSingleService(
   }
 
   // Find or create target service
-  const targetServiceId = `${targetAppInstance.cluster}-${targetAppInstance.namespace}-${sourceService.name}`;
   let targetService = await service.serviceRepository.findOne({
-    where: { id: targetServiceId, appInstanceId: targetAppInstanceId },
+    where: { name: sourceService.name, appInstanceId: targetAppInstanceId },
   });
 
   const previousImageTag = targetService?.imageTag || '';
@@ -71,7 +70,6 @@ export async function syncSingleService(
     targetService.updatedAt = new Date();
   } else {
     targetService = service.serviceRepository.create({
-      id: targetServiceId,
       name: sourceService.name,
       appInstanceId: targetAppInstanceId,
       status: 'synced',

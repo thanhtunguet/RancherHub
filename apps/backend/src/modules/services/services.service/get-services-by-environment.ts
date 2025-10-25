@@ -41,9 +41,8 @@ export async function getServicesByEnvironment(service: ServicesService, environ
       );
       // Update or create services in database
       for (const dep of deployments) {
-        const serviceId = `${appInstance.cluster}-${appInstance.namespace}-${dep.name}`;
         let svc = await service.serviceRepository.findOne({
-          where: { id: serviceId, appInstanceId: appInstance.id },
+          where: { name: dep.name, appInstanceId: appInstance.id },
         });
         if (svc) {
           svc.status = dep.state;
@@ -54,7 +53,6 @@ export async function getServicesByEnvironment(service: ServicesService, environ
           svc.updatedAt = new Date();
         } else {
           svc = service.serviceRepository.create({
-            id: serviceId,
             name: dep.name,
             appInstanceId: appInstance.id,
             status: dep.state,

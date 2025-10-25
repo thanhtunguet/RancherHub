@@ -1,10 +1,18 @@
 import { Service } from 'src/entities';
 import { ServicesService } from './index';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { In } from 'typeorm';
 
 export async function getServicesByAppInstance(service: ServicesService, appInstanceId: string): Promise<Service[]> {
   service.logger.debug(`Fetching services for app instance: ${appInstanceId}`);
+
+  // Validate that appInstanceId is a valid UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(appInstanceId)) {
+    throw new BadRequestException(
+      `Invalid app instance ID format. Expected UUID, got: ${appInstanceId}`,
+    );
+  }
 
   // Get the app instance
   const appInstance = await service.appInstanceRepository.findOne({
@@ -35,9 +43,8 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
     const services: Service[] = [];
     // Update or create services in database
     for (const dep of deployments) {
-      const serviceId = `${appInstance.cluster}-${appInstance.namespace}-${dep.name}`;
       let svc = await service.serviceRepository.findOne({
-        where: { id: serviceId, appInstanceId: appInstance.id },
+        where: { name: dep.name, appInstanceId: appInstance.id },
       });
       if (svc) {
         svc.status = dep.state;
@@ -48,7 +55,6 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
         svc.updatedAt = new Date();
       } else {
         svc = service.serviceRepository.create({
-          id: serviceId,
           name: dep.name,
           appInstanceId: appInstance.id,
           status: dep.state,

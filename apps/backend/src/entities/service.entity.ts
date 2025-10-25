@@ -6,10 +6,12 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { AppInstance } from './app-instance.entity';
 
 @Entity('services')
+@Unique(['name', 'appInstanceId'])
 export class Service {
   @PrimaryGeneratedColumn('uuid')
   id: string;
