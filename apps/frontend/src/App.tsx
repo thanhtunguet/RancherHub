@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
+import { Button, Dropdown, Avatar, Space, Modal } from "antd";
+import { UserOutlined, LogoutOutlined, SafetyOutlined } from "@ant-design/icons";
 import {
   ServerIcon,
   LayersIcon,
@@ -22,6 +25,9 @@ import { StorageViewPage } from "./pages/StorageViewPage";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -29,10 +35,49 @@ const { Header, Content, Sider } = Layout;
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, disable2FA } = useAuth();
+  const [show2FASetup, setShow2FASetup] = useState(false);
 
   const handleMenuClick = (key: string) => {
     navigate(key);
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const handle2FAToggle = async () => {
+    if (user?.twoFactorEnabled) {
+      await disable2FA();
+    } else {
+      setShow2FASetup(true);
+    }
+  };
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: `Signed in as ${user?.username}`,
+      disabled: true,
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: '2fa',
+      icon: <SafetyOutlined />,
+      label: user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA',
+      onClick: handle2FAToggle,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Sign Out',
+      onClick: handleLogout,
+    },
+  ];
 
   return (
     <Layout className="min-h-screen">
@@ -41,6 +86,17 @@ function AppContent() {
           <ServerIcon size={32} className="text-blue-500" />
           <h1 className="text-xl font-bold text-gray-900 m-0">Rancher Hub</h1>
         </div>
+        
+        <Space>
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Button type="text" style={{ height: 'auto', padding: '4px 8px' }}>
+              <Space>
+                <Avatar size="small" icon={<UserOutlined />} />
+                <span>{user?.username}</span>
+              </Space>
+            </Button>
+          </Dropdown>
+        </Space>
       </Header>
 
       <Layout>
@@ -123,15 +179,32 @@ function AppContent() {
           </Routes>
         </Content>
       </Layout>
+      
+      <Modal
+        title="Two-Factor Authentication Setup"
+        open={show2FASetup}
+        onCancel={() => setShow2FASetup(false)}
+        footer={null}
+        width={600}
+      >
+        <TwoFactorSetup
+          onComplete={() => setShow2FASetup(false)}
+          onCancel={() => setShow2FASetup(false)}
+        />
+      </Modal>
     </Layout>
   );
 }
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <ProtectedRoute>
+          <AppContent />
+        </ProtectedRoute>
+      </Router>
+    </AuthProvider>
   );
 }
 

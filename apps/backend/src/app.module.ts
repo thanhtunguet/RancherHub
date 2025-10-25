@@ -16,6 +16,7 @@ import {
   MonitoredInstance,
   MonitoringHistory,
   AlertHistory,
+  User,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
 import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
@@ -24,6 +25,7 @@ import { AppInstancesModule } from './modules/app-instances/app-instances.module
 import { ServicesModule } from './modules/services/services.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { ConfigMapsModule } from './modules/configmaps/configmaps.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { RancherApiService } from './services/rancher-api.service';
 import { HarborApiService } from './services/harbor-api.service';
 
@@ -48,6 +50,7 @@ import { HarborApiService } from './services/harbor-api.service';
         MonitoredInstance,
         MonitoringHistory,
         AlertHistory,
+        User,
       ],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
@@ -59,6 +62,7 @@ import { HarborApiService } from './services/harbor-api.service';
     ServicesModule,
     MonitoringModule,
     ConfigMapsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],

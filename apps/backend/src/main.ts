@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { AuthSeederService } from './modules/auth/auth-seeder.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,10 +29,15 @@ async function bootstrap() {
     .addTag('app-instances')
     .addTag('services')
     .addTag('sync')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
+
+  // Initialize default admin user
+  const authSeeder = app.get(AuthSeederService);
+  await authSeeder.createDefaultAdmin();
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

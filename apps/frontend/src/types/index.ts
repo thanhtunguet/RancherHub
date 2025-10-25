@@ -1,3 +1,6 @@
+// Re-export auth types
+export * from './auth';
+
 export interface RancherSite {
   id: string;
   name: string;
