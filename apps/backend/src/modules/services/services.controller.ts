@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Query,
   HttpCode,
@@ -556,5 +557,115 @@ export class ServicesController {
         error: error.message,
       };
     }
+  }
+
+  @Get(':serviceId/debug-image-info')
+  @ApiOperation({ summary: 'Debug image information for a service' })
+  @ApiResponse({
+    status: 200,
+    description: 'Debug information about the service image',
+  })
+  @ApiParam({ name: 'serviceId', description: 'Service ID' })
+  async debugImageInfo(@Param('serviceId') serviceId: string) {
+    this.logger.debug(`debugImageInfo called for service: ${serviceId}`);
+    
+    const service = await this.servicesService.serviceRepository.findOne({
+      where: { id: serviceId },
+      relations: ['appInstance', 'appInstance.rancherSite'],
+    });
+
+    if (!service) {
+      return { error: 'Service not found' };
+    }
+
+    const imageTag = service.imageTag;
+    const isHarborImage = imageTag?.includes('.') && imageTag?.includes('/');
+    const firstPart = imageTag?.split('/')[0];
+
+    return {
+      service: {
+        id: service.id,
+        name: service.name,
+        imageTag: service.imageTag,
+      },
+      analysis: {
+        isHarborImage,
+        firstPart,
+        hasPort: firstPart?.includes(':'),
+        hasDot: firstPart?.includes('.'),
+        parts: imageTag?.split('/'),
+      },
+    };
+  }
+
+  @Get(':serviceId/image-tags')
+  @ApiOperation({ summary: 'Get available image tags for a service' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of available image tags from the registry',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', example: 'v1.2.3' },
+          pushedAt: { type: 'string', example: '2025-10-26T00:00:00Z' },
+          size: { type: 'number', example: 123456789 },
+          sizeFormatted: { type: 'string', example: '117.74 MB' },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiParam({ name: 'serviceId', description: 'Service ID' })
+  async getImageTags(@Param('serviceId') serviceId: string) {
+    this.logger.debug(`getImageTags called for service: ${serviceId}`);
+    return this.servicesService.getImageTags(serviceId);
+  }
+
+  @Put(':serviceId/update-image')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update the image tag for a service deployment' })
+  @ApiResponse({
+    status: 200,
+    description: 'Service image updated successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        message: { type: 'string' },
+        service: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            oldImageTag: { type: 'string' },
+            newImageTag: { type: 'string' },
+            fullNewImageTag: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid update request' })
+  @ApiResponse({ status: 404, description: 'Service not found' })
+  @ApiParam({ name: 'serviceId', description: 'Service ID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        tag: { type: 'string', example: 'v1.2.3' },
+      },
+      required: ['tag'],
+    },
+  })
+  async updateServiceImage(
+    @Param('serviceId') serviceId: string,
+    @Body('tag') tag: string,
+  ) {
+    this.logger.debug(
+      `updateServiceImage called for service ${serviceId} with tag: ${tag}`,
+    );
+    return this.servicesService.updateServiceImage(serviceId, tag);
   }
 }

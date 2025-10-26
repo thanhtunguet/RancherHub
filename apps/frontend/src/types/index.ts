@@ -251,3 +251,23 @@ export interface ConfigMapDetailedComparison {
     missingInTarget: number;
   };
 }
+
+export interface ImageTag {
+  name: string;
+  pushedAt: string;
+  size?: number;
+  sizeFormatted?: string;
+}
+
+export interface UpdateImageResponse {
+  success: boolean;
+  message: string;
+  service: {
+    id: string;
+    name: string;
+    oldImageTag: string;
+    newImageTag: string;
+    fullNewImageTag: string;
+  };
+  rancherResponse?: any;
+}

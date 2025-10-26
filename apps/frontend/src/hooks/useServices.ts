@@ -131,3 +131,40 @@ export const useCompareServicesByInstance = (sourceAppInstanceId?: string, targe
     retry: 2,
   });
 };
+
+export const useImageTags = (serviceId?: string) => {
+  return useQuery({
+    queryKey: ["image-tags", serviceId],
+    queryFn: () => {
+      console.log("useImageTags: Fetching image tags for service:", serviceId);
+      return servicesApi.getImageTags(serviceId!);
+    },
+    enabled: !!serviceId,
+    staleTime: 60000, // Consider data stale after 1 minute
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
+};
+
+export const useUpdateServiceImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ serviceId, tag }: { serviceId: string; tag: string }) => {
+      const response = await servicesApi.updateServiceImage(serviceId, tag);
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch services data
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["image-tags", variables.serviceId] });
+
+      console.log("Service image updated successfully:", data);
+      return data;
+    },
+    onError: (error) => {
+      console.error("Failed to update service image:", error);
+      throw error;
+    },
+  });
+};

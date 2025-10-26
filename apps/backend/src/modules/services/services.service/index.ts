@@ -23,6 +23,8 @@ import { getComparisonStatus } from './get-comparison-status';
 import { getDifferenceType } from './get-difference-type';
 import { getServicesWithImageSizes } from './get-services-with-image-sizes';
 import { getAllAppInstancesGroupedByEnvironment } from './get-all-app-instances-grouped-by-environment';
+import { getImageTags } from './get-image-tags';
+import { updateServiceImage } from './update-service-image';
 import { HarborSitesService } from '@/modules/harbor-sites/harbor-sites.service';
 import { SyncServicesDto } from '../dto/sync-services.dto';
 
@@ -93,6 +95,14 @@ export class ServicesService {
 
   async getAllAppInstancesGroupedByEnvironment() {
     return getAllAppInstancesGroupedByEnvironment(this);
+  }
+
+  async getImageTags(serviceId: string) {
+    return getImageTags(this, serviceId);
+  }
+
+  async updateServiceImage(serviceId: string, newTag: string) {
+    return updateServiceImage(this, serviceId, newTag);
   }
 
   // ... All methods from ServicesService ...

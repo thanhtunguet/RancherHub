@@ -24,6 +24,8 @@ import type {
   TestHarborConnectionRequest,
   ServiceWithImageSize,
   AppInstanceTreeNode,
+  ImageTag,
+  UpdateImageResponse,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
@@ -235,6 +237,12 @@ export const servicesApi = {
         params: { source: sourceAppInstanceId, target: targetAppInstanceId },
       })
       .then((res) => res.data),
+
+  getImageTags: (serviceId: string): Promise<ImageTag[]> =>
+    api.get(`/api/services/${serviceId}/image-tags`).then((res) => res.data),
+
+  updateServiceImage: (serviceId: string, tag: string): Promise<UpdateImageResponse> =>
+    api.put(`/api/services/${serviceId}/update-image`, { tag }).then((res) => res.data),
 };
 
 export const harborSitesApi = {

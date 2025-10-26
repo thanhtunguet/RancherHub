@@ -4,6 +4,7 @@ import {
   ExclamationCircleTwoTone,
   SyncOutlined as SyncIcon,
   CopyOutlined,
+  CloudUploadOutlined,
 } from "@ant-design/icons";
 import Badge from "antd/es/badge";
 import Button from "antd/es/button";
@@ -13,6 +14,7 @@ import Typography from "antd/es/typography";
 import message from "antd/es/message";
 import { useMemo, useState } from "react";
 import type { Service } from "../../types";
+import { UpdateImageModal } from "./UpdateImageModal";
 
 const { Text } = Typography;
 
@@ -41,6 +43,9 @@ export function ServiceTable({
     field: "name",
     order: "ascend",
   });
+
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
 
   // Sort services based on current sort state
   const sortedServices = useMemo(() => {
@@ -102,6 +107,16 @@ export function ServiceTable({
     } catch (error) {
       message.error("Failed to copy tag");
     }
+  };
+
+  const handleUpdateClick = (service: Service) => {
+    setSelectedService(service);
+    setUpdateModalOpen(true);
+  };
+
+  const handleUpdateModalClose = () => {
+    setUpdateModalOpen(false);
+    setSelectedService(null);
   };
 
   const columns = [
@@ -201,6 +216,22 @@ export function ServiceTable({
         );
       },
     },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 120,
+      render: (_: any, record: Service) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<CloudUploadOutlined />}
+          onClick={() => handleUpdateClick(record)}
+          title="Update image tag"
+        >
+          Update
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -228,6 +259,16 @@ export function ServiceTable({
         columns={columns}
         onChange={handleTableChange}
         pagination={false}
+      />
+
+      <UpdateImageModal
+        service={selectedService}
+        open={updateModalOpen}
+        onClose={handleUpdateModalClose}
+        onSuccess={() => {
+          // The mutation will automatically invalidate queries
+          // and refresh the services list
+        }}
       />
     </div>
   );
