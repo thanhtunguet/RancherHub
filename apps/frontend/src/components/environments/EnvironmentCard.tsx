@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Card from "antd/es/card";
 import Button from "antd/es/button";
-import Tag from "antd/es/tag";
 import Dropdown from "antd/es/dropdown";
 import Modal from "antd/es/modal";
 import Badge from "antd/es/badge";
@@ -9,7 +8,6 @@ import {
   MoreOutlined,
   EditOutlined,
   DeleteOutlined,
-  AppstoreOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { HistoryIcon } from "lucide-react";
@@ -21,16 +19,12 @@ interface EnvironmentCardProps {
   environment: Environment;
   onEdit: (environment: Environment) => void;
   onDelete: (environmentId: string) => void;
-  onSelect: (environment: Environment) => void;
-  isSelected?: boolean;
 }
 
 export function EnvironmentCard({
   environment,
   onEdit,
   onDelete,
-  onSelect,
-  isSelected,
 }: EnvironmentCardProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSyncHistory, setShowSyncHistory] = useState(false);
@@ -74,23 +68,8 @@ export function EnvironmentCard({
   return (
     <>
       <Card
-        className={`transition-all duration-200 cursor-pointer ${
-          isSelected
-            ? "border-blue-500 shadow-md bg-blue-50"
-            : "border-gray-200 hover:shadow-sm hover:border-gray-300"
-        }`}
-        onClick={() => onSelect(environment)}
+        className="transition-all duration-200 border-gray-200 hover:shadow-sm hover:border-gray-300"
         actions={[
-          <Button
-            key="select"
-            type={isSelected ? "primary" : "default"}
-            icon={<AppstoreOutlined />}
-            className="ml-2"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(environment);
-            }}
-          />,
           <Button
             key="edit"
             type="text"
@@ -113,7 +92,7 @@ export function EnvironmentCard({
           </Dropdown>,
         ]}
       >
-        <div className="flex justify-between items-start mb-3">
+        <div className="flex items-start mb-3">
           <div className="flex items-center gap-2">
             <div
               className="w-3 h-3 rounded-full"
@@ -123,7 +102,6 @@ export function EnvironmentCard({
               {environment.name}
             </h3>
           </div>
-          {isSelected && <Tag color="blue">Active</Tag>}
         </div>
 
         {environment.description && (

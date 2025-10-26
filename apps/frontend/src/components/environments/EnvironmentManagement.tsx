@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Button from "antd/es/button";
 import Row from "antd/es/row";
 import Col from "antd/es/col";
@@ -22,20 +22,11 @@ export function EnvironmentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEnvironment, setEditingEnvironment] =
     useState<Environment | null>(null);
-  const [selectedEnvironment, setSelectedEnvironment] =
-    useState<Environment | null>(null);
 
   const { data: environments, isLoading, error } = useEnvironments();
   const createEnvironmentMutation = useCreateEnvironment();
   const updateEnvironmentMutation = useUpdateEnvironment();
   const deleteEnvironmentMutation = useDeleteEnvironment();
-
-  // Auto-select first environment if none selected
-  useEffect(() => {
-    if (!selectedEnvironment && environments && environments.length > 0) {
-      setSelectedEnvironment(environments[0]);
-    }
-  }, [environments, selectedEnvironment]);
 
   const handleOpenModal = () => {
     setEditingEnvironment(null);
@@ -65,10 +56,6 @@ export function EnvironmentManagement() {
 
   const handleDelete = (environmentId: string) => {
     deleteEnvironmentMutation.mutate(environmentId);
-  };
-
-  const handleSelect = (environment: Environment) => {
-    setSelectedEnvironment(environment);
   };
 
   if (isLoading) {
@@ -108,20 +95,6 @@ export function EnvironmentManagement() {
         </Button>
       </div>
 
-      {selectedEnvironment && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: selectedEnvironment.color }}
-            />
-            <span className="font-medium text-blue-900">
-              Currently selected: {selectedEnvironment.name}
-            </span>
-          </div>
-        </div>
-      )}
-
       {environments && environments.length > 0 ? (
         <Row gutter={[16, 16]}>
           {environments.map((environment) => (
@@ -130,8 +103,6 @@ export function EnvironmentManagement() {
                 environment={environment}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onSelect={handleSelect}
-                isSelected={selectedEnvironment?.id === environment.id}
               />
             </Col>
           ))}

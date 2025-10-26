@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Button from "antd/es/button";
 import Row from "antd/es/row";
 import Col from "antd/es/col";
@@ -6,14 +6,13 @@ import Modal from "antd/es/modal";
 import Empty from "antd/es/empty";
 import Spin from "antd/es/spin";
 import Alert from "antd/es/alert";
-import Select from "antd/es/select";
 import Typography from "antd/es/typography";
 import { PlusOutlined } from "@ant-design/icons";
 import { DatabaseIcon } from "lucide-react";
 import { AppInstanceCard } from "./AppInstanceCard";
 import { AppInstanceForm } from "./AppInstanceForm";
 import {
-  useAppInstancesByEnvironment,
+  useAppInstances,
   useCreateAppInstance,
   useUpdateAppInstance,
   useDeleteAppInstance,
@@ -23,34 +22,21 @@ import { useSites } from "../../hooks/useSites";
 import type { AppInstance, CreateAppInstanceRequest } from "../../types";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 export function AppInstanceManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppInstance, setEditingAppInstance] =
     useState<AppInstance | null>(null);
-  const [selectedEnvironmentId, setSelectedEnvironmentId] =
-    useState<string>("");
 
   const { data: environments, isLoading: environmentsLoading } =
     useEnvironments();
   const { data: sites, isLoading: sitesLoading } = useSites();
 
-  // Auto-select first environment if not set
-  useEffect(() => {
-    if (!selectedEnvironmentId && environments && environments.length > 0) {
-      setSelectedEnvironmentId(environments[0].id);
-    }
-  }, [selectedEnvironmentId, environments]);
-
-  // Use the selected environment from local state
-  const effectiveEnvironmentId = selectedEnvironmentId;
-
   const {
     data: appInstances,
     isLoading,
     error,
-  } = useAppInstancesByEnvironment(effectiveEnvironmentId);
+  } = useAppInstances();
   const createAppInstanceMutation = useCreateAppInstance();
   const updateAppInstanceMutation = useUpdateAppInstance();
   const deleteAppInstanceMutation = useDeleteAppInstance();
@@ -90,14 +76,6 @@ export function AppInstanceManagement() {
   const handleDelete = (appInstanceId: string) => {
     deleteAppInstanceMutation.mutate(appInstanceId);
   };
-
-  const handleEnvironmentChange = (environmentId: string) => {
-    setSelectedEnvironmentId(environmentId);
-  };
-
-  const selectedEnv = environments?.find(
-    (e) => e.id === effectiveEnvironmentId
-  );
 
   if (environmentsLoading || sitesLoading) {
     return (
@@ -162,67 +140,17 @@ export function AppInstanceManagement() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleOpenModal}
-          disabled={!effectiveEnvironmentId}
         >
           Add App Instance
         </Button>
       </div>
 
-      {/* Environment Selector */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          <Text strong>Environment:</Text>
-          <Select
-            placeholder="Select environment to view app instances"
-            value={effectiveEnvironmentId}
-            onChange={handleEnvironmentChange}
-            className="w-64"
-          >
-            {environments.map((env) => (
-              <Option key={env.id} value={env.id}>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: env.color }}
-                  />
-                  {env.name}
-                </div>
-              </Option>
-            ))}
-          </Select>
-        </div>
-
-        {selectedEnv && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: selectedEnv.color }}
-              />
-              <Text strong>Selected: {selectedEnv.name}</Text>
-              {selectedEnv.description && (
-                <Text className="text-gray-600">
-                  - {selectedEnv.description}
-                </Text>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {!effectiveEnvironmentId ? (
-        <Alert
-          message="Select Environment"
-          description="Please select an environment to view and manage app instances."
-          type="info"
-          showIcon
-        />
-      ) : appInstances && appInstances.length > 0 ? (
+      {appInstances && appInstances.length > 0 ? (
         <div>
           <div className="mb-4">
             <Text className="text-gray-600">
               {appInstances.length} app instance
-              {appInstances.length !== 1 ? "s" : ""} in {selectedEnv?.name}
+              {appInstances.length !== 1 ? "s" : ""}
             </Text>
           </div>
           <Row gutter={[16, 16]}>
@@ -243,10 +171,10 @@ export function AppInstanceManagement() {
           description={
             <div className="text-center">
               <p className="text-gray-500 mb-2">
-                No app instances in {selectedEnv?.name}
+                No app instances configured
               </p>
               <p className="text-gray-400 text-sm">
-                Create your first app instance to link this environment with a
+                Create your first app instance to link an environment with a
                 Rancher cluster
               </p>
             </div>
@@ -282,9 +210,7 @@ export function AppInstanceManagement() {
                   rancherSiteId: editingAppInstance.rancherSiteId,
                   environmentId: editingAppInstance.environmentId,
                 }
-              : {
-                  environmentId: effectiveEnvironmentId,
-                }
+              : undefined
           }
           onSubmit={handleSubmit}
           onCancel={handleCloseModal}
