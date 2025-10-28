@@ -176,6 +176,12 @@ export class HealthCheckService {
   }
 
   private isWorkloadHealthy(workload: RancherWorkload): boolean {
+    // Check if replicas are set to 0 (paused deployment)
+    // If scale is 0, we consider it healthy as it's intentionally paused
+    if (workload.scale === 0) {
+      return true;
+    }
+
     // Check workload state first
     if (workload.state === 'active') {
       return workload.availableReplicas >= workload.scale;
