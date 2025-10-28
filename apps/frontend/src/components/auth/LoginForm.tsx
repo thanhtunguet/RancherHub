@@ -168,12 +168,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             </Button>
           </Form.Item>
         </Form>
-
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary">
-            Default credentials: admin / admin123
-          </Text>
-        </div>
       </Space>
     </Card>
   );
