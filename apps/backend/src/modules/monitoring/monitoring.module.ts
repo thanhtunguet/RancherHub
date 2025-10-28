@@ -9,6 +9,7 @@ import { MonitoringConfig } from '../../entities/monitoring-config.entity';
 import { MonitoredInstance } from '../../entities/monitored-instance.entity';
 import { MonitoringHistory } from '../../entities/monitoring-history.entity';
 import { AlertHistory } from '../../entities/alert-history.entity';
+import { VisualStatusService } from './visual-status.service';
 import { AppInstance } from '../../entities/app-instance.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
 import { AuthModule } from '../auth/auth.module';
@@ -31,12 +32,14 @@ import { AuthModule } from '../auth/auth.module';
     HealthCheckService,
     MonitoringCronService,
     RancherApiService,
+    VisualStatusService,
   ],
   exports: [
     MonitoringService,
     TelegramService,
     HealthCheckService,
     MonitoringCronService,
+    VisualStatusService,
   ],
 })
 export class MonitoringModule {}

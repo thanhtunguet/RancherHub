@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { MonitoringConfig } from '../../entities/monitoring-config.entity';
+import { VisualStatusService } from './visual-status.service';
 import {
   HealthCheckResult,
   TelegramTestConfig,
@@ -13,6 +14,7 @@ import {
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
+  constructor(private readonly visualStatus: VisualStatusService) {}
 
   async sendMessage(
     chatId: string,
@@ -43,6 +45,65 @@ export class TelegramService {
     } catch (error) {
       this.logger.error(`Failed to send Telegram message: ${error.message}`);
       throw new Error(`Telegram API error: ${error.message}`);
+    }
+  }
+
+  async sendPhoto(
+    chatId: string,
+    imageBuffer: Buffer,
+    caption?: string,
+    config?: MonitoringConfig,
+  ): Promise<string> {
+    const axiosConfig = this.createAxiosConfig(config);
+    
+    // Use FormData for multipart/form-data
+    const FormData = require('form-data');
+    const formData = new FormData();
+    
+    formData.append('chat_id', chatId);
+    formData.append('photo', imageBuffer, {
+      filename: 'status-report.png',
+      contentType: 'image/png',
+    });
+    
+    if (caption) {
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'Markdown');
+    }
+
+    axiosConfig.headers = {
+      ...axiosConfig.headers,
+      ...formData.getHeaders(),
+    };
+
+    try {
+      const response = await axios.post(
+        `https://api.telegram.org/bot${config.telegramBotToken}/sendPhoto`,
+        formData,
+        axiosConfig,
+      );
+
+      this.logger.log(`Photo sent to Telegram chat ${chatId}`);
+      return response.data.result.message_id.toString();
+    } catch (error) {
+      this.logger.error(`Failed to send Telegram photo: ${error.message}`);
+      throw new Error(`Telegram photo API error: ${error.message}`);
+    }
+  }
+
+  async sendMessageWithImage(
+    chatId: string,
+    message: string,
+    imageBuffer: Buffer,
+    config: MonitoringConfig,
+  ): Promise<string> {
+    try {
+      // Send the image with the message as caption
+      return await this.sendPhoto(chatId, imageBuffer, message, config);
+    } catch (error) {
+      this.logger.error(`Failed to send message with image, falling back to text: ${error.message}`);
+      // Fallback to text message if image fails
+      return await this.sendMessage(chatId, message, config);
     }
   }
 
@@ -205,6 +266,42 @@ export class TelegramService {
     return message;
   }
 
+  async sendHealthCheckSummaryWithVisual(
+    chatId: string,
+    results: HealthCheckResult[],
+    config: MonitoringConfig,
+  ): Promise<string> {
+    try {
+      // Generate visual status representation
+      const visualSummary = this.visualStatus.generateHealthCheckVisualSummary(results);
+
+      const now = new Date();
+      const totalInstances = results.length;
+      const healthyInstances = results.filter(r => r.status === 'healthy').length;
+      const warningInstances = results.filter(r => r.status === 'warning').length;
+      const criticalInstances = results.filter(r => r.status === 'critical' || r.status === 'error').length;
+
+      let message = `Anh @thangld19 đây check monitor nhé
+
+`;
+      message += `🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}
+`;
+      message += visualSummary;
+
+      const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / results.length;
+      message += `📈 **Performance**: Avg response time ${(avgResponseTime / 1000).toFixed(1)}s
+`;
+      message += `⏰ Next check: Tomorrow 06:00`;
+
+      return await this.sendMessage(chatId, message, config);
+    } catch (error) {
+      this.logger.error(`Failed to send health check summary with visual: ${error.message}`);
+      // Fallback to original text message
+      const textMessage = this.formatHealthCheckSummary(results);
+      return await this.sendMessage(chatId, textMessage, config);
+    }
+  }
+
   formatCriticalAlert(alert: CriticalAlert): string {
     const now = new Date();
     let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
@@ -242,6 +339,36 @@ export class TelegramService {
     message += `📞 Contact DevOps team immediately`;
 
     return message;
+  }
+
+  async sendCriticalAlertWithVisual(
+    chatId: string,
+    alert: CriticalAlert,
+    config: MonitoringConfig,
+  ): Promise<string> {
+    try {
+      // Generate visual alert representation
+      const visualAlert = this.visualStatus.generateCriticalAlertVisual({
+        appInstanceName: alert.appInstanceName,
+        environmentName: alert.environmentName,
+        status: alert.status,
+        details: alert.details,
+        failedServices: alert.failedServices,
+      });
+
+      const now = new Date();
+      let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}
+`;
+      message += visualAlert;
+      message += `📞 Contact DevOps team immediately`;
+
+      return await this.sendMessage(chatId, message, config);
+    } catch (error) {
+      this.logger.error(`Failed to send critical alert with visual: ${error.message}`);
+      // Fallback to text message
+      const textMessage = this.formatCriticalAlert(alert);
+      return await this.sendMessage(chatId, textMessage, config);
+    }
   }
 
   private getStatusIcon(status: string): string {

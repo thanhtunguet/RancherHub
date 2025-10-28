@@ -34,6 +34,9 @@ export class MonitoringHistory {
   @Column({ name: 'failed_services', type: 'integer', nullable: true })
   failedServices: number;
 
+  @Column({ name: 'paused_services', type: 'integer', nullable: true })
+  pausedServices: number;
+
   @Column({ type: 'text', nullable: true })
   details: string; // JSON string with detailed status info
 

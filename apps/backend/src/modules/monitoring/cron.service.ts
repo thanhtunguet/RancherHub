@@ -41,18 +41,15 @@ export class MonitoringCronService {
       const results =
         await this.healthCheckService.checkAllInstances(instances);
 
-      // Generate summary report
-      const summary = this.telegramService.formatHealthCheckSummary(results);
-
-      // Send Telegram notification if configured
+      // Send Telegram notification with image if configured
       if (config.telegramBotToken && config.telegramChatId) {
         try {
-          await this.telegramService.sendMessage(
+          await this.telegramService.sendHealthCheckSummaryWithVisual(
             config.telegramChatId,
-            summary,
+            results,
             config,
           );
-          this.logger.log('Daily health check summary sent to Telegram');
+          this.logger.log('Daily health check summary with image sent to Telegram');
         } catch (error) {
           this.logger.error(
             `Failed to send Telegram notification: ${error.message}`,
@@ -209,7 +206,7 @@ export class MonitoringCronService {
       const failedServices =
         result.details?.workloads?.filter((w) => w.status === 'failed') || [];
 
-      const alertMessage = this.telegramService.formatCriticalAlert({
+      const alertData = {
         appInstanceName: result.appInstance?.name || 'Unknown',
         environmentName: result.appInstance?.environment?.name || 'Unknown',
         status: result.status,
@@ -217,11 +214,11 @@ export class MonitoringCronService {
           result.error ||
           `${result.failedServices}/${result.servicesCount} services failed`,
         failedServices,
-      });
+      };
 
-      await this.telegramService.sendMessage(
+      await this.telegramService.sendCriticalAlertWithVisual(
         config.telegramChatId,
-        alertMessage,
+        alertData,
         config,
       );
 

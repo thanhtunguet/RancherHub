@@ -176,6 +176,7 @@ export class MonitoringService {
     servicesCount?: number;
     healthyServices?: number;
     failedServices?: number;
+    pausedServices?: number;
     details?: string;
     error?: string;
   }): Promise<MonitoringHistory> {

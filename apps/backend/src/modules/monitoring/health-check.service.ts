@@ -42,6 +42,7 @@ export class HealthCheckService {
           servicesCount: 0,
           healthyServices: 0,
           failedServices: 0,
+          pausedServices: 0,
           details: {
             workloads: [],
             cluster: instance.appInstance?.cluster || 'unknown',
@@ -75,11 +76,16 @@ export class HealthCheckService {
       const workloadsCount = workloads.length;
       let healthyWorkloads = 0;
       let failedWorkloads = 0;
+      let pausedWorkloads = 0;
       const workloadDetails: WorkloadDetails[] = [];
 
       for (const workload of workloads) {
+        const isPaused = workload.scale === 0;
         const isHealthy = this.isWorkloadHealthy(workload);
-        if (isHealthy) {
+        
+        if (isPaused) {
+          pausedWorkloads++;
+        } else if (isHealthy) {
           healthyWorkloads++;
         } else {
           failedWorkloads++;
@@ -88,7 +94,7 @@ export class HealthCheckService {
         workloadDetails.push({
           name: workload.name || 'unknown',
           type: workload.type || 'unknown',
-          status: isHealthy ? 'healthy' : 'failed',
+          status: isPaused ? 'paused' : (isHealthy ? 'healthy' : 'failed'),
           state: workload.state,
           scale: workload.scale,
           availableReplicas: workload.availableReplicas,
@@ -115,6 +121,7 @@ export class HealthCheckService {
         servicesCount: workloadsCount,
         healthyServices: healthyWorkloads,
         failedServices: failedWorkloads,
+        pausedServices: pausedWorkloads,
         details: {
           workloads: workloadDetails,
           cluster: instance.appInstance.cluster,
@@ -131,6 +138,7 @@ export class HealthCheckService {
         servicesCount: workloadsCount,
         healthyServices: healthyWorkloads,
         failedServices: failedWorkloads,
+        pausedServices: pausedWorkloads,
         details: JSON.stringify(result.details),
       });
 

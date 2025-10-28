@@ -1,14 +1,14 @@
 import { MonitoredInstance } from '../../../entities/monitored-instance.entity';
 import { MonitoringConfig } from '../../../entities/monitoring-config.entity';
 
-export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'error';
+export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'error' | 'paused';
 
 export type NotificationSchedule = 'daily' | 'hourly' | 'immediate';
 
 export interface WorkloadDetails {
   name: string;
   type: string;
-  status: 'healthy' | 'failed';
+  status: 'healthy' | 'failed' | 'paused';
   state: string;
   scale: number;
   availableReplicas: number;
@@ -35,6 +35,8 @@ export interface HealthCheckResult {
   monitoredInstanceId: string;
   appInstance: {
     name: string;
+    cluster: string;
+    namespace: string;
     environment: {
       name: string;
     };
@@ -44,6 +46,7 @@ export interface HealthCheckResult {
   servicesCount: number;
   healthyServices: number;
   failedServices: number;
+  pausedServices: number;
   details: HealthCheckDetails;
   error?: string;
 }
