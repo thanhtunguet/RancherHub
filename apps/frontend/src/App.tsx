@@ -156,7 +156,7 @@ function AppContent() {
               {
                 key: "/configmap-diffs",
                 icon: <GitCompareIcon size={16} />,
-                label: "ConfigMap Diffs",
+                label: "ConfigMaps",
               },
               {
                 key: "/storage",

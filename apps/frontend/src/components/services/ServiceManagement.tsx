@@ -194,16 +194,18 @@ export function ServiceManagement() {
       <Tabs defaultActiveKey="1" items={tabItems} />
 
       {/* Sync Modal */}
-      <SyncModal
-        open={showSyncModal}
-        onClose={() => setShowSyncModal(false)}
-        selectedServices={selectedServices}
-        sourceEnvironment={selectedEnv!}
-        environments={environments || []}
-        onSuccess={() => {
-          setShowSyncModal(false);
-        }}
-      />
+      {showSyncModal && selectedEnv && (
+        <SyncModal
+          open={showSyncModal}
+          onClose={() => setShowSyncModal(false)}
+          selectedServices={selectedServices}
+          sourceEnvironment={selectedEnv}
+          environments={environments || []}
+          onSuccess={() => {
+            setShowSyncModal(false);
+          }}
+        />
+      )}
 
       {/* Sync History Modal */}
       <SyncHistoryModal

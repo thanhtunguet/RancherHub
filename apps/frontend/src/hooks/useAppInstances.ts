@@ -10,10 +10,10 @@ export const useAppInstances = (environmentId?: string) => {
   });
 };
 
-export const useAppInstancesByEnvironment = (environmentId: string) => {
+export const useAppInstancesByEnvironment = (environmentId: string | undefined) => {
   return useQuery({
     queryKey: ["app-instances", "environment", environmentId],
-    queryFn: () => appInstancesApi.getByEnvironment(environmentId),
+    queryFn: () => appInstancesApi.getByEnvironment(environmentId!),
     enabled: !!environmentId,
   });
 };

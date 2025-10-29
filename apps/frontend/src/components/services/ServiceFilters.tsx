@@ -87,10 +87,11 @@ export function ServiceFilters({
         <Text strong>Environment</Text>
         <Select
           placeholder="Select environment"
-          value={effectiveEnvironmentId}
+          value={effectiveEnvironmentId || "all"}
           onChange={onEnvironmentChange}
           className="w-48"
         >
+          <Option value="all">All Environments</Option>
           {environments.map((env) => (
             <Option key={env.id} value={env.id}>
               <div className="flex items-center gap-2">
@@ -105,8 +106,8 @@ export function ServiceFilters({
         </Select>
       </div>
 
-      {/* App Instance Filter - Only show when environment is selected */}
-      {effectiveEnvironmentId && (
+      {/* App Instance Filter - Show when environment is selected or showing all environments */}
+      {(effectiveEnvironmentId || effectiveEnvironmentId === undefined) && (
         <div className="flex flex-col gap-1">
           <Text strong>App Instance</Text>
           <Select

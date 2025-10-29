@@ -8,7 +8,7 @@ const { Title, Text } = Typography;
 
 interface ServiceHeaderProps {
   selectedServicesCount: number;
-  effectiveEnvironmentId: string;
+  effectiveEnvironmentId: string | undefined;
   onShowHistory: () => void;
   onRefresh: () => void;
   onSync: () => void;

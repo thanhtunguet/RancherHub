@@ -24,7 +24,7 @@ A comprehensive tool for managing and synchronizing services across different en
   - User activity tracking (last login, active/inactive status)
   - User statistics dashboard
 
-- **ConfigMap Diffs**:
+- **ConfigMap Management**:
   - Compare ConfigMaps between different app instances/environments
   - Key-by-key detailed comparison with visual indicators
   - Sync individual keys or multiple keys in batch
@@ -32,6 +32,26 @@ A comprehensive tool for managing and synchronizing services across different en
   - Summary statistics for quick overview
   - Copy values to clipboard for easy reference
   - Support for viewing large configuration values with expand/collapse
+
+- **Harbor Registry Integration**:
+  - Connect to Harbor Docker registries
+  - Manage container registry credentials
+  - View image repositories and tags
+  - Integration with service image management
+
+- **Storage View & Image Management**:
+  - Display services with container image information
+  - View image tags and sizes
+  - Track image deployments across environments
+  - Storage utilization insights
+
+- **Monitoring & Alerting System**:
+  - Automated health checks for app instances
+  - Telegram notifications with proxy support
+  - Scheduled monitoring (daily at 6:00 AM)
+  - Real-time service status monitoring
+  - Alert history and resolution tracking
+  - Monitoring dashboard with performance metrics
 
 ## Screenshot
 
@@ -78,6 +98,23 @@ Powerful ConfigMap management across environments:
 - **Service Filtering**: Filter by environment, app instance, or custom criteria
 - **Service Synchronization**: One-click sync of service configurations across environments
 - **Sync History**: Detailed audit trail of all synchronization operations
+- **Image Management**: Track container images and tags across environments
+- **Storage Analytics**: View service storage utilization and image sizes
+
+### 🏗️ Harbor Registry Integration
+
+- **Registry Management**: Connect to multiple Harbor Docker registries
+- **Credential Management**: Secure storage of registry authentication
+- **Image Repository Access**: Browse and manage container images
+- **Registry Health Monitoring**: Track registry availability and performance
+
+### 📊 Monitoring & Health Checks
+
+- **Automated Monitoring**: Scheduled health checks for all app instances
+- **Telegram Alerting**: Real-time notifications with proxy support for restricted regions
+- **Performance Metrics**: Track response times and service availability
+- **Alert Management**: Comprehensive alert history and resolution tracking
+- **Dashboard Analytics**: Visual monitoring dashboard with trends and insights
 
 ### 🏢 Multi-Site & Environment Organization
 
@@ -251,6 +288,38 @@ Create `.env` files in both `backend/` and `frontend/` directories based on the 
 4. Click "Sync" to synchronize service configurations
 5. Review sync history for operation details
 
+### Using Harbor Registry Integration
+
+1. **Setup Harbor Sites**:
+   - Navigate to "Harbor Sites" in the sidebar
+   - Add Harbor registry URL and credentials
+   - Test connection to verify access
+
+2. **Managing Container Images**:
+   - View image repositories and tags
+   - Track image deployments across environments
+   - Monitor registry health and availability
+
+### Monitoring and Alerting
+
+1. **Configure Monitoring**:
+   - Navigate to "Monitoring" in the sidebar
+   - Set up Telegram bot token and chat ID
+   - Configure proxy settings if needed (for restricted regions)
+   - Set monitoring intervals and alert thresholds
+
+2. **Health Check Management**:
+   - Enable monitoring for app instances
+   - Configure daily health check schedule (6:00 AM)
+   - Set up alert notifications for service failures
+   - Review monitoring history and performance metrics
+
+3. **Alert Management**:
+   - Receive real-time Telegram notifications
+   - View alert history and resolution status
+   - Track service availability trends
+   - Monitor performance metrics and response times
+
 ## License
 
-Private project - All rights reserved.
+MIT.
