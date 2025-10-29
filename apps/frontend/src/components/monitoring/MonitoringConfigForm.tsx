@@ -13,8 +13,9 @@ import {
   Space,
   Typography,
   Divider,
+  Tag,
 } from 'antd';
-import { MessageOutlined, BellOutlined, SaveOutlined } from '@ant-design/icons';
+import { MessageOutlined, BellOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import { monitoringApi } from '../../services/api';
 
 const { Title, Text } = Typography;
@@ -35,6 +36,7 @@ interface MonitoringConfig {
   monitoringEnabled: boolean;
   alertThreshold: number;
   notificationSchedule: string;
+  taggedUsers?: string[];
 }
 
 export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
@@ -44,6 +46,8 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [config, setConfig] = useState<MonitoringConfig | null>(null);
+  const [newUsername, setNewUsername] = useState('');
+  const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
 
   useEffect(() => {
     loadConfig();
@@ -56,6 +60,7 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
       if (data) {
         setConfig(data);
         form.setFieldsValue(data);
+        setTaggedUsers(data.taggedUsers || []);
       }
     } catch (error) {
       console.error('Failed to load monitoring config:', error);
@@ -67,11 +72,15 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
   const handleSave = async (values: MonitoringConfig) => {
     try {
       setLoading(true);
+      const configData = {
+        ...values,
+        taggedUsers,
+      };
       if (config?.id) {
-        await monitoringApi.updateConfig(values);
+        await monitoringApi.updateConfig(configData);
         message.success('Monitoring configuration updated successfully');
       } else {
-        await monitoringApi.createOrUpdateConfig(values);
+        await monitoringApi.createOrUpdateConfig(configData);
         message.success('Monitoring configuration created successfully');
       }
       await loadConfig();
@@ -96,8 +105,13 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
         'proxyPassword',
       ]);
 
-      const result = await monitoringApi.testTelegramConnection(values);
-      
+      const testData = {
+        ...values,
+        taggedUsers,
+      };
+
+      const result = await monitoringApi.testTelegramConnection(testData);
+
       if (result.success) {
         message.success('Telegram connection test successful!');
       } else {
@@ -109,6 +123,27 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
     } finally {
       setTesting(false);
     }
+  };
+
+  const handleAddUser = () => {
+    if (!newUsername.trim()) {
+      message.warning('Please enter a username');
+      return;
+    }
+
+    const cleanUsername = newUsername.trim().replace(/^@/, '');
+
+    if (taggedUsers.includes(cleanUsername)) {
+      message.warning('This username is already added');
+      return;
+    }
+
+    setTaggedUsers([...taggedUsers, cleanUsername]);
+    setNewUsername('');
+  };
+
+  const handleRemoveUser = (username: string) => {
+    setTaggedUsers(taggedUsers.filter(u => u !== username));
   };
 
   return (
@@ -205,6 +240,59 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
                 Test Telegram Connection
               </Button>
             </Form.Item>
+          </Card>
+
+          {/* Tagged Users */}
+          <Card size="small" title="Tagged Users in Messages" style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+              Add usernames to be tagged (mentioned) at the bottom of every Telegram notification message
+            </Text>
+
+            <Space.Compact style={{ width: '100%', marginBottom: 16 }}>
+              <Input
+                placeholder="Enter username (e.g., thangld19 or @thangld19)"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                onPressEnter={handleAddUser}
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddUser}
+              >
+                Add User
+              </Button>
+            </Space.Compact>
+
+            {taggedUsers.length > 0 ? (
+              <div style={{ marginTop: 16 }}>
+                <Text strong style={{ display: 'block', marginBottom: 8 }}>
+                  Tagged Users ({taggedUsers.length}):
+                </Text>
+                <Space size={[8, 8]} wrap>
+                  {taggedUsers.map((username) => (
+                    <Tag
+                      key={username}
+                      closable
+                      onClose={() => handleRemoveUser(username)}
+                      color="blue"
+                      style={{ fontSize: '14px', padding: '4px 8px' }}
+                    >
+                      @{username}
+                    </Tag>
+                  ))}
+                </Space>
+                <div style={{ marginTop: 12, padding: '8px 12px', background: '#f5f5f5', borderRadius: '4px' }}>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    Preview: These users will appear at the bottom of messages as: {taggedUsers.map(u => `@${u}`).join(' ')}
+                  </Text>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px', background: '#fafafa', borderRadius: '4px' }}>
+                <Text type="secondary">No users tagged yet. Add usernames to mention them in notification messages.</Text>
+              </div>
+            )}
           </Card>
 
           {/* Proxy Configuration */}

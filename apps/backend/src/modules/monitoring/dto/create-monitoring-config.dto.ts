@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsIn, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateMonitoringConfigDto {
@@ -74,4 +74,14 @@ export class CreateMonitoringConfigDto {
   })
   @IsIn(['immediate', 'hourly', 'daily'])
   notificationSchedule: string = 'daily';
+
+  @ApiPropertyOptional({
+    description: 'List of usernames to tag in Telegram messages',
+    example: ['thangld19', 'tungpt', 'devops_team'],
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  taggedUsers?: string[];
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TestTelegramConnectionDto {
@@ -47,4 +47,14 @@ export class TestTelegramConnectionDto {
   @IsOptional()
   @IsString()
   proxyPassword?: string;
+
+  @ApiPropertyOptional({
+    description: 'List of usernames to tag in test message',
+    example: ['thangld19', 'tungpt'],
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  taggedUsers?: string[];
 }

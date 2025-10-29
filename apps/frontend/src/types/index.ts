@@ -1,6 +1,7 @@
 // Re-export auth types
 export * from './auth';
 export * from './user';
+export * from './message-template';
 
 export interface RancherSite {
   id: string;

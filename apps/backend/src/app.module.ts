@@ -17,6 +17,7 @@ import {
   MonitoringHistory,
   AlertHistory,
   User,
+  MessageTemplate,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
 import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
@@ -27,6 +28,7 @@ import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { ConfigMapsModule } from './modules/configmaps/configmaps.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { MessageTemplatesModule } from './modules/message-templates/message-templates.module';
 import { RancherApiService } from './services/rancher-api.service';
 import { HarborApiService } from './services/harbor-api.service';
 
@@ -59,6 +61,7 @@ import { HarborApiService } from './services/harbor-api.service';
             MonitoringHistory,
             AlertHistory,
             User,
+            MessageTemplate,
           ],
           synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
           logging: process.env.NODE_ENV === 'development',
@@ -79,6 +82,7 @@ import { HarborApiService } from './services/harbor-api.service';
             MonitoringHistory,
             AlertHistory,
             User,
+            MessageTemplate,
           ],
           synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
           logging: process.env.NODE_ENV === 'development',
@@ -93,6 +97,7 @@ import { HarborApiService } from './services/harbor-api.service';
     ConfigMapsModule,
     AuthModule,
     UsersModule,
+    MessageTemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],

@@ -10,3 +10,4 @@ export { MonitoredInstance } from './monitored-instance.entity';
 export { MonitoringHistory } from './monitoring-history.entity';
 export { AlertHistory } from './alert-history.entity';
 export { User } from './user.entity';
+export { MessageTemplate } from './message-template.entity';

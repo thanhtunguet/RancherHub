@@ -58,6 +58,7 @@ export interface TelegramTestConfig {
   proxyPort?: number;
   proxyUsername?: string;
   proxyPassword?: string;
+  taggedUsers?: string[];
 }
 
 export interface CriticalAlert {

@@ -38,6 +38,9 @@ export class MonitoringConfig {
   @Column({ name: 'notification_schedule', length: 50, default: 'daily' })
   notificationSchedule: string; // daily, hourly, immediate
 
+  @Column({ name: 'tagged_users', type: 'simple-json', nullable: true })
+  taggedUsers: string[]; // Array of usernames to tag in messages (e.g., ['thangld19', 'tungpt'])
+
   @CreateDateColumn()
   createdAt: Date;
 

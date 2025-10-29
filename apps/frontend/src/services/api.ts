@@ -387,4 +387,30 @@ export const usersApi = {
     api.get("/api/users/stats").then((res) => res.data),
 };
 
+export const messageTemplatesApi = {
+  getAll: (): Promise<any[]> =>
+    api.get("/api/message-templates").then((res) => res.data),
+
+  getOne: (id: string): Promise<any> =>
+    api.get(`/api/message-templates/${id}`).then((res) => res.data),
+
+  getByType: (type: string): Promise<any> =>
+    api.get(`/api/message-templates/type/${type}`).then((res) => res.data),
+
+  create: (data: any): Promise<any> =>
+    api.post("/api/message-templates", data).then((res) => res.data),
+
+  update: (id: string, data: any): Promise<any> =>
+    api.put(`/api/message-templates/${id}`, data).then((res) => res.data),
+
+  delete: (id: string): Promise<void> =>
+    api.delete(`/api/message-templates/${id}`).then(() => undefined),
+
+  restore: (id: string): Promise<any> =>
+    api.post(`/api/message-templates/${id}/restore`).then((res) => res.data),
+
+  preview: (data: any): Promise<{ renderedMessage: string; sampleData: any }> =>
+    api.post("/api/message-templates/preview", data).then((res) => res.data),
+};
+
 export default api;

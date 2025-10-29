@@ -13,6 +13,7 @@ import { VisualStatusService } from './visual-status.service';
 import { AppInstance } from '../../entities/app-instance.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
 import { AuthModule } from '../auth/auth.module';
+import { MessageTemplatesModule } from '../message-templates/message-templates.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from '../auth/auth.module';
       AppInstance,
     ]),
     AuthModule,
+    MessageTemplatesModule,
   ],
   controllers: [MonitoringController],
   providers: [

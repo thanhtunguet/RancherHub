@@ -3,6 +3,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { MonitoringConfig } from '../../entities/monitoring-config.entity';
 import { VisualStatusService } from './visual-status.service';
+import { MessageTemplatesService } from '../message-templates/message-templates.service';
 import {
   HealthCheckResult,
   TelegramTestConfig,
@@ -14,7 +15,10 @@ import {
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
-  constructor(private readonly visualStatus: VisualStatusService) {}
+  constructor(
+    private readonly visualStatus: VisualStatusService,
+    private readonly messageTemplatesService: MessageTemplatesService,
+  ) {}
 
   async sendMessage(
     chatId: string,
@@ -117,7 +121,12 @@ export class TelegramService {
     };
 
     try {
-      const testMessage = `🔍 **Telegram Connection Test** - ${new Date().toISOString()}\n\nThis is a test message from RancherHub monitoring system.`;
+      // Render message from template
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
+      const testMessage = await this.messageTemplatesService.renderTemplate('test_connection', {
+        timestamp: new Date().toISOString(),
+        tagged_users: taggedUsers,
+      });
 
       const formData = new URLSearchParams({
         chat_id: config.telegramChatId,
@@ -233,71 +242,6 @@ export class TelegramService {
     return proxyUrl;
   }
 
-  formatHealthCheckSummary(results: HealthCheckResult[]): string {
-    const now = new Date();
-    const totalInstances = results.length;
-    const healthyInstances = results.filter(
-      (r) => r.status === 'healthy',
-    ).length;
-
-    let message = `Anh @thangld19 dậy check monitor nhé
-    
-    🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
-    message += `📊 **Overall Status**: ${healthyInstances === totalInstances ? '✅' : '⚠️'} `;
-    message += `${healthyInstances === totalInstances ? 'All Systems Healthy' : 'Issues Detected'} (${healthyInstances}/${totalInstances} instances)\n\n`;
-
-    // Group by environment
-    const byEnvironment = results.reduce<EnvironmentGroupedResults>(
-      (acc, result) => {
-        const envName = result.appInstance?.environment?.name || 'Unknown';
-        if (!acc[envName]) acc[envName] = [];
-        acc[envName].push(result);
-        return acc;
-      },
-      {},
-    );
-
-    Object.entries(byEnvironment).forEach(
-      ([envName, instances]: [string, HealthCheckResult[]]) => {
-        message += `**Environment: ${envName}**\n`;
-        instances.forEach((instance) => {
-          const statusIcon = this.getStatusIcon(instance.status);
-          const servicesInfo = instance.servicesCount
-            ? ` (${instance.healthyServices || 0}/${instance.servicesCount} services)`
-            : '';
-          message += `• ${instance.appInstance?.name || 'Unknown'}: ${statusIcon} ${instance.status}${servicesInfo}\n`;
-
-          // Add failed service details if there are any
-          if (instance.failedServices > 0 && instance.details?.workloads) {
-            const failedWorkloads = instance.details.workloads.filter(
-              (w) => w.status === 'failed',
-            );
-            if (failedWorkloads.length > 0) {
-              message += `  ❌ **Failed Services:**\n`;
-              failedWorkloads
-                .slice(0, 3)
-                .forEach((workload: WorkloadDetails) => {
-                  message += `    - ${workload.name} (${workload.type}): ${workload.state}${workload.scale ? ` [${workload.availableReplicas || 0}/${workload.scale}]` : ''}\n`;
-                });
-              if (failedWorkloads.length > 3) {
-                message += `    - ... and ${failedWorkloads.length - 3} more\n`;
-              }
-            }
-          }
-        });
-        message += '\n';
-      },
-    );
-
-    // Performance summary
-    const avgResponseTime =
-      results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) /
-      results.length;
-    message += `📈 **Performance**: Avg response time ${(avgResponseTime / 1000).toFixed(1)}s\n`;
-    message += `⏰ Next check: Tomorrow 06:00`;
-
-    return message;
-  }
 
   async sendHealthCheckSummaryWithVisual(
     chatId: string,
@@ -309,70 +253,25 @@ export class TelegramService {
       const visualSummary = this.visualStatus.generateHealthCheckVisualSummary(results);
 
       const now = new Date();
-      const totalInstances = results.length;
-      const healthyInstances = results.filter(r => r.status === 'healthy').length;
-      const warningInstances = results.filter(r => r.status === 'warning').length;
-      const criticalInstances = results.filter(r => r.status === 'critical' || r.status === 'error').length;
-
-      let message = `Anh @thangld19 đây check monitor nhé
-
-`;
-      message += `🔍 **Daily Health Check Report** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}
-`;
-      message += visualSummary;
-
       const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / results.length;
-      message += `📈 **Performance**: Avg response time ${(avgResponseTime / 1000).toFixed(1)}s
-`;
-      message += `⏰ Next check: Tomorrow 06:00`;
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
+
+      // Render message from template
+      const message = await this.messageTemplatesService.renderTemplate('daily_health_check', {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().split(' ')[0],
+        visual_summary: visualSummary,
+        avg_response_time: (avgResponseTime / 1000).toFixed(1),
+        tagged_users: taggedUsers,
+      });
 
       return await this.sendMessage(chatId, message, config);
     } catch (error) {
       this.logger.error(`Failed to send health check summary with visual: ${error.message}`);
-      // Fallback to original text message
-      const textMessage = this.formatHealthCheckSummary(results);
-      return await this.sendMessage(chatId, textMessage, config);
+      throw error;
     }
   }
 
-  formatCriticalAlert(alert: CriticalAlert): string {
-    const now = new Date();
-    let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}\n\n`;
-
-    message += `**Service Failure Detected**\n`;
-    message += `• Environment: ${alert.environmentName}\n`;
-    message += `• Instance: ${alert.appInstanceName}\n`;
-
-    if (alert.serviceName) {
-      message += `• Service: ${alert.serviceName}\n`;
-    }
-
-    message += `• Status: ❌ ${alert.status}\n\n`;
-
-    if (alert.details) {
-      message += `**Details:**\n${alert.details}\n\n`;
-    }
-
-    // Add failed service details if available
-    if (alert.failedServices && alert.failedServices.length > 0) {
-      message += `**Failed Services:**\n`;
-      alert.failedServices.slice(0, 5).forEach((service: WorkloadDetails) => {
-        message += `• ${service.name} (${service.type}): ${service.state}${service.scale ? ` [${service.availableReplicas || 0}/${service.scale}]` : ''}\n`;
-      });
-      if (alert.failedServices.length > 5) {
-        message += `• ... and ${alert.failedServices.length - 5} more services\n`;
-      }
-      message += '\n';
-    }
-
-    message += `🔧 **Recommended Actions:**\n`;
-    message += `1. Check service logs\n`;
-    message += `2. Verify resource limits\n`;
-    message += `3. Restart service if needed\n\n`;
-    message += `📞 Contact DevOps team immediately`;
-
-    return message;
-  }
 
   async sendCriticalAlertWithVisual(
     chatId: string,
@@ -390,17 +289,20 @@ export class TelegramService {
       });
 
       const now = new Date();
-      let message = `🚨 **CRITICAL ALERT** - ${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0]}
-`;
-      message += visualAlert;
-      message += `📞 Contact DevOps team immediately`;
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
+
+      // Render message from template
+      const message = await this.messageTemplatesService.renderTemplate('critical_alert', {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().split(' ')[0],
+        visual_alert: visualAlert,
+        tagged_users: taggedUsers,
+      });
 
       return await this.sendMessage(chatId, message, config);
     } catch (error) {
       this.logger.error(`Failed to send critical alert with visual: ${error.message}`);
-      // Fallback to text message
-      const textMessage = this.formatCriticalAlert(alert);
-      return await this.sendMessage(chatId, textMessage, config);
+      throw error;
     }
   }
 
