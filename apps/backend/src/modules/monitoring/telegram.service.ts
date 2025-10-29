@@ -43,8 +43,9 @@ export class TelegramService {
       this.logger.log(`Message sent to Telegram chat ${chatId}`);
       return response.data.result.message_id.toString();
     } catch (error) {
-      this.logger.error(`Failed to send Telegram message: ${error.message}`);
-      throw new Error(`Telegram API error: ${error.message}`);
+      const errorMessage = this.extractTelegramError(error);
+      this.logger.error(`Failed to send Telegram message: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
   }
 
@@ -86,8 +87,9 @@ export class TelegramService {
       this.logger.log(`Photo sent to Telegram chat ${chatId}`);
       return response.data.result.message_id.toString();
     } catch (error) {
-      this.logger.error(`Failed to send Telegram photo: ${error.message}`);
-      throw new Error(`Telegram photo API error: ${error.message}`);
+      const errorMessage = this.extractTelegramError(error);
+      this.logger.error(`Failed to send Telegram photo: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
   }
 
@@ -134,10 +136,41 @@ export class TelegramService {
       );
       return true;
     } catch (error) {
-      console.log(error);
-      this.logger.error(`Telegram connection test failed: ${error.message}`);
-      throw new Error(`Telegram connection test failed: ${error.message}`);
+      const errorMessage = this.extractTelegramError(error);
+      this.logger.error(`Telegram connection test failed: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
+  }
+
+  /**
+   * Extract detailed error message from Telegram API error response
+   */
+  private extractTelegramError(error: any): string {
+    // Check if it's an axios error with response data
+    if (error.response?.data) {
+      const data = error.response.data;
+
+      // Telegram API error format: { ok: false, error_code: number, description: string }
+      if (data.description) {
+        return `Telegram API error (${data.error_code || error.response.status}): ${data.description}`;
+      }
+
+      // If response data is a string
+      if (typeof data === 'string') {
+        return `Telegram API error (${error.response.status}): ${data}`;
+      }
+
+      // If we have the full response but no description, stringify it
+      return `Telegram API error (${error.response.status}): ${JSON.stringify(data)}`;
+    }
+
+    // Network or other errors
+    if (error.code) {
+      return `Network error (${error.code}): ${error.message}`;
+    }
+
+    // Fallback to generic error message
+    return `Telegram connection failed: ${error.message}`;
   }
 
   private createAxiosConfig(config: MonitoringConfig): AxiosRequestConfig {
