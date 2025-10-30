@@ -24,6 +24,7 @@ import { ServiceManagement } from "./components/services/ServiceManagement";
 import { ConfigMapDiffPage } from "./pages/ConfigMapDiffPage";
 import { StorageViewPage } from "./pages/StorageViewPage";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
+import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
 import { MessageTemplatesPage } from "./pages/MessageTemplatesPage";
@@ -140,6 +141,11 @@ function AppContent() {
                 label: "Harbor Sites",
               },
               {
+                key: "/harbor-browser",
+                icon: <DatabaseIcon size={16} />,
+                label: "Harbor Browser",
+              },
+              {
                 key: "/environments",
                 icon: <LayersIcon size={16} />,
                 label: "Environments",
@@ -201,6 +207,7 @@ function AppContent() {
             <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
             <Route path="/storage" element={<StorageViewPage />} />
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
+            <Route path="/harbor-browser" element={<HarborBrowser />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
             <Route path="/message-templates" element={<MessageTemplatesPage />} />
             <Route path="/sync-history" element={<SyncHistoryPage />} />

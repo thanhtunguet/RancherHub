@@ -135,6 +135,21 @@ export class HarborSitesController {
     return this.harborApiService.getRepositories(site, projectName);
   }
 
+  @Get(':id/artifacts/:projectName/:repositoryName')
+  @ApiOperation({ summary: 'List artifacts in Harbor repository' })
+  @ApiResponse({ status: 200, description: 'Harbor artifacts list' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  @ApiParam({ name: 'projectName', description: 'Project name' })
+  @ApiParam({ name: 'repositoryName', description: 'Repository name' })
+  async getArtifacts(
+    @Param('id') id: string, 
+    @Param('projectName') projectName: string,
+    @Param('repositoryName') repositoryName: string
+  ) {
+    const site = await this.harborSitesService.findOne(id);
+    return this.harborApiService.getArtifacts(site, projectName, repositoryName);
+  }
+
   @Get(':id/test-image-size')
   @ApiOperation({ summary: 'Test image size retrieval' })
   @ApiResponse({ status: 200, description: 'Image size test result' })

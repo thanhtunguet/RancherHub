@@ -276,6 +276,15 @@ export const harborSitesApi = {
         params: { imageTag },
       })
       .then((res) => res.data),
+
+  getProjects: (id: string): Promise<any[]> =>
+    api.get(`/api/harbor-sites/${id}/projects`).then((res) => res.data),
+
+  getRepositories: (id: string, projectName: string): Promise<any[]> =>
+    api.get(`/api/harbor-sites/${id}/repositories/${projectName}`).then((res) => res.data),
+
+  getArtifacts: (id: string, projectName: string, repositoryName: string): Promise<any[]> =>
+    api.get(`/api/harbor-sites/${id}/artifacts/${projectName}/${encodeURIComponent(repositoryName)}`).then((res) => res.data),
 };
 
 export const configMapsApi = {

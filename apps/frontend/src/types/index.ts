@@ -272,3 +272,74 @@ export interface UpdateImageResponse {
   };
   rancherResponse?: any;
 }
+
+// Harbor API Types
+export interface HarborProject {
+  project_id: number;
+  name: string;
+  public: boolean;
+  owner_id: number;
+  owner_name: string;
+  creation_time: string;
+  update_time: string;
+  deleted: boolean;
+  repo_count: number;
+  chart_count?: number;
+}
+
+export interface HarborRepository {
+  id: number;
+  name: string;
+  project_id: number;
+  description: string;
+  pull_count: number;
+  star_count: number;
+  tags_count: number;
+  labels: any[];
+  creation_time: string;
+  update_time: string;
+}
+
+export interface HarborTag {
+  id: number;
+  repository_id: number;
+  artifact_id: number;
+  name: string;
+  push_time: string;
+  pull_time: string;
+  signed: boolean;
+  immutable: boolean;
+}
+
+export interface HarborArtifact {
+  id: number;
+  type: string;
+  media_type: string;
+  manifest_media_type: string;
+  project_id: number;
+  repository_id: number;
+  digest: string;
+  size: number;
+  push_time: string;
+  pull_time: string;
+  extra_attrs?: {
+    architecture?: string;
+    author?: string;
+    config?: {
+      Cmd?: string[];
+      Entrypoint?: string[];
+      Env?: string[];
+      ExposedPorts?: { [key: string]: {} };
+      Labels?: { [key: string]: string };
+      User?: string;
+      WorkingDir?: string;
+    };
+    created?: string;
+    os?: string;
+  };
+  annotations?: { [key: string]: string };
+  references?: any[];
+  tags?: HarborTag[];
+  addition_links?: { [key: string]: { absolute: boolean; href: string } };
+  labels?: any[];
+}
