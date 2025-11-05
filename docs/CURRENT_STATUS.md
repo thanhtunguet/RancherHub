@@ -24,6 +24,7 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 ### 🌐 Multi-Site Integration (Complete)
 - **Rancher Sites Management** - Connect to unlimited Rancher instances
 - **Harbor Registry Integration** - Docker registry management and monitoring
+- **Harbor v2 API Alignment** - Handles double-encoded repository names to keep the Harbor Browser compatible with Harbor 2.x endpoints
 - **API Token Security** - Encrypted storage of sensitive credentials
 - **Connection Testing** - Validate site connectivity and API access
 - **Multi-Instance Support** - Manage services across multiple clusters

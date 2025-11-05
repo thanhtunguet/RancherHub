@@ -12,6 +12,7 @@ All MVP features have been successfully implemented and are fully functional:
 - **Service Management** - View, filter, and sync services across environments
 - **ConfigMap Management** - Compare and sync configuration between environments
 - **Harbor Registry Integration** - Docker registry management
+- **Harbor Browser API Alignment** - Repository paths now respect Harbor v2 double-encoding requirements
 - **Storage View** - Image size and storage analytics
 - **Monitoring System** - Health checks with Telegram alerting
 - **Sync History** - Complete audit trail of all operations

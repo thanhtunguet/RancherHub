@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HarborSite } from '../entities/harbor-site.entity';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 
 export interface HarborProject {
   project_id: number;
@@ -75,6 +75,58 @@ export interface HarborTag {
 @Injectable()
 export class HarborApiService {
   private readonly logger = new Logger(HarborApiService.name);
+  private readonly resolvedBaseUrls = new Map<string, string>();
+
+  private getSiteCacheKey(harborSite: HarborSite): string {
+    return harborSite.id || harborSite.url;
+  }
+
+  private normalizeEndpoint(endpoint: string): string {
+    return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  }
+
+  private buildApiBaseOptions(rootBase: string): string[] {
+    const trimmedRoot = rootBase.replace(/\/+$/, '');
+    const options: string[] = [];
+
+    if (trimmedRoot.endsWith('/api/v2.0')) {
+      options.push(trimmedRoot);
+    } else if (trimmedRoot.endsWith('/api')) {
+      options.push(`${trimmedRoot}/v2.0`);
+    } else {
+      options.push(`${trimmedRoot}/api/v2.0`);
+    }
+
+    return options;
+  }
+
+  private getBaseUrlCandidates(harborSite: HarborSite): string[] {
+    const trimmedBase = harborSite.url.replace(/\/+$/, '');
+    const rootCandidates: string[] = [trimmedBase];
+
+    const candidates: string[] = [];
+    const seen = new Set<string>();
+
+    for (const root of rootCandidates) {
+      for (const option of this.buildApiBaseOptions(root)) {
+        if (!seen.has(option)) {
+          candidates.push(option);
+          seen.add(option);
+        }
+      }
+    }
+
+    return candidates;
+  }
+
+  private encodeProjectName(projectName: string): string {
+    return encodeURIComponent(projectName);
+  }
+
+  private encodeRepositoryName(repositoryName: string): string {
+    const onceEncoded = encodeURIComponent(repositoryName);
+    return repositoryName.includes('/') ? encodeURIComponent(onceEncoded) : onceEncoded;
+  }
 
   private getAuthHeader(harborSite: HarborSite): string {
     return `Basic ${Buffer.from(`${harborSite.username}:${harborSite.password}`).toString('base64')}`;
@@ -85,22 +137,75 @@ export class HarborApiService {
     endpoint: string,
     params?: any,
   ): Promise<T> {
-    try {
-      const url = `${harborSite.url}/api/v2.0${endpoint}`;
-      const response: AxiosResponse<T> = await axios.get(url, {
-        headers: {
-          Authorization: this.getAuthHeader(harborSite),
-          'Content-Type': 'application/json',
-        },
-        params,
-        timeout: 30000,
-      });
+    const cacheKey = this.getSiteCacheKey(harborSite);
+    const endpointPath = this.normalizeEndpoint(endpoint);
 
-      return response.data;
-    } catch (error) {
-      this.logger.error(`Harbor API request failed: ${error.message}`, error.stack);
-      throw new Error(`Failed to fetch from Harbor: ${error.message}`);
+    let baseCandidates = this.getBaseUrlCandidates(harborSite);
+    if (this.resolvedBaseUrls.has(cacheKey)) {
+      const cached = this.resolvedBaseUrls.get(cacheKey)!;
+      baseCandidates = [cached, ...baseCandidates.filter((candidate) => candidate !== cached)];
     }
+
+    let lastError: AxiosError | null = null;
+
+    for (let index = 0; index < baseCandidates.length; index++) {
+      const baseUrl = baseCandidates[index];
+      const url = `${baseUrl}${endpointPath}`;
+
+      try {
+        this.logger.debug(
+          `Harbor API GET ${url} params=${JSON.stringify(params || {})} (candidate ${index + 1}/${baseCandidates.length})`,
+        );
+
+        const response: AxiosResponse<T> = await axios.get(url, {
+          headers: {
+            Authorization: this.getAuthHeader(harborSite),
+            'Content-Type': 'application/json',
+          },
+          params,
+          timeout: 30000,
+        });
+
+        this.resolvedBaseUrls.set(cacheKey, baseUrl);
+        return response.data;
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        lastError = axiosError;
+        const status = axiosError.response?.status;
+        const statusText = axiosError.response?.statusText;
+        const responseData = axiosError.response?.data;
+
+        this.logger.error(
+          `Harbor API request failed (${status} ${statusText}) for ${url}: ${axiosError.message}`,
+          axiosError.stack,
+        );
+
+        if (
+          index < baseCandidates.length - 1 &&
+          status &&
+          (status === 404 || status === 405 || status === 400)
+        ) {
+          this.logger.warn(
+            `Retrying Harbor API request with next base candidate due to ${status}. Response body: ${JSON.stringify(
+              responseData,
+            )}`,
+          );
+          continue;
+        }
+
+        throw new Error(
+          `Failed to fetch from Harbor (${status ?? 'unknown status'}): ${axiosError.message}`,
+        );
+      }
+    }
+
+    if (lastError) {
+      throw new Error(
+        `Failed to fetch from Harbor (${lastError.response?.status ?? 'unknown status'}): ${lastError.message}`,
+      );
+    }
+
+    throw new Error('Failed to fetch from Harbor: no base URL candidates succeeded');
   }
 
   async getProjects(harborSite: HarborSite): Promise<HarborProject[]> {
@@ -111,9 +216,10 @@ export class HarborApiService {
     harborSite: HarborSite,
     projectName: string,
   ): Promise<HarborRepository[]> {
+    const encodedProjectName = this.encodeProjectName(projectName);
     return this.makeRequest<HarborRepository[]>(
       harborSite,
-      `/projects/${projectName}/repositories`,
+      `/projects/${encodedProjectName}/repositories`,
     );
   }
 
@@ -122,10 +228,11 @@ export class HarborApiService {
     projectName: string,
     repositoryName: string,
   ): Promise<HarborArtifact[]> {
-    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedProjectName = this.encodeProjectName(projectName);
+    const encodedRepoName = this.encodeRepositoryName(repositoryName);
     return this.makeRequest<HarborArtifact[]>(
       harborSite,
-      `/projects/${projectName}/repositories/${encodedRepoName}/artifacts`,
+      `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts`,
       {
         with_tag: true,
         with_label: true,
@@ -143,11 +250,12 @@ export class HarborApiService {
     repositoryName: string,
     reference: string,
   ): Promise<any> {
-    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedProjectName = this.encodeProjectName(projectName);
+    const encodedRepoName = this.encodeRepositoryName(repositoryName);
     const encodedReference = encodeURIComponent(reference);
     return this.makeRequest<any>(
       harborSite,
-      `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/addition/build_history`,
+      `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/addition/build_history`,
     );
   }
 
@@ -157,14 +265,15 @@ export class HarborApiService {
     repositoryName: string,
     reference: string,
   ): Promise<any> {
-    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedProjectName = this.encodeProjectName(projectName);
+    const encodedRepoName = this.encodeRepositoryName(repositoryName);
     const encodedReference = encodeURIComponent(reference);
     
     try {
       // Try to get the manifest to understand the image structure
       const manifest = await this.makeRequest<any>(
         harborSite,
-        `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}`,
+        `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}`,
         {
           with_tag: true,
           with_label: false,
@@ -183,7 +292,7 @@ export class HarborApiService {
         // Get references (different platform manifests)
         const references = await this.makeRequest<any[]>(
           harborSite,
-          `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/references`,
+          `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodedReference}/references`,
         );
 
         if (references && references.length > 0) {
@@ -193,7 +302,7 @@ export class HarborApiService {
           
           return await this.makeRequest<any>(
             harborSite,
-            `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodeURIComponent(platformManifest.digest)}`,
+            `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodeURIComponent(platformManifest.digest)}`,
             {
               with_tag: true,
               with_label: false,
@@ -219,12 +328,13 @@ export class HarborApiService {
     repositoryName: string,
     tag: string
   ): Promise<HarborArtifact | null> {
-    const encodedRepoName = encodeURIComponent(repositoryName);
+    const encodedProjectName = this.encodeProjectName(projectName);
+    const encodedRepoName = this.encodeRepositoryName(repositoryName);
     const encodedTag = encodeURIComponent(tag);
     try {
       return await this.makeRequest<HarborArtifact>(
         harborSite,
-        `/projects/${projectName}/repositories/${encodedRepoName}/artifacts/${encodedTag}`,
+        `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodedTag}`,
         {
           with_tag: true,
           with_label: true,

@@ -37,6 +37,14 @@ export class HarborSitesController {
     private readonly harborApiService: HarborApiService,
   ) {}
 
+  private decodeParam(value: string): string {
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+
   @Post()
   @ApiOperation({ summary: 'Create a new Harbor site' })
   @ApiResponse({ status: 201, description: 'Harbor site created successfully' })
@@ -132,7 +140,8 @@ export class HarborSitesController {
   @ApiParam({ name: 'projectName', description: 'Project name' })
   async getRepositories(@Param('id') id: string, @Param('projectName') projectName: string) {
     const site = await this.harborSitesService.findOne(id);
-    return this.harborApiService.getRepositories(site, projectName);
+    const decodedProjectName = this.decodeParam(projectName);
+    return this.harborApiService.getRepositories(site, decodedProjectName);
   }
 
   @Get(':id/artifacts/:projectName/:repositoryName')
@@ -147,7 +156,9 @@ export class HarborSitesController {
     @Param('repositoryName') repositoryName: string
   ) {
     const site = await this.harborSitesService.findOne(id);
-    return this.harborApiService.getArtifacts(site, projectName, repositoryName);
+    const decodedProjectName = this.decodeParam(projectName);
+    const decodedRepositoryName = this.decodeParam(repositoryName);
+    return this.harborApiService.getArtifacts(site, decodedProjectName, decodedRepositoryName);
   }
 
   @Get(':id/test-image-size')

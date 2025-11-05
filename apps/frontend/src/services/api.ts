@@ -20,6 +20,9 @@ import type {
   UserListResponse,
   UserStats,
   HarborSite,
+  HarborProject,
+  HarborRepository,
+  HarborArtifact,
   CreateHarborSiteRequest,
   TestHarborConnectionRequest,
   ServiceWithImageSize,
@@ -277,14 +280,20 @@ export const harborSitesApi = {
       })
       .then((res) => res.data),
 
-  getProjects: (id: string): Promise<any[]> =>
+  getProjects: (id: string): Promise<HarborProject[]> =>
     api.get(`/api/harbor-sites/${id}/projects`).then((res) => res.data),
 
-  getRepositories: (id: string, projectName: string): Promise<any[]> =>
-    api.get(`/api/harbor-sites/${id}/repositories/${projectName}`).then((res) => res.data),
+  getRepositories: (id: string, projectName: string): Promise<HarborRepository[]> =>
+    api
+      .get(`/api/harbor-sites/${id}/repositories/${encodeURIComponent(projectName)}`)
+      .then((res) => res.data),
 
-  getArtifacts: (id: string, projectName: string, repositoryName: string): Promise<any[]> =>
-    api.get(`/api/harbor-sites/${id}/artifacts/${projectName}/${encodeURIComponent(repositoryName)}`).then((res) => res.data),
+  getArtifacts: (id: string, projectName: string, repositoryName: string): Promise<HarborArtifact[]> =>
+    api
+      .get(
+        `/api/harbor-sites/${id}/artifacts/${encodeURIComponent(projectName)}/${encodeURIComponent(repositoryName)}`
+      )
+      .then((res) => res.data),
 };
 
 export const configMapsApi = {
