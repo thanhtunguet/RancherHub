@@ -7,6 +7,7 @@ import {
   Param,
   Logger,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -142,9 +143,10 @@ export class ConfigMapsController {
     configMapName: string;
     key: string;
     value: string;
-  }) {
+  }, @Request() req) {
     this.logger.debug(`syncConfigMapKey called with:`, syncData);
-    return this.configMapsService.syncConfigMapKey(syncData);
+    const initiatedBy = req.user?.username || req.user?.userId || 'system';
+    return this.configMapsService.syncConfigMapKey(syncData, initiatedBy);
   }
 
   @Post('sync-keys')
@@ -158,8 +160,9 @@ export class ConfigMapsController {
     targetAppInstanceId: string;
     configMapName: string;
     keys: Record<string, string>;
-  }) {
+  }, @Request() req) {
     this.logger.debug(`syncConfigMapKeys called with:`, syncData);
-    return this.configMapsService.syncConfigMapKeys(syncData);
+    const initiatedBy = req.user?.username || req.user?.userId || 'system';
+    return this.configMapsService.syncConfigMapKeys(syncData, initiatedBy);
   }
 }

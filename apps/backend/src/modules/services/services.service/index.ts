@@ -59,12 +59,12 @@ export class ServicesService {
     return getServicesByAppInstanceDirect(this, appInstanceId);
   }
 
-  async syncServices(syncDto: SyncServicesDto) {
-    return syncServices(this, syncDto);
+  async syncServices(syncDto: SyncServicesDto, initiatedBy?: string) {
+    return syncServices(this, syncDto, initiatedBy);
   }
 
-  async syncSingleService(serviceId: string, targetAppInstanceId: string, syncOperationId: string) {
-    return syncSingleService(this, serviceId, targetAppInstanceId, syncOperationId);
+  async syncSingleService(serviceId: string, targetAppInstanceId: string, syncOperationId: string, initiatedBy?: string) {
+    return syncSingleService(this, serviceId, targetAppInstanceId, syncOperationId, initiatedBy);
   }
 
   async getSyncHistory(environmentId?: string) {

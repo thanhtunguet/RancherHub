@@ -1,7 +1,7 @@
 import { SyncServicesDto } from '../dto/sync-services.dto';
 import { ServicesService } from './index';
 
-export async function syncServices(service: ServicesService, syncDto: SyncServicesDto): Promise<any> {
+export async function syncServices(service: ServicesService, syncDto: SyncServicesDto, initiatedBy?: string): Promise<any> {
   service.logger.log(
     `Starting sync operation from env ${syncDto.sourceEnvironmentId} to ${syncDto.targetEnvironmentId}`,
   );
@@ -13,7 +13,7 @@ export async function syncServices(service: ServicesService, syncDto: SyncServic
     serviceIds: syncDto.serviceIds,
     status: 'pending',
     startTime: new Date(),
-    initiatedBy: 'system', // TODO: Add user context
+    initiatedBy: initiatedBy || 'system',
   });
 
   await service.syncOperationRepository.save(syncOperation);
@@ -30,6 +30,7 @@ export async function syncServices(service: ServicesService, syncDto: SyncServic
             serviceId,
             targetAppInstanceId,
             syncOperation.id,
+            initiatedBy,
           );
           syncResults.push(result);
         } catch (error) {
@@ -67,6 +68,7 @@ export async function syncServices(service: ServicesService, syncDto: SyncServic
             status: 'failed',
             error: error.message,
             durationMs: null,
+            initiatedBy: initiatedBy || 'system',
             timestamp: new Date(),
           });
         }

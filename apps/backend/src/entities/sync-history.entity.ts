@@ -70,6 +70,9 @@ export class SyncHistory {
   @Column({ name: 'duration_ms', type: 'integer', nullable: true })
   durationMs: number;
 
+  @Column({ name: 'initiated_by', length: 255, nullable: true })
+  initiatedBy: string;
+
   @Column({ type: 'timestamp' })
   timestamp: Date;
 

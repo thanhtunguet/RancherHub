@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AppInstance } from '../../entities';
+import { AppInstance, SyncOperation, SyncHistory } from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
 
 export interface ConfigMapData {
@@ -55,6 +55,10 @@ export class ConfigMapsService {
   constructor(
     @InjectRepository(AppInstance)
     private readonly appInstanceRepository: Repository<AppInstance>,
+    @InjectRepository(SyncOperation)
+    private readonly syncOperationRepository: Repository<SyncOperation>,
+    @InjectRepository(SyncHistory)
+    private readonly syncHistoryRepository: Repository<SyncHistory>,
     private readonly rancherApiService: RancherApiService,
   ) {}
 
@@ -305,35 +309,131 @@ export class ConfigMapsService {
     configMapName: string;
     key: string;
     value: string;
-  }) {
+  }, initiatedBy?: string) {
     this.logger.debug(`Syncing single ConfigMap key: ${syncData.key} in ${syncData.configMapName}`);
 
-    // Get target app instance
-    const targetAppInstance = await this.appInstanceRepository.findOne({
-      where: { id: syncData.targetAppInstanceId },
-      relations: ['rancherSite'],
-    });
+    const startTime = Date.now();
+
+    // Get source and target app instances
+    const [sourceAppInstance, targetAppInstance] = await Promise.all([
+      this.appInstanceRepository.findOne({
+        where: { id: syncData.sourceAppInstanceId },
+        relations: ['rancherSite', 'environment'],
+      }),
+      this.appInstanceRepository.findOne({
+        where: { id: syncData.targetAppInstanceId },
+        relations: ['rancherSite', 'environment'],
+      }),
+    ]);
+
+    if (!sourceAppInstance) {
+      throw new NotFoundException(`Source app instance with ID ${syncData.sourceAppInstanceId} not found`);
+    }
 
     if (!targetAppInstance) {
       throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
     }
 
-    // Update the ConfigMap key
-    await this.rancherApiService.updateConfigMapKey(
-      targetAppInstance.rancherSite,
-      targetAppInstance.cluster,
-      targetAppInstance.namespace,
-      syncData.configMapName,
-      syncData.key,
-      syncData.value,
-    );
+    // Create sync operation record
+    const syncOperation = this.syncOperationRepository.create({
+      sourceEnvironmentId: sourceAppInstance.environmentId,
+      targetEnvironmentId: targetAppInstance.environmentId,
+      serviceIds: [], // ConfigMap sync doesn't have service IDs
+      status: 'pending',
+      startTime: new Date(),
+      initiatedBy: initiatedBy || 'system',
+    });
 
-    return {
-      success: true,
-      message: `Successfully synced key '${syncData.key}' in ConfigMap '${syncData.configMapName}'`,
-      syncedKey: syncData.key,
-      syncedValue: syncData.value,
-    };
+    await this.syncOperationRepository.save(syncOperation);
+
+    try {
+      // Update the ConfigMap key
+      await this.rancherApiService.updateConfigMapKey(
+        targetAppInstance.rancherSite,
+        targetAppInstance.cluster,
+        targetAppInstance.namespace,
+        syncData.configMapName,
+        syncData.key,
+        syncData.value,
+      );
+
+      // Record successful sync in history
+      await this.syncHistoryRepository.save({
+        syncOperationId: syncOperation.id,
+        serviceId: syncData.configMapName, // Use configMapName as serviceId
+        serviceName: syncData.configMapName,
+        workloadType: 'configmap',
+        sourceAppInstanceId: syncData.sourceAppInstanceId,
+        sourceEnvironmentName: sourceAppInstance.environment?.name || null,
+        sourceCluster: sourceAppInstance.cluster || null,
+        sourceNamespace: sourceAppInstance.namespace || null,
+        targetAppInstanceId: syncData.targetAppInstanceId,
+        targetEnvironmentName: targetAppInstance.environment?.name || null,
+        targetCluster: targetAppInstance.cluster || null,
+        targetNamespace: targetAppInstance.namespace || null,
+        previousImageTag: null,
+        newImageTag: null,
+        containerName: null,
+        configChanges: {
+          configMapName: syncData.configMapName,
+          key: syncData.key,
+          value: syncData.value,
+        },
+        status: 'success',
+        durationMs: Date.now() - startTime,
+        initiatedBy: initiatedBy || 'system',
+        timestamp: new Date(),
+      });
+
+      // Update sync operation status
+      syncOperation.status = 'completed';
+      syncOperation.endTime = new Date();
+      await this.syncOperationRepository.save(syncOperation);
+
+      return {
+        success: true,
+        message: `Successfully synced key '${syncData.key}' in ConfigMap '${syncData.configMapName}'`,
+        syncedKey: syncData.key,
+        syncedValue: syncData.value,
+        syncOperationId: syncOperation.id,
+      };
+    } catch (error) {
+      // Record failed sync in history
+      await this.syncHistoryRepository.save({
+        syncOperationId: syncOperation.id,
+        serviceId: syncData.configMapName,
+        serviceName: syncData.configMapName,
+        workloadType: 'configmap',
+        sourceAppInstanceId: syncData.sourceAppInstanceId,
+        sourceEnvironmentName: sourceAppInstance.environment?.name || null,
+        sourceCluster: sourceAppInstance.cluster || null,
+        sourceNamespace: sourceAppInstance.namespace || null,
+        targetAppInstanceId: syncData.targetAppInstanceId,
+        targetEnvironmentName: targetAppInstance.environment?.name || null,
+        targetCluster: targetAppInstance.cluster || null,
+        targetNamespace: targetAppInstance.namespace || null,
+        previousImageTag: null,
+        newImageTag: null,
+        containerName: null,
+        configChanges: {
+          configMapName: syncData.configMapName,
+          key: syncData.key,
+          value: syncData.value,
+        },
+        status: 'failed',
+        error: error.message,
+        durationMs: Date.now() - startTime,
+        initiatedBy: initiatedBy || 'system',
+        timestamp: new Date(),
+      });
+
+      // Update sync operation status
+      syncOperation.status = 'failed';
+      syncOperation.endTime = new Date();
+      await this.syncOperationRepository.save(syncOperation);
+
+      throw error;
+    }
   }
 
   async syncConfigMapKeys(syncData: {
@@ -341,33 +441,129 @@ export class ConfigMapsService {
     targetAppInstanceId: string;
     configMapName: string;
     keys: Record<string, string>;
-  }) {
+  }, initiatedBy?: string) {
     this.logger.debug(`Syncing multiple ConfigMap keys in ${syncData.configMapName}:`, Object.keys(syncData.keys));
 
-    // Get target app instance
-    const targetAppInstance = await this.appInstanceRepository.findOne({
-      where: { id: syncData.targetAppInstanceId },
-      relations: ['rancherSite'],
-    });
+    const startTime = Date.now();
+
+    // Get source and target app instances
+    const [sourceAppInstance, targetAppInstance] = await Promise.all([
+      this.appInstanceRepository.findOne({
+        where: { id: syncData.sourceAppInstanceId },
+        relations: ['rancherSite', 'environment'],
+      }),
+      this.appInstanceRepository.findOne({
+        where: { id: syncData.targetAppInstanceId },
+        relations: ['rancherSite', 'environment'],
+      }),
+    ]);
+
+    if (!sourceAppInstance) {
+      throw new NotFoundException(`Source app instance with ID ${syncData.sourceAppInstanceId} not found`);
+    }
 
     if (!targetAppInstance) {
       throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
     }
 
-    // Update multiple ConfigMap keys
-    await this.rancherApiService.syncConfigMapKeys(
-      targetAppInstance.rancherSite,
-      targetAppInstance.cluster,
-      targetAppInstance.namespace,
-      syncData.configMapName,
-      syncData.keys,
-    );
+    // Create sync operation record
+    const syncOperation = this.syncOperationRepository.create({
+      sourceEnvironmentId: sourceAppInstance.environmentId,
+      targetEnvironmentId: targetAppInstance.environmentId,
+      serviceIds: [], // ConfigMap sync doesn't have service IDs
+      status: 'pending',
+      startTime: new Date(),
+      initiatedBy: initiatedBy || 'system',
+    });
 
-    return {
-      success: true,
-      message: `Successfully synced ${Object.keys(syncData.keys).length} keys in ConfigMap '${syncData.configMapName}'`,
-      syncedKeys: Object.keys(syncData.keys),
-      syncedCount: Object.keys(syncData.keys).length,
-    };
+    await this.syncOperationRepository.save(syncOperation);
+
+    try {
+      // Update multiple ConfigMap keys
+      await this.rancherApiService.syncConfigMapKeys(
+        targetAppInstance.rancherSite,
+        targetAppInstance.cluster,
+        targetAppInstance.namespace,
+        syncData.configMapName,
+        syncData.keys,
+      );
+
+      // Record successful sync in history
+      await this.syncHistoryRepository.save({
+        syncOperationId: syncOperation.id,
+        serviceId: syncData.configMapName, // Use configMapName as serviceId
+        serviceName: syncData.configMapName,
+        workloadType: 'configmap',
+        sourceAppInstanceId: syncData.sourceAppInstanceId,
+        sourceEnvironmentName: sourceAppInstance.environment?.name || null,
+        sourceCluster: sourceAppInstance.cluster || null,
+        sourceNamespace: sourceAppInstance.namespace || null,
+        targetAppInstanceId: syncData.targetAppInstanceId,
+        targetEnvironmentName: targetAppInstance.environment?.name || null,
+        targetCluster: targetAppInstance.cluster || null,
+        targetNamespace: targetAppInstance.namespace || null,
+        previousImageTag: null,
+        newImageTag: null,
+        containerName: null,
+        configChanges: {
+          configMapName: syncData.configMapName,
+          keys: syncData.keys,
+          keysCount: Object.keys(syncData.keys).length,
+        },
+        status: 'success',
+        durationMs: Date.now() - startTime,
+        initiatedBy: initiatedBy || 'system',
+        timestamp: new Date(),
+      });
+
+      // Update sync operation status
+      syncOperation.status = 'completed';
+      syncOperation.endTime = new Date();
+      await this.syncOperationRepository.save(syncOperation);
+
+      return {
+        success: true,
+        message: `Successfully synced ${Object.keys(syncData.keys).length} keys in ConfigMap '${syncData.configMapName}'`,
+        syncedKeys: Object.keys(syncData.keys),
+        syncedCount: Object.keys(syncData.keys).length,
+        syncOperationId: syncOperation.id,
+      };
+    } catch (error) {
+      // Record failed sync in history
+      await this.syncHistoryRepository.save({
+        syncOperationId: syncOperation.id,
+        serviceId: syncData.configMapName,
+        serviceName: syncData.configMapName,
+        workloadType: 'configmap',
+        sourceAppInstanceId: syncData.sourceAppInstanceId,
+        sourceEnvironmentName: sourceAppInstance.environment?.name || null,
+        sourceCluster: sourceAppInstance.cluster || null,
+        sourceNamespace: sourceAppInstance.namespace || null,
+        targetAppInstanceId: syncData.targetAppInstanceId,
+        targetEnvironmentName: targetAppInstance.environment?.name || null,
+        targetCluster: targetAppInstance.cluster || null,
+        targetNamespace: targetAppInstance.namespace || null,
+        previousImageTag: null,
+        newImageTag: null,
+        containerName: null,
+        configChanges: {
+          configMapName: syncData.configMapName,
+          keys: syncData.keys,
+          keysCount: Object.keys(syncData.keys).length,
+        },
+        status: 'failed',
+        error: error.message,
+        durationMs: Date.now() - startTime,
+        initiatedBy: initiatedBy || 'system',
+        timestamp: new Date(),
+      });
+
+      // Update sync operation status
+      syncOperation.status = 'failed';
+      syncOperation.endTime = new Date();
+      await this.syncOperationRepository.save(syncOperation);
+
+      throw error;
+    }
   }
 }

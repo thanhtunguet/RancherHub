@@ -65,11 +65,12 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 - **Repository Management** - Harbor registry integration for image management
 
 ### 📈 Audit & History (Complete)
-- **Sync History Tracking** - Complete audit trail of all operations
-- **Operation Details** - Detailed sync operation records
-- **User Attribution** - Track which user initiated operations
-- **Error Logging** - Comprehensive error tracking and reporting
-- **Historical Analytics** - Trends and patterns in sync operations
+- **Sync History Tracking** - Complete audit trail of all sync operations (services and ConfigMaps)
+- **Operation Details** - Detailed sync operation records with timestamps
+- **User Attribution** - Automatically track which user initiated each sync operation
+- **ConfigMap Sync Logging** - Full logging support for ConfigMap key synchronization
+- **Error Logging** - Comprehensive error tracking and reporting with user context
+- **Historical Analytics** - Trends and patterns in sync operations with user attribution
 
 ---
 
@@ -131,15 +132,23 @@ Entities Implemented:
 ├── Environment (environment organization)
 ├── AppInstance (environment-to-cluster mapping)
 ├── Service (workload tracking and sync status)
-├── SyncOperation (sync operation records)
-├── SyncHistory (detailed sync audit trail)
+├── SyncOperation (sync operation records with user attribution)
+├── SyncHistory (detailed sync audit trail with user tracking and timestamps)
 ├── MonitoringConfig (monitoring configuration)
 ├── MonitoredInstance (monitored app instances)
 ├── MonitoringHistory (health check history)
 └── AlertHistory (alert tracking and resolution)
 
+Key Fields for Audit Trail:
+├── SyncOperation.initiatedBy - Username of user who initiated the sync
+├── SyncOperation.startTime - When the sync operation started
+├── SyncOperation.endTime - When the sync operation completed
+├── SyncHistory.initiatedBy - Username tracked for each sync detail record
+├── SyncHistory.timestamp - Exact timestamp of each sync action
+└── SyncHistory.configChanges - Detailed record of what was changed
+
 Relationships:
-├── User → (owns) → SyncOperations
+├── User → (owns) → SyncOperations (tracked via initiatedBy field)
 ├── Environment → (has many) → AppInstances
 ├── RancherSite → (has many) → AppInstances
 ├── AppInstance → (has many) → Services

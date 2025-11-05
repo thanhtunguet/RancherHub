@@ -10,6 +10,7 @@ import {
   Param,
   Logger,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -325,8 +326,9 @@ export class ServicesController {
   })
   @ApiResponse({ status: 400, description: 'Invalid sync request' })
   @ApiBody({ type: SyncServicesDto })
-  async syncServices(@Body() syncDto: SyncServicesDto) {
-    return this.servicesService.syncServices(syncDto);
+  async syncServices(@Body() syncDto: SyncServicesDto, @Request() req) {
+    const initiatedBy = req.user?.username || req.user?.userId || 'system';
+    return this.servicesService.syncServices(syncDto, initiatedBy);
   }
 
   @Get('sync/history')

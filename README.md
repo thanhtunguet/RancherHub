@@ -97,7 +97,12 @@ Powerful ConfigMap management across environments:
 - **Service Discovery**: Automatically fetch and display all services from Rancher clusters
 - **Service Filtering**: Filter by environment, app instance, or custom criteria
 - **Service Synchronization**: One-click sync of service configurations across environments
-- **Sync History**: Detailed audit trail of all synchronization operations
+- **Comprehensive Audit Trail**:
+  - Detailed sync history for both services and ConfigMaps
+  - Automatic user attribution (tracks which user initiated each sync)
+  - Precise timestamps for all sync operations
+  - Rich logging with source/target environment details
+  - Error tracking and reporting with user context
 - **Image Management**: Track container images and tags across environments
 - **Storage Analytics**: View service storage utilization and image sizes
 

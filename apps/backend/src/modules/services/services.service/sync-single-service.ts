@@ -6,6 +6,7 @@ export async function syncSingleService(
   serviceId: string,
   targetAppInstanceId: string,
   syncOperationId: string,
+  initiatedBy?: string,
 ): Promise<any> {
   // Get source service
   const sourceService = await service.serviceRepository.findOne({
@@ -109,6 +110,7 @@ export async function syncSingleService(
     },
     status: 'success',
     durationMs: Date.now() - startTime,
+    initiatedBy: initiatedBy || 'system',
     timestamp: new Date(),
   });
 
