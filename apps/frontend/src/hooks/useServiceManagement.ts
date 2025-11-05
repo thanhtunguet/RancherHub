@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { Service } from "../types";
-import { useAppInstancesByEnvironment } from "./useAppInstances";
+import { useAppInstancesByEnvironment, useAppInstances } from "./useAppInstances";
 import { useEnvironments } from "./useEnvironments";
 import { useServices, useServicesByAppInstance } from "./useServices";
 import { servicesApi } from "../services/api";
@@ -18,13 +18,14 @@ export function useServiceManagement() {
     useState<string>("all"); // Default to "all" instead of auto-selecting first
 
   const { data: environments } = useEnvironments();
+  const { data: allAppInstances } = useAppInstances();
 
-  // Don't auto-select first environment anymore - let it stay as "all"
-  // useEffect(() => {
-  //   if (!selectedEnvironmentId && environments && environments.length > 0) {
-  //     setSelectedEnvironmentId(environments[0].id);
-  //   }
-  // }, [selectedEnvironmentId, environments]);
+  // Auto-select first app instance when loaded
+  React.useEffect(() => {
+    if (selectedAppInstanceId === "all" && allAppInstances && allAppInstances.length > 0) {
+      setSelectedAppInstanceId(allAppInstances[0].id);
+    }
+  }, [selectedAppInstanceId, allAppInstances]);
 
   // Use the selected environment from local state
   const effectiveEnvironmentId = selectedEnvironmentId === "all" ? undefined : selectedEnvironmentId;
@@ -136,7 +137,7 @@ export function useServiceManagement() {
 
   // Determine which data and loading states to use
   let services;
-  let isLoading;
+  let isLoadingServices;
   let error;
   let refetch;
 
@@ -144,13 +145,13 @@ export function useServiceManagement() {
     // Show services from all environments
     if (selectedAppInstanceId === "all") {
       services = servicesFromAllEnvs;
-      isLoading = isLoadingAllEnvs;
+      isLoadingServices = isLoadingAllEnvs;
       error = errorAllEnvs;
       refetch = refetchAllEnvs;
     } else {
       // If specific app instance is selected, use app instance services
       services = servicesByAppInstance;
-      isLoading = isLoadingByAppInstance;
+      isLoadingServices = isLoadingByAppInstance;
       error = errorByAppInstance;
       refetch = refetchByAppInstance;
     }
@@ -158,16 +159,20 @@ export function useServiceManagement() {
     // Show services from specific environment
     if (selectedAppInstanceId === "all") {
       services = servicesByEnvironment;
-      isLoading = isLoadingByEnvironment;
+      isLoadingServices = isLoadingByEnvironment;
       error = errorByEnvironment;
       refetch = refetchByEnvironment;
     } else {
       services = servicesByAppInstance;
-      isLoading = isLoadingByAppInstance;
+      isLoadingServices = isLoadingByAppInstance;
       error = errorByAppInstance;
       refetch = refetchByAppInstance;
     }
   }
+
+  // Separate loading states
+  const isLoadingAppInstances = !environments || !allAppInstances;
+  const isInitialLoading = isLoadingAppInstances;
 
   // Force refetch when environment changes
   React.useEffect(() => {
@@ -294,12 +299,14 @@ export function useServiceManagement() {
     services,
     filteredServices,
     appInstances,
+    allAppInstances,
     selectedEnv,
     selectedAppInstance,
     availableStatuses,
 
     // Loading states
-    isLoading,
+    isInitialLoading,
+    isLoadingServices,
     error,
 
     // Handlers

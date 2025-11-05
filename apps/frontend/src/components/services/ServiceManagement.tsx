@@ -1,19 +1,30 @@
+import { useMemo, useState, useEffect } from "react";
 import Alert from "antd/es/alert";
 import Button from "antd/es/button";
+import Input from "antd/es/input";
+import Select from "antd/es/select";
 import Spin from "antd/es/spin";
 import Tabs from "antd/es/tabs";
+import TreeSelect from "antd/es/tree-select";
+import Typography from "antd/es/typography";
 import { RefreshCwIcon, GitBranchIcon, GitCompareIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
-import { ServiceFilters } from "./ServiceFilters";
 import { ServiceStats } from "./ServiceStats";
 import { ServiceTable } from "./ServiceTable";
 import { ServiceEmptyState } from "./ServiceEmptyState";
 import { SyncHistoryModal } from "./SyncHistoryModal";
 import { ServiceComparison } from "./ServiceComparison";
 import { useServiceManagement } from "../../hooks/useServiceManagement";
+import { formatAppInstanceDisplay } from "../../utils/displayUtils";
+
+const { Option } = Select;
+const { Text } = Typography;
 
 export function ServiceManagement() {
+  // Local search state for debouncing
+  const [localSearchTerm, setLocalSearchTerm] = useState("");
+
   const {
     // State
     searchTerm,
@@ -33,12 +44,14 @@ export function ServiceManagement() {
     services,
     filteredServices,
     appInstances,
+    allAppInstances,
     selectedEnv,
     selectedAppInstance,
     availableStatuses,
 
     // Loading states
-    isLoading,
+    isInitialLoading,
+    isLoadingServices,
     error,
 
     // Handlers
@@ -46,9 +59,30 @@ export function ServiceManagement() {
     handleSelectAll,
     handleSync,
     handleRefresh,
-    handleEnvironmentChange,
     handleAppInstanceChange,
   } = useServiceManagement();
+
+  // Sync local search term with hook search term
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  // Create tree data for app instance selection
+  const treeData = useMemo(() => {
+    if (!environments || !allAppInstances) return [];
+    
+    return environments.map(env => ({
+      title: env.name,
+      value: `env-${env.id}`,
+      disabled: true, // Environment nodes are not selectable
+      children: allAppInstances
+        .filter(instance => instance.environmentId === env.id)
+        .map(instance => ({
+          title: formatAppInstanceDisplay(instance.name, instance.cluster, instance.namespace),
+          value: instance.id,
+        }))
+    })).filter(env => env.children && env.children.length > 0);
+  }, [environments, allAppInstances]);
 
   if (!environments || environments.length === 0) {
     return (
@@ -68,7 +102,7 @@ export function ServiceManagement() {
     );
   }
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
@@ -116,50 +150,96 @@ export function ServiceManagement() {
               onSync={handleSync}
             />
 
-            {!effectiveEnvironmentId ? (
-              <Alert
-                message="Select Environment"
-                description="Please select an environment to view and manage services."
-                type="info"
-                showIcon
+            {/* App Instance Tree Selector */}
+            <div className="mb-4">
+              <Text strong>Select App Instance to View Services</Text>
+              <TreeSelect
+                className="w-full mt-1"
+                placeholder="Select an app instance to view services"
+                value={selectedAppInstanceId === "all" ? undefined : selectedAppInstanceId}
+                onChange={(value) => {
+                  handleAppInstanceChange(value || "all");
+                }}
+                treeData={treeData}
+                loading={!environments || !allAppInstances}
+                showSearch
+                filterTreeNode={(search, node) => {
+                  if (typeof node.title === 'string') {
+                    return node.title.toLowerCase().includes(search.toLowerCase());
+                  }
+                  return false;
+                }}
+                treeDefaultExpandAll
+                allowClear
               />
-            ) : (
-              <>
-                {/* Combined Filters */}
-                <ServiceFilters
-                  // Environment filter
-                  environments={environments}
-                  effectiveEnvironmentId={effectiveEnvironmentId}
-                  onEnvironmentChange={handleEnvironmentChange}
-                  // App Instance filter
-                  appInstances={appInstances || []}
-                  selectedAppInstanceId={selectedAppInstanceId}
-                  onAppInstanceChange={handleAppInstanceChange}
-                  // Search and status filters
-                  searchTerm={searchTerm}
-                  statusFilter={statusFilter}
-                  availableStatuses={availableStatuses}
-                  onSearchChange={setSearchTerm}
-                  onStatusFilterChange={setStatusFilter}
-                  // Select all functionality
-                  filteredServicesCount={filteredServices.length}
-                  selectedServicesCount={selectedServices.length}
-                  onSelectAll={handleSelectAll}
-                />
+            </div>
 
-                {/* Stats */}
-                <ServiceStats
-                  services={services || []}
-                  filteredServices={filteredServices}
-                  selectedServices={selectedServices}
-                  appInstances={appInstances || []}
+            {/* Search and Status Filters */}
+            <div className="flex items-end gap-6 mb-4">
+              {/* Search Filter */}
+              <div className="flex flex-col gap-1">
+                <Text strong>Search</Text>
+                <Input.Search
+                  placeholder="Search services..."
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
+                  onSearch={() => setSearchTerm(localSearchTerm)}
+                  allowClear
+                  onClear={() => {
+                    setLocalSearchTerm("");
+                    setSearchTerm("");
+                  }}
+                  className="w-56"
+                  enterButton
                 />
-              </>
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex flex-col gap-1">
+                <Text strong>Status</Text>
+                <Select
+                  placeholder="Filter by status"
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  className="w-40"
+                >
+                  <Option value="all">All Statuses</Option>
+                  {availableStatuses.map((status) => (
+                    <Option key={status} value={status}>
+                      {status}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Select All Button */}
+              <div className="flex flex-col gap-1">
+                <Text strong>&nbsp;</Text>
+                <Button onClick={handleSelectAll} disabled={filteredServices.length === 0}>
+                  {selectedServices.length === filteredServices.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Stats */}
+            {services && services.length > 0 && (
+              <ServiceStats
+                services={services || []}
+                filteredServices={filteredServices}
+                selectedServices={selectedServices}
+                appInstances={appInstances || []}
+              />
             )}
           </div>
 
           {/* Services Table */}
-          {!effectiveEnvironmentId ? null : filteredServices.length > 0 ? (
+          {isLoadingServices ? (
+            <div className="flex justify-center items-center h-64">
+              <Spin size="large" />
+            </div>
+          ) : filteredServices.length > 0 ? (
             <ServiceTable
               filteredServices={filteredServices}
               selectedServices={selectedServices}
@@ -171,7 +251,6 @@ export function ServiceManagement() {
               statusFilter={statusFilter}
               selectedAppInstanceId={selectedAppInstanceId}
               selectedAppInstanceName={selectedAppInstance?.name}
-              selectedEnvironmentName={selectedEnv?.name}
             />
           )}
         </>
