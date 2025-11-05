@@ -9,10 +9,9 @@ import {
   Divider, 
   Tag, 
   Space,
-  Tooltip,
-  Collapse
+  Tooltip
 } from 'antd';
-import { GitCompareIcon, EyeIcon } from 'lucide-react';
+import { GitCompareIcon, EyeIcon, PlusIcon, MinusIcon } from 'lucide-react';
 import ConfigMapDetailModal from './ConfigMapDetailModal';
 import { useEnvironments } from '../../hooks/useEnvironments';
 import { useAppInstances } from '../../hooks/useAppInstances';
@@ -20,7 +19,6 @@ import { useConfigMapComparison } from '../../hooks/useConfigMaps';
 import type { ConfigMapComparison } from '../../types';
 
 const { Title, Text } = Typography;
-const { Panel } = Collapse;
 
 const ConfigMapComparison: React.FC = () => {
   const [sourceAppInstanceId, setSourceAppInstanceId] = useState<string>();
@@ -113,44 +111,6 @@ const ConfigMapComparison: React.FC = () => {
     }
   };
 
-  const renderConfigMapData = (configMapData: any) => {
-    if (!configMapData) {
-      return (
-        <Text type="secondary" italic>
-          Not found
-        </Text>
-      );
-    }
-
-    return (
-      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-        <div>
-          <Text strong>Data Keys: </Text>
-          <Text style={{ fontFamily: "monospace", fontSize: "12px" }}>
-            {configMapData.dataKeys?.length || 0} keys
-          </Text>
-        </div>
-        {configMapData.dataKeys?.length > 0 && (
-          <Collapse ghost size="small">
-            <Panel header="View Data Keys" key="1">
-              <div style={{ maxHeight: '200px', overflow: 'auto' }}>
-                {configMapData.dataKeys.map((key: string) => (
-                  <div key={key} style={{ marginBottom: '4px' }}>
-                    <Tag>{key}</Tag>
-                  </div>
-                ))}
-              </div>
-            </Panel>
-          </Collapse>
-        )}
-        <div>
-          <Text type="secondary" style={{ fontSize: "11px" }}>
-            Created: {new Date(configMapData.creationTimestamp).toLocaleString()}
-          </Text>
-        </div>
-      </Space>
-    );
-  };
 
   const renderDifferences = (record: ConfigMapComparison) => {
     if (!record.differences || record.differenceType === 'identical') {
@@ -192,6 +152,147 @@ const ConfigMapComparison: React.FC = () => {
     return <Space wrap>{items}</Space>;
   };
 
+  const getDifferentKeys = (record: ConfigMapComparison) => {
+    const keys: Array<{
+      key: string;
+      status: string;
+      type: string;
+      sourceValue: string;
+      targetValue: string;
+    }> = [];
+    
+    // Add missing keys
+    if (record.differences?.dataKeys?.length > 0) {
+      record.differences.dataKeys.forEach(key => {
+        keys.push({
+          key,
+          status: 'missing',
+          type: 'Missing in Target',
+          sourceValue: record.source?.data?.[key] || 'N/A',
+          targetValue: 'Missing',
+        });
+      });
+    }
+
+    // Add changed keys
+    if (record.differences?.changedKeys?.length > 0) {
+      record.differences.changedKeys.forEach(key => {
+        keys.push({
+          key,
+          status: 'changed',
+          type: 'Different Values',
+          sourceValue: record.source?.data?.[key] || 'N/A',
+          targetValue: record.target?.data?.[key] || 'N/A',
+        });
+      });
+    }
+
+    return keys;
+  };
+
+  const expandedRowRender = (record: ConfigMapComparison) => {
+    const differentKeys = getDifferentKeys(record);
+    
+    if (differentKeys.length === 0) {
+      return (
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <Text type="secondary">No key differences to display</Text>
+        </div>
+      );
+    }
+
+    const expandedColumns = [
+      {
+        title: 'Key Name',
+        dataIndex: 'key',
+        key: 'key',
+        width: 200,
+        render: (key: string) => <Text strong style={{ fontFamily: 'monospace' }}>{key}</Text>,
+      },
+      {
+        title: 'Status',
+        dataIndex: 'type',
+        key: 'type',
+        width: 150,
+        render: (type: string) => (
+          <Tag color={type === 'Missing in Target' ? 'volcano' : 'cyan'}>
+            {type}
+          </Tag>
+        ),
+      },
+      {
+        title: 'Source Value',
+        dataIndex: 'sourceValue',
+        key: 'sourceValue',
+        render: (value: string) => (
+          <div style={{ 
+            maxWidth: '300px', 
+            fontFamily: 'monospace', 
+            fontSize: '12px',
+            backgroundColor: '#f5f5f5',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {value}
+          </div>
+        ),
+      },
+      {
+        title: 'Target Value',
+        dataIndex: 'targetValue',
+        key: 'targetValue',
+        render: (value: string) => (
+          <div style={{ 
+            maxWidth: '300px', 
+            fontFamily: 'monospace', 
+            fontSize: '12px',
+            backgroundColor: '#f5f5f5',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {value}
+          </div>
+        ),
+      },
+      {
+        title: 'Actions',
+        key: 'actions',
+        width: 100,
+        render: (_: any, _keyRecord: any) => (
+          <Tooltip title="View detailed diff for this key">
+            <Button
+              size="small"
+              icon={<GitCompareIcon size={12} />}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewDetails(record.configMapName);
+              }}
+            >
+              Diff
+            </Button>
+          </Tooltip>
+        ),
+      },
+    ];
+
+    return (
+      <Table
+        columns={expandedColumns}
+        dataSource={differentKeys}
+        pagination={false}
+        size="small"
+        rowKey="key"
+        style={{ margin: '0 24px' }}
+      />
+    );
+  };
+
   const columns = [
     {
       title: "#",
@@ -219,7 +320,6 @@ const ConfigMapComparison: React.FC = () => {
       key: "differences",
       render: renderDifferences,
     },
-    
     {
       title: "Actions",
       key: "actions",
@@ -393,7 +493,6 @@ const ConfigMapComparison: React.FC = () => {
               dataSource={comparison.comparisons}
               rowKey="configMapName"
               pagination={false}
-              
               size="middle"
               onRow={(record) => ({
                 onClick: () => handleViewDetails(record.configMapName),
@@ -401,6 +500,31 @@ const ConfigMapComparison: React.FC = () => {
                 className: 'hover:bg-gray-50 transition-colors duration-200',
               })}
               rowClassName="hover:bg-gray-50"
+              expandable={{
+                expandedRowRender,
+                rowExpandable: (record) => {
+                  const differentKeys = getDifferentKeys(record);
+                  return differentKeys.length > 0;
+                },
+                expandRowByClick: false,
+                expandIcon: ({ expanded, onExpand, record }) => {
+                  const differentKeys = getDifferentKeys(record);
+                  if (differentKeys.length === 0) return null;
+                  
+                  return (
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={expanded ? <MinusIcon size={14} /> : <PlusIcon size={14} />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onExpand(record, e);
+                      }}
+                      style={{ marginRight: 8 }}
+                    />
+                  );
+                },
+              }}
             />
           </>
         )}
