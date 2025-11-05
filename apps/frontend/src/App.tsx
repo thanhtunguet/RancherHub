@@ -3,7 +3,7 @@ import { useState } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import { Button, Dropdown, Avatar, Space, Modal } from "antd";
-import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined, FileTextOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined } from "@ant-design/icons";
 import {
   ServerIcon,
   LayersIcon,
@@ -27,7 +27,6 @@ import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManage
 import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
-import { MessageTemplatesPage } from "./pages/MessageTemplatesPage";
 import UserManagement from "./pages/users/UserManagement";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -141,11 +140,6 @@ function AppContent() {
                 label: "Harbor Sites",
               },
               {
-                key: "/harbor-browser",
-                icon: <DatabaseIcon size={16} />,
-                label: "Harbor Browser",
-              },
-              {
                 key: "/environments",
                 icon: <LayersIcon size={16} />,
                 label: "Environments",
@@ -176,11 +170,6 @@ function AppContent() {
                 label: "Monitoring",
               },
               {
-                key: "/message-templates",
-                icon: <FileTextOutlined style={{ fontSize: 16 }} />,
-                label: "Message Templates",
-              },
-              {
                 key: "/sync-history",
                 icon: <HistoryIcon size={16} />,
                 label: "Sync History",
@@ -207,9 +196,8 @@ function AppContent() {
             <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
             <Route path="/storage" element={<StorageViewPage />} />
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
-            <Route path="/harbor-browser" element={<HarborBrowser />} />
+            <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />
             <Route path="/monitoring" element={<MonitoringPage />} />
-            <Route path="/message-templates" element={<MessageTemplatesPage />} />
             <Route path="/sync-history" element={<SyncHistoryPage />} />
             <Route path="/users" element={<UserManagement />} />
           </Routes>

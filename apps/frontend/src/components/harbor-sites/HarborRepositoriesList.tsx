@@ -25,7 +25,9 @@ import {
   ArrowRightOutlined,
   HomeOutlined,
   FolderOutlined,
+  HddOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { HarborSite, HarborRepository, HarborProject } from '../../types';
 import { harborSitesApi } from '../../services/api';
 import type { ColumnsType } from 'antd/es/table';
@@ -39,12 +41,13 @@ interface HarborRepositoriesListProps {
   onBack?: () => void;
 }
 
-export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({ 
-  harborSite, 
-  project, 
+export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
+  harborSite,
+  project,
   onSelectRepository,
-  onBack 
+  onBack
 }) => {
+  const navigate = useNavigate();
   const [repositories, setRepositories] = useState<HarborRepository[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,25 +177,39 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
     <div style={{ padding: '24px' }}>
       <Card>
         <div style={{ marginBottom: '24px' }}>
-          <Breadcrumb style={{ marginBottom: '16px' }}>
-            <Breadcrumb.Item>
-              <Button type="link" icon={<HomeOutlined />} onClick={onBack}>
-                Harbor Sites
-              </Button>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Space>
-                <DatabaseOutlined />
-                {harborSite.name}
-              </Space>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Space>
-                <FolderOutlined />
-                {project.name}
-              </Space>
-            </Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb
+            style={{ marginBottom: '16px' }}
+            items={[
+              {
+                title: (
+                  <a onClick={() => navigate('/')}>
+                    <HomeOutlined /> Home
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <a onClick={() => navigate('/harbor-sites')}>
+                    <HddOutlined /> Harbor Sites
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <a onClick={onBack}>
+                    <DatabaseOutlined /> {harborSite.name}
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <span>
+                    <FolderOutlined /> {project.name}
+                  </span>
+                ),
+              },
+            ]}
+          />
 
           <div style={{ 
             display: 'flex', 

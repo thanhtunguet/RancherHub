@@ -10,6 +10,7 @@ import {
   Tooltip,
   Select,
   message,
+  Breadcrumb,
 } from 'antd';
 import {
   DatabaseOutlined,
@@ -18,7 +19,10 @@ import {
   TeamOutlined,
   CalendarOutlined,
   ArrowRightOutlined,
+  HomeOutlined,
+  HddOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { HarborSite, HarborProject } from '../../types';
 import { harborSitesApi } from '../../services/api';
 import type { ColumnsType } from 'antd/es/table';
@@ -27,19 +31,31 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 interface HarborProjectsListProps {
+  harborSiteId?: string;
   onSelectProject?: (project: HarborProject, harborSite: HarborSite) => void;
 }
 
-export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({ onSelectProject }) => {
+export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
+  harborSiteId,
+  onSelectProject
+}) => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<HarborProject[]>([]);
   const [harborSites, setHarborSites] = useState<HarborSite[]>([]);
-  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(harborSiteId || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchHarborSites();
-  }, []);
+    if (harborSiteId) {
+      // If harborSiteId is provided via props, use it directly
+      setSelectedSiteId(harborSiteId);
+      fetchHarborSites();
+    } else {
+      // Otherwise, fetch sites and auto-select
+      fetchHarborSites();
+    }
+  }, [harborSiteId]);
 
   useEffect(() => {
     if (selectedSiteId) {
@@ -51,13 +67,16 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({ onSelect
     try {
       const sites = await harborSitesApi.getAll();
       setHarborSites(sites);
-      
-      // Auto-select active site if available
-      const activeSite = sites.find(site => site.active);
-      if (activeSite) {
-        setSelectedSiteId(activeSite.id);
-      } else if (sites.length > 0) {
-        setSelectedSiteId(sites[0].id);
+
+      // Only auto-select if harborSiteId is not provided via props
+      if (!harborSiteId) {
+        // Auto-select active site if available
+        const activeSite = sites.find(site => site.active);
+        if (activeSite) {
+          setSelectedSiteId(activeSite.id);
+        } else if (sites.length > 0) {
+          setSelectedSiteId(sites[0].id);
+        }
       }
     } catch (err: any) {
       const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch Harbor sites';
@@ -170,8 +189,32 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({ onSelect
 
   const selectedSite = harborSites.find(site => site.id === selectedSiteId);
 
+  const breadcrumbItems = [
+    {
+      title: (
+        <a onClick={() => navigate('/')}>
+          <HomeOutlined /> Home
+        </a>
+      ),
+    },
+    {
+      title: (
+        <a onClick={() => navigate('/harbor-sites')}>
+          <HddOutlined /> Harbor Sites
+        </a>
+      ),
+    },
+  ];
+
+  if (selectedSite) {
+    breadcrumbItems.push({
+      title: <span>{selectedSite.name}</span>,
+    });
+  }
+
   return (
     <div style={{ padding: '24px' }}>
+      <Breadcrumb items={breadcrumbItems} style={{ marginBottom: '16px' }} />
       <Card>
         <div style={{ marginBottom: '24px' }}>
           <div style={{ 
@@ -201,26 +244,28 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({ onSelect
             </Space>
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <Text strong style={{ marginRight: '8px' }}>Harbor Site:</Text>
-            <Select
-              style={{ width: 300 }}
-              placeholder="Select a Harbor site"
-              value={selectedSiteId}
-              onChange={setSelectedSiteId}
-              loading={!harborSites.length}
-            >
-              {harborSites.map(site => (
-                <Option key={site.id} value={site.id}>
-                  <Space>
-                    <DatabaseOutlined />
-                    {site.name}
-                    {site.active && <Tag color="green">Active</Tag>}
-                  </Space>
-                </Option>
-              ))}
-            </Select>
-          </div>
+          {!harborSiteId && (
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong style={{ marginRight: '8px' }}>Harbor Site:</Text>
+              <Select
+                style={{ width: 300 }}
+                placeholder="Select a Harbor site"
+                value={selectedSiteId}
+                onChange={setSelectedSiteId}
+                loading={!harborSites.length}
+              >
+                {harborSites.map(site => (
+                  <Option key={site.id} value={site.id}>
+                    <Space>
+                      <DatabaseOutlined />
+                      {site.name}
+                      {site.active && <Tag color="green">Active</Tag>}
+                    </Space>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
 
           {selectedSite && (
             <Alert

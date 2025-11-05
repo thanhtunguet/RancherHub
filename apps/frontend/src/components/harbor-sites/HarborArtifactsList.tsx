@@ -29,7 +29,9 @@ import {
   InfoCircleOutlined,
   SafetyOutlined,
   FileImageOutlined,
+  HddOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { HarborSite, HarborArtifact, HarborRepository, HarborProject } from '../../types';
 import { harborSitesApi } from '../../services/api';
 import type { ColumnsType } from 'antd/es/table';
@@ -42,14 +44,17 @@ interface HarborArtifactsListProps {
   project: HarborProject;
   repository: HarborRepository;
   onBack?: () => void;
+  onBackToProjects?: () => void;
 }
 
-export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({ 
-  harborSite, 
-  project, 
+export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
+  harborSite,
+  project,
   repository,
-  onBack 
+  onBack,
+  onBackToProjects
 }) => {
+  const navigate = useNavigate();
   const [artifacts, setArtifacts] = useState<HarborArtifact[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -285,31 +290,46 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
     <div style={{ padding: '24px' }}>
       <Card>
         <div style={{ marginBottom: '24px' }}>
-          <Breadcrumb style={{ marginBottom: '16px' }}>
-            <Breadcrumb.Item>
-              <Button type="link" icon={<HomeOutlined />} onClick={onBack}>
-                Harbor Sites
-              </Button>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Space>
-                <DatabaseOutlined />
-                {harborSite.name}
-              </Space>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Space>
-                <FolderOutlined />
-                {project.name}
-              </Space>
-            </Breadcrumb.Item>
-            <Breadcrumb.Item>
-              <Space>
-                <ContainerOutlined />
-                {repository.name}
-              </Space>
-            </Breadcrumb.Item>
-          </Breadcrumb>
+          <Breadcrumb
+            style={{ marginBottom: '16px' }}
+            items={[
+              {
+                title: (
+                  <a onClick={() => navigate('/')}>
+                    <HomeOutlined /> Home
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <a onClick={() => navigate('/harbor-sites')}>
+                    <HddOutlined /> Harbor Sites
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <a onClick={onBackToProjects}>
+                    <DatabaseOutlined /> {harborSite.name}
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <a onClick={onBack}>
+                    <FolderOutlined /> {project.name}
+                  </a>
+                ),
+              },
+              {
+                title: (
+                  <span>
+                    <ContainerOutlined /> {repository.name}
+                  </span>
+                ),
+              },
+            ]}
+          />
 
           <div style={{ 
             display: 'flex', 

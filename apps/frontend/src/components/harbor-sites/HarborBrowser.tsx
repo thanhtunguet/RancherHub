@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { HarborProjectsList } from './HarborProjectsList';
 import { HarborRepositoriesList } from './HarborRepositoriesList';
 import { HarborArtifactsList } from './HarborArtifactsList';
 import { HarborSite, HarborProject, HarborRepository } from '../../types';
 
-type ViewState = 
+type ViewState =
   | { type: 'projects' }
   | { type: 'repositories'; harborSite: HarborSite; project: HarborProject }
   | { type: 'artifacts'; harborSite: HarborSite; project: HarborProject; repository: HarborRepository };
 
 export const HarborBrowser: React.FC = () => {
+  const { siteId } = useParams<{ siteId: string }>();
   const [currentView, setCurrentView] = useState<ViewState>({ type: 'projects' });
 
   const handleSelectProject = (project: HarborProject, harborSite: HarborSite) => {
@@ -50,7 +52,8 @@ export const HarborBrowser: React.FC = () => {
   switch (currentView.type) {
     case 'projects':
       return (
-        <HarborProjectsList 
+        <HarborProjectsList
+          harborSiteId={siteId}
           onSelectProject={handleSelectProject}
         />
       );
@@ -72,6 +75,7 @@ export const HarborBrowser: React.FC = () => {
           project={currentView.project}
           repository={currentView.repository}
           onBack={handleBackToRepositories}
+          onBackToProjects={handleBackToProjects}
         />
       );
 

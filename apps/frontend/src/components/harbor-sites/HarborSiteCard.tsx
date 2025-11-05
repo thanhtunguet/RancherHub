@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Card, Tag, Button, Space, Popconfirm, Tooltip } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
   EditOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   LinkOutlined,
+  FolderOpenOutlined,
 } from '@ant-design/icons';
 import { HarborSite } from '../../types';
 
@@ -24,6 +26,7 @@ export const HarborSiteCard: React.FC<HarborSiteCardProps> = ({
   onActivate,
   onTestConnection,
 }) => {
+  const navigate = useNavigate();
   const [testing, setTesting] = useState(false);
 
   const handleTestConnection = async () => {
@@ -33,6 +36,10 @@ export const HarborSiteCard: React.FC<HarborSiteCardProps> = ({
     } finally {
       setTesting(false);
     }
+  };
+
+  const handleBrowse = () => {
+    navigate(`/harbor-sites/${site.id}/browser`);
   };
 
   const formatDate = (dateString: string) => {
@@ -112,6 +119,18 @@ export const HarborSiteCard: React.FC<HarborSiteCardProps> = ({
           <div style={{ marginTop: '4px', fontSize: '13px', fontFamily: 'monospace' }}>
             {site.username}
           </div>
+        </div>
+
+        <div style={{ marginTop: '12px' }}>
+          <Button
+            type="default"
+            icon={<FolderOpenOutlined />}
+            size="small"
+            block
+            onClick={handleBrowse}
+          >
+            Browse Registry
+          </Button>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px' }}>

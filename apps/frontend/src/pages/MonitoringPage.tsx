@@ -12,12 +12,14 @@ import {
   SettingOutlined,
   PlusOutlined,
   MonitorOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { MonitoringDashboard } from '../components/monitoring/MonitoringDashboard';
 import { MonitoringConfigForm } from '../components/monitoring/MonitoringConfigForm';
 import { MonitoredInstanceCard } from '../components/monitoring/MonitoredInstanceCard';
 import { MonitoredInstanceForm } from '../components/monitoring/MonitoredInstanceForm';
 import { AlertDetailPage } from '../components/monitoring/AlertDetailPage';
+import { MessageTemplatesTab } from '../components/message-templates/MessageTemplatesTab';
 import { monitoringApi } from '../services/api';
 
 const { TabPane } = Tabs;
@@ -187,16 +189,28 @@ export const MonitoringPage: React.FC = () => {
           )}
         </TabPane>
         
-        <TabPane 
+        <TabPane
           tab={
             <span>
               <SettingOutlined className="mr-2" />
               Configuration
             </span>
-          } 
+          }
           key="config"
         >
           <MonitoringConfigForm />
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <FileTextOutlined className="mr-2" />
+              Message Templates
+            </span>
+          }
+          key="templates"
+        >
+          <MessageTemplatesTab />
         </TabPane>
       </Tabs>
 
