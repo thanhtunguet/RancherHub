@@ -22,8 +22,10 @@ import {
   EyeOffIcon,
   CheckIcon,
   XIcon,
+  GitCompareIcon,
 } from 'lucide-react';
 import { useConfigMapDetails, useSyncConfigMapKey, useSyncConfigMapKeys } from '../../hooks/useConfigMaps';
+import ConfigMapKeyDiffModal from './ConfigMapKeyDiffModal';
 import type { ConfigMapKeyComparison } from '../../types';
 
 const { Title, Text } = Typography;
@@ -49,6 +51,8 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
 }) => {
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [showValues, setShowValues] = useState<Record<string, boolean>>({});
+  const [diffModalOpen, setDiffModalOpen] = useState(false);
+  const [selectedKeyForDiff, setSelectedKeyForDiff] = useState<ConfigMapKeyComparison | null>(null);
 
   const {
     data: details,
@@ -70,19 +74,47 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
   };
 
   const handleSyncSingleKey = async (key: string, value: string) => {
-    try {
-      await syncKeyMutation.mutateAsync({
-        sourceAppInstanceId,
-        targetAppInstanceId,
-        configMapName,
-        key,
-        value,
-      });
-      message.success(`Successfully synced key '${key}'`);
-      refetch();
-    } catch (err) {
-      message.error(`Failed to sync key '${key}': ${(err as any)?.message || 'Unknown error'}`);
-    }
+    Modal.confirm({
+      title: 'Confirm Sync Operation',
+      content: (
+        <div>
+          <p><strong>Are you sure you want to sync this key?</strong></p>
+          <p><strong>Key:</strong> <code>{key}</code></p>
+          <p><strong>ConfigMap:</strong> {configMapName}</p>
+          <p><strong>Direction:</strong> {sourceInstanceName} → {targetInstanceName}</p>
+          <div style={{ 
+            marginTop: '12px', 
+            padding: '8px', 
+            backgroundColor: '#fff7e6', 
+            border: '1px solid #ffd591', 
+            borderRadius: '4px' 
+          }}>
+            <Text type="warning">
+              <strong>Warning:</strong> This will overwrite the target value and cannot be undone.
+            </Text>
+          </div>
+        </div>
+      ),
+      okText: 'Yes, Sync Now',
+      cancelText: 'Cancel',
+      okType: 'primary',
+      width: 500,
+      onOk: async () => {
+        try {
+          await syncKeyMutation.mutateAsync({
+            sourceAppInstanceId,
+            targetAppInstanceId,
+            configMapName,
+            key,
+            value,
+          });
+          message.success(`Successfully synced key '${key}'`);
+          refetch();
+        } catch (err) {
+          message.error(`Failed to sync key '${key}': ${(err as any)?.message || 'Unknown error'}`);
+        }
+      },
+    });
   };
 
   const handleSyncSelectedKeys = async () => {
@@ -99,23 +131,72 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
       }
     });
 
-    try {
-      await syncKeysMutation.mutateAsync({
-        sourceAppInstanceId,
-        targetAppInstanceId,
-        configMapName,
-        keys: keysToSync,
-      });
-      message.success(`Successfully synced ${selectedKeys.length} keys`);
-      setSelectedKeys([]);
-      refetch();
-    } catch (err) {
-      message.error(`Failed to sync keys: ${(err as any)?.message || 'Unknown error'}`);
-    }
+    Modal.confirm({
+      title: 'Confirm Bulk Sync Operation',
+      content: (
+        <div>
+          <p><strong>Are you sure you want to sync {selectedKeys.length} keys?</strong></p>
+          <p><strong>ConfigMap:</strong> {configMapName}</p>
+          <p><strong>Direction:</strong> {sourceInstanceName} → {targetInstanceName}</p>
+          <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+            <strong>Keys to sync:</strong>
+            <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
+              {selectedKeys.map(key => (
+                <li key={key}><code>{key}</code></li>
+              ))}
+            </ul>
+          </div>
+          <div style={{ 
+            marginTop: '12px', 
+            padding: '8px', 
+            backgroundColor: '#fff2f0', 
+            border: '1px solid #ffccc7', 
+            borderRadius: '4px' 
+          }}>
+            <Text type="danger">
+              <strong>Warning:</strong> This will overwrite all selected target values and cannot be undone.
+            </Text>
+          </div>
+        </div>
+      ),
+      okText: `Yes, Sync ${selectedKeys.length} Keys`,
+      cancelText: 'Cancel',
+      okType: 'danger',
+      width: 600,
+      onOk: async () => {
+        try {
+          await syncKeysMutation.mutateAsync({
+            sourceAppInstanceId,
+            targetAppInstanceId,
+            configMapName,
+            keys: keysToSync,
+          });
+          message.success(`Successfully synced ${selectedKeys.length} keys`);
+          setSelectedKeys([]);
+          refetch();
+        } catch (err) {
+          message.error(`Failed to sync keys: ${(err as any)?.message || 'Unknown error'}`);
+        }
+      },
+    });
   };
 
   const toggleShowValue = (key: string) => {
     setShowValues(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleOpenDiffModal = (keyComparison: ConfigMapKeyComparison) => {
+    setSelectedKeyForDiff(keyComparison);
+    setDiffModalOpen(true);
+  };
+
+  const handleCloseDiffModal = () => {
+    setDiffModalOpen(false);
+    setSelectedKeyForDiff(null);
+  };
+
+  const handleSyncFromDiff = async (key: string, value: string) => {
+    await handleSyncSingleKey(key, value);
   };
 
   const getStatusTag = (comparison: ConfigMapKeyComparison) => {
@@ -246,26 +327,34 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 160,
       render: (_: any, record: ConfigMapKeyComparison) => {
-        if (!record.sourceValue) {
-          return <Text type="secondary">No source value</Text>;
-        }
-
         return (
           <Space direction="vertical" size="small">
-            <Tooltip title={`Sync '${record.key}' from source to target`}>
+            <Tooltip title="View detailed diff comparison">
               <Button
                 size="small"
-                type="primary"
-                icon={<RefreshCwIcon size={12} />}
-                onClick={() => handleSyncSingleKey(record.key, record.sourceValue!)}
-                loading={syncKeyMutation.isPending}
-                disabled={record.identical}
+                icon={<GitCompareIcon size={12} />}
+                onClick={() => handleOpenDiffModal(record)}
+                disabled={!record.sourceValue && !record.targetValue}
               >
-                Sync
+                Diff View
               </Button>
             </Tooltip>
+            {record.sourceValue && (
+              <Tooltip title={`Sync '${record.key}' from source to target`}>
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<RefreshCwIcon size={12} />}
+                  onClick={() => handleSyncSingleKey(record.key, record.sourceValue!)}
+                  loading={syncKeyMutation.isPending}
+                  disabled={record.identical}
+                >
+                  Sync
+                </Button>
+              </Tooltip>
+            )}
           </Space>
         );
       },
@@ -387,6 +476,18 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
           />
         </>
       )}
+
+      {/* Diff Modal */}
+      <ConfigMapKeyDiffModal
+        open={diffModalOpen}
+        onClose={handleCloseDiffModal}
+        keyComparison={selectedKeyForDiff}
+        configMapName={configMapName}
+        sourceInstanceName={sourceInstanceName}
+        targetInstanceName={targetInstanceName}
+        onSync={handleSyncFromDiff}
+        syncLoading={syncKeyMutation.isPending}
+      />
     </Modal>
   );
 };
