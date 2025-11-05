@@ -158,7 +158,7 @@ const MonacoDiffViewer: React.FC<MonacoDiffViewerProps> = ({
         })
       }}
     >
-      <div style={{ height: isFullscreen ? 'calc(100vh - 60px)' : height }}>
+      <div style={{ height: isFullscreen ? '100vh' : height }}>
         <DiffEditor
           original={original || ''}
           modified={modified || ''}

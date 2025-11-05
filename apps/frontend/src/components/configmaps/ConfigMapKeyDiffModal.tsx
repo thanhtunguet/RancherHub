@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Typography, Tag, Button, message, Space, Tooltip } from 'antd';
+import { Modal, Typography, Tag, Button, message, Tooltip } from 'antd';
 import { RefreshCwIcon, MaximizeIcon, MinimizeIcon } from 'lucide-react';
 import MonacoDiffViewer from '../common/MonacoDiffViewer';
 import type { ConfigMapKeyComparison } from '../../types';
@@ -101,26 +101,14 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
   return (
     <Modal
       title={
-        <div>
-          <div className="flex items-center justify-between">
-            <div>
-              <Title level={4} style={{ margin: 0 }}>
-                Key Diff: {keyComparison.key}
-              </Title>
-              <div className="mt-1">
-                {getStatusTag()}
-              </div>
+        <div className="p-4">
+          <div>
+            <Title level={4} style={{ margin: 0 }}>
+              Key Diff: {keyComparison.key}
+            </Title>
+            <div className="mt-1">
+              {getStatusTag()}
             </div>
-            <Space>
-              <Tooltip title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
-                <Button 
-                  size="small" 
-                  icon={isFullscreen ? <MinimizeIcon size={14} /> : <MaximizeIcon size={14} />} 
-                  onClick={handleToggleFullscreen}
-                  type="text"
-                />
-              </Tooltip>
-            </Space>
           </div>
           <div className="mt-2">
             <Text type="secondary">
@@ -136,6 +124,7 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
       open={open}
       onCancel={onClose}
       width={isFullscreen ? '100vw' : 1200}
+      centered={!isFullscreen}
       style={
         isFullscreen 
           ? { 
@@ -148,13 +137,22 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
           : {}
       }
       styles={{
-        body: isFullscreen ? { padding: 0, height: 'calc(100vh - 110px)' } : {},
+        body: isFullscreen ? { padding: '24px', height: 'calc(100vh - 110px)' } : {},
         content: isFullscreen ? { height: '100vh', padding: 0 } : {},
       }}
       footer={[
         <Button key="close" onClick={onClose}>
           Close
         </Button>,
+        <Tooltip key="fullscreen" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
+          <Button 
+            icon={isFullscreen ? <MinimizeIcon size={14} /> : <MaximizeIcon size={14} />} 
+            onClick={handleToggleFullscreen}
+            type="default"
+          >
+            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          </Button>
+        </Tooltip>,
         keyComparison.sourceValue && !keyComparison.identical && (
           <Button
             key="sync"
@@ -171,7 +169,7 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
       maskClosable={!isFullscreen}
       zIndex={isFullscreen ? 1050 : 1000}
     >
-      <div style={{ marginTop: '16px' }}>
+      <div>
         {!keyComparison.sourceValue && !keyComparison.targetValue ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <Text type="secondary">No values to compare</Text>
@@ -181,7 +179,7 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
             original={keyComparison.sourceValue || ''}
             modified={keyComparison.targetValue || ''}
             title={`Comparing "${keyComparison.key}"`}
-            height={isFullscreen ? 'calc(100vh - 200px)' : 500}
+            height={isFullscreen ? 'calc(100vh - 280px)' : 500}
             onCopyOriginal={handleCopyOriginal}
             onCopyModified={handleCopyModified}
             showFullscreen={false} // Disable independent fullscreen since modal handles it
