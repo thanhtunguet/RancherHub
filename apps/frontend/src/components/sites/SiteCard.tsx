@@ -115,7 +115,16 @@ export function SiteCard({
           {site.active && <Tag color="blue">Active</Tag>}
         </div>
 
-        <p className="text-gray-600 text-sm mb-2">{site.url}</p>
+        <div className="mb-2">
+          <a
+            href={site.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 text-sm hover:underline"
+          >
+            {site.url}
+          </a>
+        </div>
 
         <div className="text-xs text-gray-500">
           Created: {new Date(site.createdAt).toLocaleDateString()}
