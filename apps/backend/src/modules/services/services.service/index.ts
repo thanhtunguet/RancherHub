@@ -13,6 +13,8 @@ import { HarborApiService } from 'src/services/harbor-api.service';
 import { DockerHubApiService } from 'src/services/dockerhub-api.service';
 import { getServicesByEnvironment } from './get-services-by-environment';
 import { getServicesByAppInstance } from './get-services-by-app-instance';
+import { getServicesByEnvironmentDirect } from './get-services-by-environment-direct';
+import { getServicesByAppInstanceDirect } from './get-services-by-app-instance-direct';
 import { syncServices } from './sync-services';
 import { syncSingleService } from './sync-single-service';
 import { getSyncHistory } from './get-sync-history';
@@ -50,11 +52,11 @@ export class ServicesService {
   ) {}
 
   async getServicesByEnvironment(environmentId: string) {
-    return getServicesByEnvironment(this, environmentId);
+    return getServicesByEnvironmentDirect(this, environmentId);
   }
 
   async getServicesByAppInstance(appInstanceId: string) {
-    return getServicesByAppInstance(this, appInstanceId);
+    return getServicesByAppInstanceDirect(this, appInstanceId);
   }
 
   async syncServices(syncDto: SyncServicesDto) {
