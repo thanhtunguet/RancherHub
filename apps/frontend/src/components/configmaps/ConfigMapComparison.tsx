@@ -196,14 +196,12 @@ const ConfigMapComparison: React.FC = () => {
     {
       title: "#",
       key: "index",
-      width: 60,
       render: (_: any, __: any, index: number) => index + 1,
     },
     {
       title: "ConfigMap Name",
       dataIndex: "configMapName",
       key: "configMapName",
-      width: 200,
       render: (name: string) => (
         <Text strong>{name}</Text>
       ),
@@ -211,7 +209,6 @@ const ConfigMapComparison: React.FC = () => {
     {
       title: "Different Status",
       key: "differentStatus",
-      width: 150,
       render: (record: ConfigMapComparison) => {
         const status = getDifferentStatus(record);
         return <Tag color={getDifferentStatusColor(status)}>{status}</Tag>;
@@ -220,32 +217,23 @@ const ConfigMapComparison: React.FC = () => {
     {
       title: "Differences",
       key: "differences",
-      width: 300,
       render: renderDifferences,
     },
-    {
-      title: "Source",
-      key: "source",
-      width: 300,
-      render: (record: ConfigMapComparison) => renderConfigMapData(record.source),
-    },
-    {
-      title: "Target",
-      key: "target",
-      width: 300,
-      render: (record: ConfigMapComparison) => renderConfigMapData(record.target),
-    },
+    
     {
       title: "Actions",
       key: "actions",
       width: 120,
       render: (record: ConfigMapComparison) => (
         <Space direction="vertical" size="small">
-          <Tooltip title="View detailed comparison">
+          <Tooltip title="View detailed comparison (or click anywhere on row)">
             <Button
               size="small"
               icon={<EyeIcon size={14} />}
-              onClick={() => handleViewDetails(record.configMapName)}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent row click when button is clicked
+                handleViewDetails(record.configMapName);
+              }}
               disabled={!record.source && !record.target}
             >
               Details
@@ -390,9 +378,14 @@ const ConfigMapComparison: React.FC = () => {
             <Divider />
 
             <div className="mb-4">
-              <Title level={4}>
-                {sourceInstanceDisplay} vs {targetInstanceDisplay}
-              </Title>
+              <div className="flex items-center justify-between">
+                <Title level={4}>
+                  {sourceInstanceDisplay} vs {targetInstanceDisplay}
+                </Title>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  💡 Click on any row to view detailed comparison
+                </Text>
+              </div>
             </div>
 
             <Table
@@ -400,8 +393,14 @@ const ConfigMapComparison: React.FC = () => {
               dataSource={comparison.comparisons}
               rowKey="configMapName"
               pagination={false}
-              scroll={{ x: 1520 }}
+              
               size="middle"
+              onRow={(record) => ({
+                onClick: () => handleViewDetails(record.configMapName),
+                style: { cursor: 'pointer' },
+                className: 'hover:bg-gray-50 transition-colors duration-200',
+              })}
+              rowClassName="hover:bg-gray-50"
             />
           </>
         )}
