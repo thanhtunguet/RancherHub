@@ -143,52 +143,51 @@ export function ServiceManagement() {
               onSync={handleSync}
             />
 
-            {/* App Instance Tree Selector */}
-            <div className="mb-4">
-              <Text strong>Select App Instance to View Services</Text>
-              <TreeSelect
-                className="w-full mt-1"
-                placeholder="Select an app instance to view services"
-                value={selectedAppInstanceId === "all" ? undefined : selectedAppInstanceId}
-                onChange={(value) => {
-                  handleAppInstanceChange(value || "all");
-                }}
-                treeData={treeData}
-                loading={!environments || !allAppInstances}
-                showSearch
-                filterTreeNode={(search, node) => {
-                  if (typeof node.title === 'string') {
-                    return node.title.toLowerCase().includes(search.toLowerCase());
-                  }
-                  return false;
-                }}
-                treeDefaultExpandAll
-                allowClear
-              />
-            </div>
+            {/* Filters and Controls Row */}
+            <div className="flex items-end gap-3 mb-4 flex-wrap">
+              {/* App Instance Tree Selector */}
+              <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
+                <Text strong>App Instance</Text>
+                <TreeSelect
+                  className="w-full"
+                  placeholder="Select an app instance"
+                  value={selectedAppInstanceId === "all" ? undefined : selectedAppInstanceId}
+                  onChange={(value) => {
+                    handleAppInstanceChange(value || "all");
+                  }}
+                  treeData={treeData}
+                  loading={!environments || !allAppInstances}
+                  showSearch
+                  filterTreeNode={(search, node) => {
+                    if (typeof node.title === 'string') {
+                      return node.title.toLowerCase().includes(search.toLowerCase());
+                    }
+                    return false;
+                  }}
+                  treeDefaultExpandAll
+                  allowClear
+                />
+              </div>
 
-            {/* Search and Status Filters */}
-            <div className="flex items-end gap-6 mb-4">
               {/* Search Filter */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
                 <Text strong>Search</Text>
                 <Input
                   placeholder="Search services..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   allowClear
-                  className="w-56"
                 />
               </div>
 
               {/* Status Filter */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 w-40">
                 <Text strong>Status</Text>
                 <Select
                   placeholder="Filter by status"
                   value={statusFilter}
                   onChange={setStatusFilter}
-                  className="w-40"
+                  className="w-full"
                 >
                   <Option value="all">All Statuses</Option>
                   {availableStatuses.map((status) => (
