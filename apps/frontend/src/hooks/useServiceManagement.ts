@@ -39,10 +39,8 @@ export function useServiceManagement() {
     statusFilter,
   });
 
-  // Prepare filters for API calls - only include non-default values
-  const apiFilters = {
-    ...(searchTerm && { search: searchTerm }),
-  };
+  // No need for API filters since we'll do client-side filtering
+  const apiFilters = {};
 
   // Fetch app instances for the selected environment (or all if no specific environment)
   const { data: appInstances } = useAppInstancesByEnvironment(
@@ -174,14 +172,18 @@ export function useServiceManagement() {
   const isLoadingAppInstances = !environments || !allAppInstances;
   const isInitialLoading = isLoadingAppInstances;
 
-  // Force refetch when environment changes
+  // Only show service loading when we have a specific app instance selected
+  const shouldShowServiceLoading = selectedAppInstanceId !== "all" && isLoadingServices;
+
+  // Force refetch when app instance changes (not search term)
   React.useEffect(() => {
-    console.log("useEffect: Environment or app instance changed", {
+    console.log("useEffect: App instance changed", {
       selectedEnvironmentId,
       effectiveEnvironmentId,
       selectedAppInstanceId,
     });
 
+    // Only refetch when app instance selection changes, not on search
     if (selectedEnvironmentId === "all") {
       if (selectedAppInstanceId === "all") {
         refetchAllEnvs();
@@ -199,31 +201,48 @@ export function useServiceManagement() {
     selectedEnvironmentId,
     effectiveEnvironmentId,
     selectedAppInstanceId,
+    // Remove search-related dependencies
     refetchByEnvironment,
     refetchByAppInstance,
     refetchAllEnvs,
   ]);
 
-  // Filter services by status
+  // Filter services by search term and status client-side
   const filteredServices = useMemo(() => {
     if (!services) return [];
-    if (statusFilter === "all") return services;
+    
+    let filtered = services;
 
-    return services.filter((service) => {
-      switch (statusFilter) {
-        case "running":
-          return service.status === "running";
-        case "stopped":
-          return service.status === "stopped";
-        case "error":
-          return service.status === "error";
-        case "pending":
-          return service.status === "pending";
-        default:
-          return true;
-      }
-    });
-  }, [services, statusFilter]);
+    // Apply search filter
+    if (searchTerm && searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter((service) =>
+        service.name.toLowerCase().includes(searchLower) ||
+        service.imageTag?.toLowerCase().includes(searchLower) ||
+        service.workloadType?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((service) => {
+        switch (statusFilter) {
+          case "running":
+            return service.status === "running";
+          case "stopped":
+            return service.status === "stopped";
+          case "error":
+            return service.status === "error";
+          case "pending":
+            return service.status === "pending";
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [services, searchTerm, statusFilter]);
 
   // Get available statuses for filter
   const availableStatuses = useMemo(() => {
@@ -306,7 +325,7 @@ export function useServiceManagement() {
 
     // Loading states
     isInitialLoading,
-    isLoadingServices,
+    isLoadingServices: shouldShowServiceLoading,
     error,
 
     // Handlers

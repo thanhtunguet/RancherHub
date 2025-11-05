@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import Alert from "antd/es/alert";
 import Button from "antd/es/button";
 import Input from "antd/es/input";
@@ -22,9 +22,6 @@ const { Option } = Select;
 const { Text } = Typography;
 
 export function ServiceManagement() {
-  // Local search state for debouncing
-  const [localSearchTerm, setLocalSearchTerm] = useState("");
-
   const {
     // State
     searchTerm,
@@ -62,10 +59,6 @@ export function ServiceManagement() {
     handleAppInstanceChange,
   } = useServiceManagement();
 
-  // Sync local search term with hook search term
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
 
   // Create tree data for app instance selection
   const treeData = useMemo(() => {
@@ -179,18 +172,12 @@ export function ServiceManagement() {
               {/* Search Filter */}
               <div className="flex flex-col gap-1">
                 <Text strong>Search</Text>
-                <Input.Search
+                <Input
                   placeholder="Search services..."
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  onSearch={() => setSearchTerm(localSearchTerm)}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   allowClear
-                  onClear={() => {
-                    setLocalSearchTerm("");
-                    setSearchTerm("");
-                  }}
                   className="w-56"
-                  enterButton
                 />
               </div>
 
