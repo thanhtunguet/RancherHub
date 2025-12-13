@@ -10,7 +10,8 @@ export async function updateServiceImage(
   servicesService.logger.log(`Updating service ${serviceId} to tag: ${newTag}`);
 
   // Check if serviceId is a valid UUID
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const isUuid = uuidRegex.test(serviceId);
 
   let service;
@@ -30,7 +31,7 @@ export async function updateServiceImage(
       // Find the longest UUID prefix
       let appInstanceId = '';
       let serviceName = '';
-      
+
       // Try different split points to find valid UUID
       for (let i = 1; i < parts.length; i++) {
         const potentialUuid = parts.slice(0, i).join('-');
@@ -57,10 +58,11 @@ export async function updateServiceImage(
             `Service not found in database, fetching directly from Rancher`,
           );
           // Get app instance to fetch service directly
-          const appInstance = await servicesService.appInstanceRepository.findOne({
-            where: { id: appInstanceId },
-            relations: ['rancherSite'],
-          });
+          const appInstance =
+            await servicesService.appInstanceRepository.findOne({
+              where: { id: appInstanceId },
+              relations: ['rancherSite'],
+            });
 
           if (appInstance) {
             // Fetch deployments from Rancher and find the matching service
@@ -71,7 +73,9 @@ export async function updateServiceImage(
                 appInstance.namespace,
               );
 
-            const deployment = deployments.find((dep) => dep.name === serviceName);
+            const deployment = deployments.find(
+              (dep) => dep.name === serviceName,
+            );
             if (deployment) {
               // Create a temporary service object from the deployment
               service = new Service();

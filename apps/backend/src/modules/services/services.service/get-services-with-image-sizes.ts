@@ -39,7 +39,7 @@ export async function getServicesWithImageSizes(
           for (const harborSite of harborSites) {
             // Remove protocol from Harbor URL for comparison
             const harborDomain = harborSite.url.replace(/^https?:\/\//, '');
-            
+
             // Check if image tag starts with this Harbor site's domain
             // Image format: domain.com/project/repo:tag or domain.com/project/repo
             if (imageTag.startsWith(harborDomain)) {

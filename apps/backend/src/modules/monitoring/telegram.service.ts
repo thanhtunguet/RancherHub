@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { SocksProxyAgent } from 'socks-proxy-agent';
+import * as FormData from 'form-data';
 import { MonitoringConfig } from '../../entities/monitoring-config.entity';
 import { VisualStatusService } from './visual-status.service';
 import { MessageTemplatesService } from '../message-templates/message-templates.service';
@@ -62,7 +63,6 @@ export class TelegramService {
     const axiosConfig = this.createAxiosConfig(config);
 
     // Use FormData for multipart/form-data
-    const FormData = require('form-data');
     const formData = new FormData();
 
     formData.append('chat_id', chatId);

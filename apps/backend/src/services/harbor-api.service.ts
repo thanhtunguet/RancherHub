@@ -46,7 +46,7 @@ export interface HarborArtifact {
       Cmd?: string[];
       Entrypoint?: string[];
       Env?: string[];
-      ExposedPorts?: { [key: string]: {} };
+      ExposedPorts?: { [key: string]: Record<string, never> };
       Labels?: { [key: string]: string };
       User?: string;
       WorkingDir?: string;

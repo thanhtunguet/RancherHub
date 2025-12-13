@@ -32,8 +32,8 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  const document = SwaggerModule.createDocument(app as any, config);
+  SwaggerModule.setup('api/docs', app as any, document);
 
   // Initialize default admin user
   const authSeeder = app.get(AuthSeederService);
