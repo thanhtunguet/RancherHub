@@ -1,5 +1,6 @@
 import React from 'react';
-import { ServerIcon, CheckCircleIcon, DatabaseIcon, RefreshCwIcon } from 'lucide-react';
+import { Button, Select, Table, Tag, Space } from 'antd';
+import { ServerIcon, CheckCircleIcon, DatabaseIcon, RefreshCwIcon, PlusIcon, EditIcon, TrashIcon } from 'lucide-react';
 
 export const RancherClustersMockup: React.FC = () => {
   return (
@@ -7,9 +8,13 @@ export const RancherClustersMockup: React.FC = () => {
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Rancher Sites</h3>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium">
-          + Add Rancher Site
-        </button>
+        <Button 
+          type="primary" 
+          icon={<PlusIcon size={16} />}
+          size="middle"
+        >
+          Add Rancher Site
+        </Button>
       </div>
 
       {/* Sites List */}
@@ -19,7 +24,7 @@ export const RancherClustersMockup: React.FC = () => {
           { name: 'Staging Cluster', url: 'https://rancher.staging.example.com', status: 'Connected' },
           { name: 'Development Cluster', url: 'https://rancher.dev.example.com', status: 'Connected' },
         ].map((site, index) => (
-          <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div key={index} className="bg-white rounded-lg p-4 border-2 border-blue-100 hover:border-blue-200 hover:shadow-lg transition-all duration-200">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -35,8 +40,23 @@ export const RancherClustersMockup: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="text-blue-600 text-sm font-medium">Edit</button>
-                <button className="text-gray-400 text-sm">Delete</button>
+                <Space>
+                  <Button 
+                    type="link" 
+                    icon={<EditIcon size={14} />} 
+                    size="small"
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    type="link" 
+                    danger
+                    icon={<TrashIcon size={14} />} 
+                    size="small"
+                  >
+                    Delete
+                  </Button>
+                </Space>
               </div>
             </div>
           </div>
@@ -52,69 +72,99 @@ export const EnvironmentComparisonMockup: React.FC = () => {
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Compare Environments</h3>
-        <div className="flex gap-4">
-          <select className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white">
-            <option>Staging - API Gateway</option>
-          </select>
-          <div className="flex items-center">
-            <RefreshCwIcon className="w-5 h-5 text-gray-400" aria-hidden="true" />
-          </div>
-          <select className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white">
-            <option>Production - API Gateway</option>
-          </select>
+        <div className="flex gap-4 items-center">
+          <Select 
+            defaultValue="staging-api-gateway"
+            style={{ flex: 1 }}
+            options={[
+              { value: 'staging-api-gateway', label: 'Staging - API Gateway' },
+              { value: 'staging-auth-service', label: 'Staging - Auth Service' },
+              { value: 'staging-database', label: 'Staging - Database' }
+            ]}
+          />
+          <Button 
+            icon={<RefreshCwIcon size={16} />} 
+            type="text"
+            shape="circle"
+          />
+          <Select 
+            defaultValue="production-api-gateway"
+            style={{ flex: 1 }}
+            options={[
+              { value: 'production-api-gateway', label: 'Production - API Gateway' },
+              { value: 'production-auth-service', label: 'Production - Auth Service' },
+              { value: 'production-database', label: 'Production - Database' }
+            ]}
+          />
         </div>
       </div>
 
       {/* Comparison Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Service</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Staging</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Production</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            <tr>
-              <td className="px-4 py-3 font-medium text-gray-900">api-gateway</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v2.1.4</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v2.1.3</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Different
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3 font-medium text-gray-900">auth-service</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v1.8.2</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v1.8.2</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                  Synced
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3 font-medium text-gray-900">database</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v3.2.1</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">v3.2.0</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Different
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <Table 
+        size="small"
+        pagination={false}
+        dataSource={[
+          {
+            key: 'api-gateway',
+            service: 'api-gateway',
+            staging: 'v2.1.4',
+            production: 'v2.1.3',
+            status: 'different'
+          },
+          {
+            key: 'auth-service',
+            service: 'auth-service',
+            staging: 'v1.8.2',
+            production: 'v1.8.2',
+            status: 'synced'
+          },
+          {
+            key: 'database',
+            service: 'database',
+            staging: 'v3.2.1',
+            production: 'v3.2.0',
+            status: 'different'
+          }
+        ]}
+        columns={[
+          {
+            title: 'Service',
+            dataIndex: 'service',
+            key: 'service',
+            render: (text) => <span className="font-medium">{text}</span>
+          },
+          {
+            title: 'Staging',
+            dataIndex: 'staging',
+            key: 'staging',
+            render: (text) => <code className="text-xs">{text}</code>
+          },
+          {
+            title: 'Production',
+            dataIndex: 'production',
+            key: 'production',
+            render: (text) => <code className="text-xs">{text}</code>
+          },
+          {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            render: (status) => (
+              <Tag color={status === 'synced' ? 'success' : 'warning'}>
+                {status === 'synced' ? 'Synced' : 'Different'}
+              </Tag>
+            )
+          }
+        ]}
+      />
 
       <div className="mt-4">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium">
+        <Button 
+          type="primary"
+          icon={<RefreshCwIcon size={16} />}
+        >
           Sync Selected Services
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -132,15 +182,15 @@ export const HarborRegistryMockup: React.FC = () => {
       </div>
 
       {/* Repository List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="p-4 bg-gray-50 border-b border-gray-200">
+      <div className="bg-white rounded-lg border-2 border-blue-100 overflow-hidden shadow-md">
+        <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-purple-200">
           <div className="flex items-center justify-between">
             <div className="font-medium text-gray-700">backend/api-gateway</div>
             <div className="text-sm text-gray-500">12 tags</div>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-blue-100">
           {[
             { tag: 'v2.1.4', size: '245 MB', date: '2 days ago', latest: true },
             { tag: 'v2.1.3', size: '243 MB', date: '1 week ago', latest: false },
@@ -165,9 +215,12 @@ export const HarborRegistryMockup: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <button className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
+                <Button 
+                  type="primary"
+                  size="small"
+                >
                   Deploy
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -196,70 +249,85 @@ export const ConfigMapSyncMockup: React.FC = () => {
       </div>
 
       {/* ConfigMap Diff */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="w-8 px-4 py-3">
-                <input type="checkbox" className="rounded border-gray-300" />
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Key</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Staging</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Production</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            <tr className="bg-yellow-50">
-              <td className="px-4 py-3">
-                <input type="checkbox" className="rounded border-gray-300" defaultChecked />
-              </td>
-              <td className="px-4 py-3 font-mono text-xs font-medium text-gray-900">API_TIMEOUT</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">30000</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">20000</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Different
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <input type="checkbox" className="rounded border-gray-300" />
-              </td>
-              <td className="px-4 py-3 font-mono text-xs font-medium text-gray-900">LOG_LEVEL</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">debug</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">info</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Different
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <input type="checkbox" className="rounded border-gray-300" />
-              </td>
-              <td className="px-4 py-3 font-mono text-xs font-medium text-gray-900">MAX_CONNECTIONS</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">100</td>
-              <td className="px-4 py-3 font-mono text-xs text-gray-600">100</td>
-              <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                  Synced
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <Table 
+        size="small"
+        pagination={false}
+        rowSelection={{
+          type: 'checkbox',
+          defaultSelectedRowKeys: ['API_TIMEOUT'],
+        }}
+        dataSource={[
+          {
+            key: 'API_TIMEOUT',
+            configKey: 'API_TIMEOUT',
+            staging: '30000',
+            production: '20000',
+            status: 'different'
+          },
+          {
+            key: 'LOG_LEVEL',
+            configKey: 'LOG_LEVEL',
+            staging: 'debug',
+            production: 'info',
+            status: 'different'
+          },
+          {
+            key: 'MAX_CONNECTIONS',
+            configKey: 'MAX_CONNECTIONS',
+            staging: '100',
+            production: '100',
+            status: 'synced'
+          }
+        ]}
+        columns={[
+          {
+            title: 'Key',
+            dataIndex: 'configKey',
+            key: 'configKey',
+            render: (text) => <code className="text-xs font-medium">{text}</code>
+          },
+          {
+            title: 'Staging',
+            dataIndex: 'staging',
+            key: 'staging',
+            render: (text) => <code className="text-xs">{text}</code>
+          },
+          {
+            title: 'Production',
+            dataIndex: 'production',
+            key: 'production',
+            render: (text) => <code className="text-xs">{text}</code>
+          },
+          {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            render: (status) => (
+              <Tag color={status === 'synced' ? 'success' : 'warning'}>
+                {status === 'synced' ? 'Synced' : 'Different'}
+              </Tag>
+            )
+          }
+        ]}
+        rowClassName={(record) => 
+          record.status === 'different' && record.key === 'API_TIMEOUT' 
+            ? 'bg-orange-50' 
+            : ''
+        }
+      />
 
       <div className="mt-4 flex gap-3">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium">
-          Sync Selected Keys
-        </button>
-        <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium">
-          Sync All
-        </button>
+        <Space>
+          <Button 
+            type="primary"
+            icon={<CheckCircleIcon size={16} />}
+          >
+            Sync Selected Keys
+          </Button>
+          <Button>
+            Sync All
+          </Button>
+        </Space>
       </div>
     </div>
   );
