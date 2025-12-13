@@ -4,6 +4,13 @@ import { Helmet } from 'react-helmet-async';
 import { Button, Card, Modal } from 'antd';
 import { ServerIcon, GitCompareIcon, PackageIcon, FileTextIcon, ArrowRightIcon, CheckCircle2Icon } from 'lucide-react';
 import { LoginForm } from '../components/auth/LoginForm';
+import { BrowserFrame } from '../components/landing/BrowserFrame';
+import {
+  RancherClustersMockup,
+  EnvironmentComparisonMockup,
+  HarborRegistryMockup,
+  ConfigMapSyncMockup,
+} from '../components/landing/FeatureMockups';
 
 export const LandingPage: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -24,21 +31,29 @@ export const LandingPage: React.FC = () => {
       icon: <ServerIcon className="w-12 h-12 text-blue-600" aria-hidden="true" />,
       title: 'Manage Rancher Clusters',
       description: 'Centralize management of multiple Rancher clusters and namespaces. Connect unlimited Rancher instances and seamlessly switch between environments.',
+      mockup: <RancherClustersMockup />,
+      reverse: false,
     },
     {
       icon: <GitCompareIcon className="w-12 h-12 text-blue-600" aria-hidden="true" />,
       title: 'Compare Environments',
       description: 'Side-by-side comparison of services and configurations across Dev, Staging, and Production environments. Identify differences instantly.',
+      mockup: <EnvironmentComparisonMockup />,
+      reverse: true,
     },
     {
       icon: <PackageIcon className="w-12 h-12 text-blue-600" aria-hidden="true" />,
       title: 'Harbor Registry Integration',
       description: 'Browse and select container images directly from Harbor registry. Update service versions with a single click. Track image sizes and storage usage.',
+      mockup: <HarborRegistryMockup />,
+      reverse: false,
     },
     {
       icon: <FileTextIcon className="w-12 h-12 text-blue-600" aria-hidden="true" />,
       title: 'ConfigMap Synchronization',
       description: 'Compare ConfigMaps between environments with key-by-key diff view. Sync selected configuration keys or batch update entire ConfigMaps.',
+      mockup: <ConfigMapSyncMockup />,
+      reverse: true,
     },
   ];
 
@@ -181,7 +196,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Features Section */}
       <div id="features" className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <h3 className="font-heading text-4xl font-bold text-gray-900 mb-4">
             Everything You Need to Manage Your Infrastructure
           </h3>
@@ -190,25 +205,32 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-32">
           {features.map((feature, index) => (
-            <Card
+            <div
               key={index}
-              className="bg-white/80 backdrop-blur-sm border-gray-200 hover:shadow-xl transition-all duration-300 cursor-pointer group"
-              bodyStyle={{ padding: '2rem' }}
+              className={`flex flex-col ${feature.reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-12 items-center`}
             >
-              <div className="flex flex-col gap-4">
-                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              {/* Feature Description */}
+              <div className="flex-1 space-y-6">
+                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
                   {feature.icon}
                 </div>
-                <h4 className="font-heading text-xl font-semibold text-gray-900">
+                <h4 className="font-heading text-3xl font-bold text-gray-900">
                   {feature.title}
                 </h4>
-                <p className="font-body text-gray-600 leading-relaxed">
+                <p className="font-body text-lg text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
-            </Card>
+
+              {/* Feature Mockup */}
+              <div className="flex-1 w-full">
+                <BrowserFrame title={feature.title}>
+                  {feature.mockup}
+                </BrowserFrame>
+              </div>
+            </div>
           ))}
         </div>
       </div>
