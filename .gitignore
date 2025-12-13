@@ -58,3 +58,4 @@ postgres_data/
 .env
 .nx/cache/
 .nx/workspace-data/
+__pycache__

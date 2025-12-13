@@ -1,7 +1,7 @@
 import React from 'react';
 import { Spin } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
-import { LoginForm } from './LoginForm';
+import { LandingPage } from '../../pages/LandingPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,11 +12,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
       }}>
         <Spin size="large" />
       </div>
@@ -24,17 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh',
-        background: '#f5f5f5'
-      }}>
-        <LoginForm />
-      </div>
-    );
+    return <LandingPage />;
   }
 
   return <>{children}</>;
