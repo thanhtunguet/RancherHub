@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:ssg": "tsc && vite-react-ssg build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "preview:ssg": "vite-react-ssg preview",
     "test": "jest"
   },
   "dependencies": {
@@ -32,6 +34,7 @@
     "@types/jest": "^29.5.2",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@types/react-helmet-async": "^1.0.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
@@ -42,8 +45,10 @@
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
     "postcss": "^8.4.27",
+    "react-helmet-async": "^2.0.5",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.2",
-    "vite": "^7.2.7"
+    "vite": "^7.2.7",
+    "vite-react-ssg": "^0.8.9"
   }
 }

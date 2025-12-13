@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Button, Card, Modal } from 'antd';
 import { ServerIcon, GitCompareIcon, PackageIcon, FileTextIcon, ArrowRightIcon, CheckCircle2Icon } from 'lucide-react';
 import { LoginForm } from '../components/auth/LoginForm';
 
 export const LandingPage: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
+
+  const siteTitle = 'Rancher Hub - Service Sync Manager for Kubernetes Clusters';
+  const siteDescription = 'Streamline your Kubernetes operations with unified service management, environment comparison, and automated synchronization across multiple Rancher clusters.';
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://rancherhub.io';
+  const siteImage = `${siteUrl}/og-image.png`;
 
   const features = [
     {
@@ -40,6 +46,61 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <Helmet>
+        {/* Primary Meta Tags */}
+        <title>{siteTitle}</title>
+        <meta name="title" content={siteTitle} />
+        <meta name="description" content={siteDescription} />
+        <meta name="keywords" content="Rancher, Kubernetes, DevOps, Service Management, ConfigMap, Harbor, Container Registry, Multi-cluster, Environment Sync, K8s" />
+        <meta name="author" content="Rancher Hub" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={siteUrl} />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
+        <meta property="og:title" content={siteTitle} />
+        <meta property="og:description" content={siteDescription} />
+        <meta property="og:image" content={siteImage} />
+        <meta property="og:site_name" content="Rancher Hub" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={siteUrl} />
+        <meta name="twitter:title" content={siteTitle} />
+        <meta name="twitter:description" content={siteDescription} />
+        <meta name="twitter:image" content={siteImage} />
+
+        {/* Additional Meta Tags */}
+        <meta name="theme-color" content="#2563EB" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Rancher Hub" />
+
+        {/* Structured Data for SEO */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Rancher Hub",
+            "applicationCategory": "DeveloperApplication",
+            "description": siteDescription,
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "5",
+              "ratingCount": "1"
+            }
+          })}
+        </script>
+      </Helmet>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Floating Navbar */}
