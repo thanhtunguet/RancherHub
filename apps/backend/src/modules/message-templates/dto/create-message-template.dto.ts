@@ -21,8 +21,10 @@ export class CreateMessageTemplateDto {
   templateName: string;
 
   @ApiProperty({
-    description: 'Message template with placeholders (e.g., {{date}}, {{time}})',
-    example: '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}\n\n{{tagged_users}}',
+    description:
+      'Message template with placeholders (e.g., {{date}}, {{time}})',
+    example:
+      '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}\n\n{{tagged_users}}',
   })
   @IsString()
   @IsNotEmpty()

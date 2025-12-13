@@ -15,7 +15,7 @@ export class AuthSeederService {
   async createDefaultAdmin() {
     try {
       const adminCount = await this.userRepository.count();
-      
+
       if (adminCount === 0) {
         const defaultAdmin = this.userRepository.create({
           username: 'admin',
@@ -27,7 +27,9 @@ export class AuthSeederService {
 
         await this.userRepository.save(defaultAdmin);
         this.logger.log('Default admin user created: admin / admin123');
-        this.logger.warn('Please change the default password after first login!');
+        this.logger.warn(
+          'Please change the default password after first login!',
+        );
       } else {
         this.logger.log('Admin users already exist, skipping seeder');
       }

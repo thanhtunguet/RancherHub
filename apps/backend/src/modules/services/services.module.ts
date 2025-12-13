@@ -28,7 +28,12 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [ServicesController],
-  providers: [ServicesService, RancherApiService, HarborApiService, DockerHubApiService],
+  providers: [
+    ServicesService,
+    RancherApiService,
+    HarborApiService,
+    DockerHubApiService,
+  ],
   exports: [ServicesService],
 })
 export class ServicesModule {}

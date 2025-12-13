@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MessageTemplate } from '../../entities/message-template.entity';
@@ -46,7 +51,9 @@ export class MessageTemplatesService {
     });
 
     if (!template) {
-      throw new NotFoundException(`Active template of type '${templateType}' not found`);
+      throw new NotFoundException(
+        `Active template of type '${templateType}' not found`,
+      );
     }
 
     return template;
@@ -62,7 +69,9 @@ export class MessageTemplatesService {
     });
 
     if (existing) {
-      throw new ConflictException(`Template with type '${dto.templateType}' already exists`);
+      throw new ConflictException(
+        `Template with type '${dto.templateType}' already exists`,
+      );
     }
 
     const template = this.messageTemplateRepository.create({
@@ -77,7 +86,10 @@ export class MessageTemplatesService {
   /**
    * Update message template
    */
-  async update(id: string, dto: UpdateMessageTemplateDto): Promise<MessageTemplate> {
+  async update(
+    id: string,
+    dto: UpdateMessageTemplateDto,
+  ): Promise<MessageTemplate> {
     const template = await this.findOne(id);
 
     Object.assign(template, dto);
@@ -92,7 +104,9 @@ export class MessageTemplatesService {
     const template = await this.findOne(id);
 
     if (template.isDefault) {
-      throw new BadRequestException('Cannot delete default system template. Use restore instead.');
+      throw new BadRequestException(
+        'Cannot delete default system template. Use restore instead.',
+      );
     }
 
     await this.messageTemplateRepository.remove(template);
@@ -117,7 +131,10 @@ export class MessageTemplatesService {
   /**
    * Render template with variables
    */
-  async renderTemplate(templateType: string, variables: Record<string, any>): Promise<string> {
+  async renderTemplate(
+    templateType: string,
+    variables: Record<string, any>,
+  ): Promise<string> {
     const template = await this.findByType(templateType);
     return this.render(template.messageTemplate, variables);
   }
@@ -139,7 +156,7 @@ export class MessageTemplatesService {
     }
 
     return usernames
-      .map(username => {
+      .map((username) => {
         // Remove @ if already present, then add it
         const cleanUsername = username.replace(/^@/, '');
         return `@${cleanUsername}`;
@@ -171,7 +188,13 @@ export class MessageTemplatesService {
   private getAvailableVariables(templateType: string): string[] {
     const variablesMap: Record<string, string[]> = {
       test_connection: ['timestamp', 'tagged_users'],
-      daily_health_check: ['date', 'time', 'visual_summary', 'avg_response_time', 'tagged_users'],
+      daily_health_check: [
+        'date',
+        'time',
+        'visual_summary',
+        'avg_response_time',
+        'tagged_users',
+      ],
       critical_alert: ['date', 'time', 'visual_alert', 'tagged_users'],
     };
 
@@ -243,7 +266,8 @@ This is a test message from RancherHub monitoring system.
 📞 Contact DevOps team immediately
 
 {{tagged_users}}`,
-        description: 'Sent immediately when critical service failure is detected',
+        description:
+          'Sent immediately when critical service failure is detected',
       },
     };
 
@@ -254,7 +278,11 @@ This is a test message from RancherHub monitoring system.
    * Seed default templates on application startup
    */
   async seedDefaultTemplates(): Promise<void> {
-    const templateTypes = ['test_connection', 'daily_health_check', 'critical_alert'];
+    const templateTypes = [
+      'test_connection',
+      'daily_health_check',
+      'critical_alert',
+    ];
 
     for (const templateType of templateTypes) {
       const existing = await this.messageTemplateRepository.findOne({

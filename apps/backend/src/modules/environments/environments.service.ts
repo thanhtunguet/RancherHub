@@ -12,8 +12,11 @@ export class EnvironmentsService {
     private environmentsRepository: Repository<Environment>,
   ) {}
 
-  async create(createEnvironmentDto: CreateEnvironmentDto): Promise<Environment> {
-    const environment = this.environmentsRepository.create(createEnvironmentDto);
+  async create(
+    createEnvironmentDto: CreateEnvironmentDto,
+  ): Promise<Environment> {
+    const environment =
+      this.environmentsRepository.create(createEnvironmentDto);
     return await this.environmentsRepository.save(environment);
   }
 
@@ -29,15 +32,18 @@ export class EnvironmentsService {
       where: { id },
       relations: ['appInstances', 'appInstances.rancherSite'],
     });
-    
+
     if (!environment) {
       throw new NotFoundException(`Environment with ID ${id} not found`);
     }
-    
+
     return environment;
   }
 
-  async update(id: string, updateEnvironmentDto: UpdateEnvironmentDto): Promise<Environment> {
+  async update(
+    id: string,
+    updateEnvironmentDto: UpdateEnvironmentDto,
+  ): Promise<Environment> {
     const environment = await this.findOne(id);
     Object.assign(environment, updateEnvironmentDto);
     return await this.environmentsRepository.save(environment);

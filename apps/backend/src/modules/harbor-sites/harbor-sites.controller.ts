@@ -84,7 +84,10 @@ export class HarborSitesController {
   @ApiResponse({ status: 404, description: 'Harbor site not found' })
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
   @ApiBody({ type: UpdateHarborSiteDto })
-  update(@Param('id') id: string, @Body() updateHarborSiteDto: UpdateHarborSiteDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateHarborSiteDto: UpdateHarborSiteDto,
+  ) {
     return this.harborSitesService.update(id, updateHarborSiteDto);
   }
 
@@ -107,7 +110,9 @@ export class HarborSitesController {
   }
 
   @Post(':id/test')
-  @ApiOperation({ summary: 'Test connection to a Harbor site using stored credentials' })
+  @ApiOperation({
+    summary: 'Test connection to a Harbor site using stored credentials',
+  })
   @ApiResponse({ status: 200, description: 'Connection test result' })
   @ApiResponse({ status: 404, description: 'Harbor site not found' })
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
@@ -122,7 +127,10 @@ export class HarborSitesController {
 
   @Post(':id/activate')
   @ApiOperation({ summary: 'Set a Harbor site as active' })
-  @ApiResponse({ status: 200, description: 'Harbor site activated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Harbor site activated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Harbor site not found' })
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
   activateSite(@Param('id') id: string) {
@@ -131,7 +139,10 @@ export class HarborSitesController {
 
   @Post(':id/deactivate')
   @ApiOperation({ summary: 'Deactivate a Harbor site' })
-  @ApiResponse({ status: 200, description: 'Harbor site deactivated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Harbor site deactivated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Harbor site not found' })
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
   deactivateSite(@Param('id') id: string) {
@@ -152,7 +163,10 @@ export class HarborSitesController {
   @ApiResponse({ status: 200, description: 'Harbor repositories list' })
   @ApiParam({ name: 'id', description: 'Harbor site ID' })
   @ApiParam({ name: 'projectName', description: 'Project name' })
-  async getRepositories(@Param('id') id: string, @Param('projectName') projectName: string) {
+  async getRepositories(
+    @Param('id') id: string,
+    @Param('projectName') projectName: string,
+  ) {
     const site = await this.harborSitesService.findOne(id);
     const decodedProjectName = this.decodeParam(projectName);
     return this.harborApiService.getRepositories(site, decodedProjectName);
@@ -165,14 +179,18 @@ export class HarborSitesController {
   @ApiParam({ name: 'projectName', description: 'Project name' })
   @ApiParam({ name: 'repositoryName', description: 'Repository name' })
   async getArtifacts(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Param('projectName') projectName: string,
-    @Param('repositoryName') repositoryName: string
+    @Param('repositoryName') repositoryName: string,
   ) {
     const site = await this.harborSitesService.findOne(id);
     const decodedProjectName = this.decodeParam(projectName);
     const decodedRepositoryName = this.decodeParam(repositoryName);
-    return this.harborApiService.getArtifacts(site, decodedProjectName, decodedRepositoryName);
+    return this.harborApiService.getArtifacts(
+      site,
+      decodedProjectName,
+      decodedRepositoryName,
+    );
   }
 
   @Get(':id/test-image-size')
@@ -186,10 +204,10 @@ export class HarborSitesController {
     if (!imageTag) {
       return { error: 'imageTag query parameter is required' };
     }
-    
+
     const site = await this.harborSitesService.findOne(id);
     const result = await this.harborApiService.getImageSize(site, imageTag);
-    
+
     return {
       imageTag,
       site: { id: site.id, name: site.name, url: site.url },

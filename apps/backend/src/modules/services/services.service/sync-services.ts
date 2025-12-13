@@ -1,7 +1,11 @@
 import { SyncServicesDto } from '../dto/sync-services.dto';
 import { ServicesService } from './index';
 
-export async function syncServices(service: ServicesService, syncDto: SyncServicesDto, initiatedBy?: string): Promise<any> {
+export async function syncServices(
+  service: ServicesService,
+  syncDto: SyncServicesDto,
+  initiatedBy?: string,
+): Promise<any> {
   service.logger.log(
     `Starting sync operation from env ${syncDto.sourceEnvironmentId} to ${syncDto.targetEnvironmentId}`,
   );
@@ -94,4 +98,4 @@ export async function syncServices(service: ServicesService, syncDto: SyncServic
     await service.syncOperationRepository.save(syncOperation);
     throw error;
   }
-} 
+}

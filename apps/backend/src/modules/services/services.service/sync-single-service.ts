@@ -11,7 +11,11 @@ export async function syncSingleService(
   // Get source service
   const sourceService = await service.serviceRepository.findOne({
     where: { id: serviceId },
-    relations: ['appInstance', 'appInstance.rancherSite', 'appInstance.environment'],
+    relations: [
+      'appInstance',
+      'appInstance.rancherSite',
+      'appInstance.environment',
+    ],
   });
 
   if (!sourceService) {
@@ -40,13 +44,12 @@ export async function syncSingleService(
   service.logger.log(
     `Syncing service ${sourceService.name} from ${sourceService.appInstance.cluster}/${sourceService.appInstance.namespace} to ${targetAppInstance.cluster}/${targetAppInstance.namespace}`,
   );
-  service.logger.log(
-    `Source image: ${sourceService.imageTag}`,
-  );
+  service.logger.log(`Source image: ${sourceService.imageTag}`);
 
   // Normalize workload type (remove plurals if present)
-  const normalizedWorkloadType = sourceService.workloadType?.toLowerCase().replace(/s$/, '') || 'deployment';
-  
+  const normalizedWorkloadType =
+    sourceService.workloadType?.toLowerCase().replace(/s$/, '') || 'deployment';
+
   try {
     await service.rancherApiService.updateWorkloadImage(
       targetAppInstance.rancherSite,
@@ -56,9 +59,13 @@ export async function syncSingleService(
       normalizedWorkloadType,
       sourceService.imageTag,
     );
-    service.logger.log(`Successfully updated workload ${sourceService.name} in Rancher`);
+    service.logger.log(
+      `Successfully updated workload ${sourceService.name} in Rancher`,
+    );
   } catch (rancherError) {
-    service.logger.error(`Failed to update workload in Rancher: ${rancherError.message}`);
+    service.logger.error(
+      `Failed to update workload in Rancher: ${rancherError.message}`,
+    );
     throw new Error(`Rancher API update failed: ${rancherError.message}`);
   }
 
@@ -105,8 +112,8 @@ export async function syncSingleService(
     configChanges: {
       imageTag: {
         from: previousImageTag,
-        to: sourceService.imageTag
-      }
+        to: sourceService.imageTag,
+      },
     },
     status: 'success',
     durationMs: Date.now() - startTime,
@@ -121,4 +128,4 @@ export async function syncSingleService(
     newImageTag: sourceService.imageTag,
     status: 'success',
   };
-} 
+}

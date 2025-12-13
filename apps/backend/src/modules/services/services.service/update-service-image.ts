@@ -6,9 +6,7 @@ export async function updateServiceImage(
   serviceId: string,
   newTag: string,
 ): Promise<any> {
-  servicesService.logger.log(
-    `Updating service ${serviceId} to tag: ${newTag}`,
-  );
+  servicesService.logger.log(`Updating service ${serviceId} to tag: ${newTag}`);
 
   // Get the service with its app instance and rancher site
   const service = await servicesService.serviceRepository.findOne({
@@ -41,7 +39,7 @@ export async function updateServiceImage(
   // Parse the current image to get the image name without tag
   const currentImageParts = service.imageTag.split(':');
   let imageNameWithoutTag: string;
-  
+
   if (currentImageParts.length > 1) {
     imageNameWithoutTag = currentImageParts.slice(0, -1).join(':');
   } else {
@@ -92,7 +90,7 @@ export async function updateServiceImage(
       `Failed to update service ${service.name}: ${error.message}`,
       error.stack,
     );
-    
+
     throw new BadRequestException(
       `Failed to update deployment image: ${error.message}`,
     );

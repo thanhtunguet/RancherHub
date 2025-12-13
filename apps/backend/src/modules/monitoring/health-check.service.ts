@@ -18,14 +18,18 @@ export class HealthCheckService {
     private readonly monitoringService: MonitoringService,
   ) {}
 
-  async checkAllInstances(instances: MonitoredInstance[]): Promise<HealthCheckResult[]> {
+  async checkAllInstances(
+    instances: MonitoredInstance[],
+  ): Promise<HealthCheckResult[]> {
     this.logger.log(`Starting health check for ${instances.length} instances`);
-    
+
     const results: HealthCheckResult[] = [];
-    
+
     for (const instance of instances) {
       if (!instance.monitoringEnabled) {
-        this.logger.log(`Skipping disabled instance: ${instance.appInstance?.name}`);
+        this.logger.log(
+          `Skipping disabled instance: ${instance.appInstance?.name}`,
+        );
         continue;
       }
 
@@ -33,7 +37,9 @@ export class HealthCheckService {
         const result = await this.checkInstance(instance);
         results.push(result);
       } catch (error) {
-        this.logger.error(`Failed to check instance ${instance.appInstance?.name}: ${error.message}`);
+        this.logger.error(
+          `Failed to check instance ${instance.appInstance?.name}: ${error.message}`,
+        );
         results.push({
           monitoredInstanceId: instance.id,
           appInstance: instance.appInstance,
@@ -59,10 +65,12 @@ export class HealthCheckService {
 
   async checkInstance(instance: MonitoredInstance): Promise<HealthCheckResult> {
     const startTime = Date.now();
-    
+
     try {
-      this.logger.log(`Checking health for instance: ${instance.appInstance?.name}`);
-      
+      this.logger.log(
+        `Checking health for instance: ${instance.appInstance?.name}`,
+      );
+
       // Get workloads for this app instance using the same method as regular service loading
       const workloads = await this.rancherApiService.getDeploymentsFromK8sApi(
         instance.appInstance.rancherSite,
@@ -71,7 +79,7 @@ export class HealthCheckService {
       );
 
       const responseTime = Date.now() - startTime;
-      
+
       // Analyze workload health
       const workloadsCount = workloads.length;
       let healthyWorkloads = 0;
@@ -82,7 +90,7 @@ export class HealthCheckService {
       for (const workload of workloads) {
         const isPaused = workload.scale === 0;
         const isHealthy = this.isWorkloadHealthy(workload);
-        
+
         if (isPaused) {
           pausedWorkloads++;
         } else if (isHealthy) {
@@ -94,7 +102,7 @@ export class HealthCheckService {
         workloadDetails.push({
           name: workload.name || 'unknown',
           type: workload.type || 'unknown',
-          status: isPaused ? 'paused' : (isHealthy ? 'healthy' : 'failed'),
+          status: isPaused ? 'paused' : isHealthy ? 'healthy' : 'failed',
           state: workload.state,
           scale: workload.scale,
           availableReplicas: workload.availableReplicas,
@@ -104,7 +112,7 @@ export class HealthCheckService {
 
       // Determine overall status
       let status: HealthStatus = 'healthy';
-      
+
       if (failedWorkloads > 0) {
         if (failedWorkloads >= workloadsCount * 0.5) {
           status = 'critical'; // More than 50% failed
@@ -143,7 +151,8 @@ export class HealthCheckService {
       });
 
       // Update instance status
-      const consecutiveFailures = status === 'healthy' ? 0 : instance.consecutiveFailures + 1;
+      const consecutiveFailures =
+        status === 'healthy' ? 0 : instance.consecutiveFailures + 1;
       await this.monitoringService.updateMonitoredInstanceStatus(
         instance.id,
         status,
@@ -155,14 +164,17 @@ export class HealthCheckService {
         await this.generateAlert(instance, result);
       }
 
-      this.logger.log(`Health check completed for ${instance.appInstance?.name}: ${status}`);
+      this.logger.log(
+        `Health check completed for ${instance.appInstance?.name}: ${status}`,
+      );
       return result;
-      
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
-      this.logger.error(`Health check failed for ${instance.appInstance?.name}: ${error.message}`);
-      
+
+      this.logger.error(
+        `Health check failed for ${instance.appInstance?.name}: ${error.message}`,
+      );
+
       // Save error to monitoring history
       await this.monitoringService.createMonitoringHistory({
         monitoredInstanceId: instance.id,
@@ -194,33 +206,46 @@ export class HealthCheckService {
     if (workload.state === 'active') {
       return workload.availableReplicas >= workload.scale;
     }
-    
+
     // Check different workload types
     switch (workload.type?.toLowerCase()) {
       case 'deployment':
-        return workload.state === 'active' && workload.availableReplicas >= workload.scale;
+        return (
+          workload.state === 'active' &&
+          workload.availableReplicas >= workload.scale
+        );
       case 'statefulset':
-        return workload.state === 'active' && workload.availableReplicas >= workload.scale;
+        return (
+          workload.state === 'active' &&
+          workload.availableReplicas >= workload.scale
+        );
       case 'daemonset':
         return workload.state === 'active' && workload.availableReplicas > 0;
       default:
         // For unknown types, consider healthy if state is active and has replicas
-        return workload.state === 'active' && (workload.availableReplicas || 0) > 0;
+        return (
+          workload.state === 'active' && (workload.availableReplicas || 0) > 0
+        );
     }
   }
 
-
-  private async generateAlert(instance: MonitoredInstance, result: HealthCheckResult): Promise<void> {
+  private async generateAlert(
+    instance: MonitoredInstance,
+    result: HealthCheckResult,
+  ): Promise<void> {
     try {
-      const alertType = result.failedServices > 0 ? 'service_failure' : 'performance_degradation';
+      const alertType =
+        result.failedServices > 0
+          ? 'service_failure'
+          : 'performance_degradation';
       const severity = result.status === 'critical' ? 'critical' : 'warning';
-      
+
       let message = `Health check failed for ${instance.appInstance?.name} in ${instance.appInstance?.environment?.name}`;
-      
+
       if (result.failedServices > 0) {
         message += `. ${result.failedServices}/${result.servicesCount} workloads are failing.`;
       }
-      
+
       if (result.error) {
         message += ` Error: ${result.error}`;
       }

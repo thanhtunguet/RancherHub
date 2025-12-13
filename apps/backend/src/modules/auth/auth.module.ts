@@ -18,7 +18,8 @@ import { Require2FAGuard } from './guards/require-2fa.guard';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'rancher-hub-secret-key',
+        secret:
+          configService.get<string>('JWT_SECRET') || 'rancher-hub-secret-key',
         signOptions: {
           expiresIn: '24h',
         },
@@ -27,7 +28,13 @@ import { Require2FAGuard } from './guards/require-2fa.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, AuthSeederService, Require2FAGuard],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    AuthSeederService,
+    Require2FAGuard,
+  ],
   exports: [AuthService, AuthSeederService, Require2FAGuard],
 })
 export class AuthModule {}

@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import * as speakeasy from 'speakeasy';
@@ -6,7 +11,11 @@ import { User } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
-import { UserResponseDto, UserListResponseDto, UserStatsDto } from './dto/user-response.dto';
+import {
+  UserResponseDto,
+  UserListResponseDto,
+  UserStatsDto,
+} from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +27,10 @@ export class UsersService {
   /**
    * Verify admin's 2FA token
    */
-  private async verifyAdminToken(adminId: string, token: string): Promise<void> {
+  private async verifyAdminToken(
+    adminId: string,
+    token: string,
+  ): Promise<void> {
     const admin = await this.userRepository.findOne({ where: { id: adminId } });
 
     if (!admin) {
@@ -26,7 +38,9 @@ export class UsersService {
     }
 
     if (!admin.twoFactorEnabled || !admin.twoFactorSecret) {
-      throw new BadRequestException('2FA is not enabled for your account. Please enable 2FA first.');
+      throw new BadRequestException(
+        '2FA is not enabled for your account. Please enable 2FA first.',
+      );
     }
 
     const isValid = speakeasy.totp.verify({
@@ -37,14 +51,19 @@ export class UsersService {
     });
 
     if (!isValid) {
-      throw new UnauthorizedException('Invalid 2FA token. Please enter the correct code from your authenticator app.');
+      throw new UnauthorizedException(
+        'Invalid 2FA token. Please enter the correct code from your authenticator app.',
+      );
     }
   }
 
   /**
    * Create a new user (requires admin 2FA)
    */
-  async create(createUserDto: CreateUserDto, adminId: string): Promise<UserResponseDto> {
+  async create(
+    createUserDto: CreateUserDto,
+    adminId: string,
+  ): Promise<UserResponseDto> {
     // Verify admin's 2FA token
     await this.verifyAdminToken(adminId, createUserDto.adminTwoFactorToken);
 
@@ -52,12 +71,14 @@ export class UsersService {
     const existingUser = await this.userRepository.findOne({
       where: [
         { username: createUserDto.username },
-        { email: createUserDto.email }
+        { email: createUserDto.email },
       ],
     });
 
     if (existingUser) {
-      throw new BadRequestException('User with this username or email already exists');
+      throw new BadRequestException(
+        'User with this username or email already exists',
+      );
     }
 
     // Create new user
@@ -87,7 +108,7 @@ export class UsersService {
     if (search) {
       queryBuilder.where(
         'user.username LIKE :search OR user.email LIKE :search',
-        { search: `%${search}%` }
+        { search: `%${search}%` },
       );
     }
 
@@ -107,7 +128,7 @@ export class UsersService {
       .getMany();
 
     // Remove sensitive data
-    const data = users.map(user => {
+    const data = users.map((user) => {
       const { password, twoFactorSecret, ...result } = user;
       return result;
     });
@@ -140,7 +161,7 @@ export class UsersService {
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
-    adminId: string
+    adminId: string,
   ): Promise<UserResponseDto> {
     // Verify admin's 2FA token
     await this.verifyAdminToken(adminId, updateUserDto.adminTwoFactorToken);
@@ -156,7 +177,7 @@ export class UsersService {
       const duplicateUser = await this.userRepository.findOne({
         where: [
           { username: updateUserDto.username },
-          { email: updateUserDto.email }
+          { email: updateUserDto.email },
         ],
       });
 
@@ -203,8 +224,12 @@ export class UsersService {
   async getStats(): Promise<UserStatsDto> {
     const total = await this.userRepository.count();
     const active = await this.userRepository.count({ where: { active: true } });
-    const inactive = await this.userRepository.count({ where: { active: false } });
-    const with2FA = await this.userRepository.count({ where: { twoFactorEnabled: true } });
+    const inactive = await this.userRepository.count({
+      where: { active: false },
+    });
+    const with2FA = await this.userRepository.count({
+      where: { twoFactorEnabled: true },
+    });
 
     return { total, active, inactive, with2FA };
   }

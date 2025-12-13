@@ -62,7 +62,9 @@ export class ConfigMapsService {
     private readonly rancherApiService: RancherApiService,
   ) {}
 
-  async getConfigMapsByAppInstance(appInstanceId: string): Promise<ConfigMapData[]> {
+  async getConfigMapsByAppInstance(
+    appInstanceId: string,
+  ): Promise<ConfigMapData[]> {
     this.logger.debug(`Getting ConfigMaps for app instance: ${appInstanceId}`);
 
     const appInstance = await this.appInstanceRepository.findOne({
@@ -71,10 +73,14 @@ export class ConfigMapsService {
     });
 
     if (!appInstance) {
-      throw new NotFoundException(`App instance with ID ${appInstanceId} not found`);
+      throw new NotFoundException(
+        `App instance with ID ${appInstanceId} not found`,
+      );
     }
 
-    this.logger.debug(`Found app instance: ${appInstance.name} in cluster: ${appInstance.cluster}, namespace: ${appInstance.namespace}`);
+    this.logger.debug(
+      `Found app instance: ${appInstance.name} in cluster: ${appInstance.cluster}, namespace: ${appInstance.namespace}`,
+    );
 
     const configMaps = await this.rancherApiService.getConfigMapsFromK8sApi(
       appInstance.rancherSite,
@@ -82,7 +88,7 @@ export class ConfigMapsService {
       appInstance.namespace,
     );
 
-    return configMaps.map(cm => ({
+    return configMaps.map((cm) => ({
       ...cm,
       appInstanceId,
     }));
@@ -92,7 +98,9 @@ export class ConfigMapsService {
     sourceAppInstanceId: string,
     targetAppInstanceId: string,
   ): Promise<ConfigMapComparisonResult> {
-    this.logger.debug(`Comparing ConfigMaps between app instances: ${sourceAppInstanceId} -> ${targetAppInstanceId}`);
+    this.logger.debug(
+      `Comparing ConfigMaps between app instances: ${sourceAppInstanceId} -> ${targetAppInstanceId}`,
+    );
 
     // Fetch ConfigMaps from both app instances
     const [sourceConfigMaps, targetConfigMaps] = await Promise.all([
@@ -100,16 +108,22 @@ export class ConfigMapsService {
       this.getConfigMapsByAppInstance(targetAppInstanceId),
     ]);
 
-    this.logger.debug(`Source ConfigMaps: ${sourceConfigMaps.length}, Target ConfigMaps: ${targetConfigMaps.length}`);
+    this.logger.debug(
+      `Source ConfigMaps: ${sourceConfigMaps.length}, Target ConfigMaps: ${targetConfigMaps.length}`,
+    );
 
     // Create maps for quick lookup
-    const sourceConfigMapMap = new Map(sourceConfigMaps.map(cm => [cm.name, cm]));
-    const targetConfigMapMap = new Map(targetConfigMaps.map(cm => [cm.name, cm]));
+    const sourceConfigMapMap = new Map(
+      sourceConfigMaps.map((cm) => [cm.name, cm]),
+    );
+    const targetConfigMapMap = new Map(
+      targetConfigMaps.map((cm) => [cm.name, cm]),
+    );
 
     // Get all unique ConfigMap names
     const allConfigMapNames = new Set([
-      ...sourceConfigMaps.map(cm => cm.name),
-      ...targetConfigMaps.map(cm => cm.name),
+      ...sourceConfigMaps.map((cm) => cm.name),
+      ...targetConfigMaps.map((cm) => cm.name),
     ]);
 
     const comparisons: ConfigMapComparison[] = [];
@@ -130,7 +144,12 @@ export class ConfigMapsService {
     // Sort comparisons by differenceType priority then by ConfigMap name
     comparisons.sort((a, b) => {
       if (a.differenceType !== b.differenceType) {
-        const statusOrder = { 'missing_in_source': 0, 'missing_in_target': 1, 'different': 2, 'identical': 3 };
+        const statusOrder = {
+          missing_in_source: 0,
+          missing_in_target: 1,
+          different: 2,
+          identical: 3,
+        };
         return statusOrder[a.differenceType] - statusOrder[b.differenceType];
       }
       return a.configMapName.localeCompare(b.configMapName);
@@ -138,10 +157,16 @@ export class ConfigMapsService {
 
     const summary = {
       totalConfigMaps: allConfigMapNames.size,
-      identical: comparisons.filter(c => c.differenceType === 'identical').length,
-      different: comparisons.filter(c => c.differenceType === 'different').length,
-      missingInSource: comparisons.filter(c => c.differenceType === 'missing_in_source').length,
-      missingInTarget: comparisons.filter(c => c.differenceType === 'missing_in_target').length,
+      identical: comparisons.filter((c) => c.differenceType === 'identical')
+        .length,
+      different: comparisons.filter((c) => c.differenceType === 'different')
+        .length,
+      missingInSource: comparisons.filter(
+        (c) => c.differenceType === 'missing_in_source',
+      ).length,
+      missingInTarget: comparisons.filter(
+        (c) => c.differenceType === 'missing_in_target',
+      ).length,
     };
 
     return {
@@ -157,8 +182,11 @@ export class ConfigMapsService {
     sourceConfigMap: ConfigMapData | undefined,
     targetConfigMap: ConfigMapData | undefined,
   ): ConfigMapComparison {
-    const differences = this.calculateDifferences(sourceConfigMap, targetConfigMap);
-    
+    const differences = this.calculateDifferences(
+      sourceConfigMap,
+      targetConfigMap,
+    );
+
     return {
       configMapName,
       source: sourceConfigMap || null,
@@ -188,7 +216,7 @@ export class ConfigMapsService {
     const sourceKeys = new Set(Object.keys(sourceConfigMap.data || {}));
     const targetKeys = new Set(Object.keys(targetConfigMap.data || {}));
     const allKeys = new Set([...sourceKeys, ...targetKeys]);
-    
+
     const dataKeys: string[] = [];
     const changedKeys: string[] = [];
 
@@ -203,8 +231,12 @@ export class ConfigMapsService {
     return {
       existence: false,
       data: changedKeys.length > 0 || dataKeys.length > 0,
-      labels: JSON.stringify(sourceConfigMap.labels || {}) !== JSON.stringify(targetConfigMap.labels || {}),
-      annotations: JSON.stringify(sourceConfigMap.annotations || {}) !== JSON.stringify(targetConfigMap.annotations || {}),
+      labels:
+        JSON.stringify(sourceConfigMap.labels || {}) !==
+        JSON.stringify(targetConfigMap.labels || {}),
+      annotations:
+        JSON.stringify(sourceConfigMap.annotations || {}) !==
+        JSON.stringify(targetConfigMap.annotations || {}),
       dataKeys,
       changedKeys,
     };
@@ -218,8 +250,11 @@ export class ConfigMapsService {
       return 'missing';
     }
 
-    const differences = this.calculateDifferences(sourceConfigMap, targetConfigMap);
-    
+    const differences = this.calculateDifferences(
+      sourceConfigMap,
+      targetConfigMap,
+    );
+
     if (differences.data || differences.labels || differences.annotations) {
       return 'different';
     }
@@ -238,7 +273,10 @@ export class ConfigMapsService {
       return 'missing_in_target';
     }
     if (sourceConfigMap && targetConfigMap) {
-      const differences = this.calculateDifferences(sourceConfigMap, targetConfigMap);
+      const differences = this.calculateDifferences(
+        sourceConfigMap,
+        targetConfigMap,
+      );
       if (differences.data || differences.labels || differences.annotations) {
         return 'different';
       }
@@ -251,7 +289,9 @@ export class ConfigMapsService {
     sourceAppInstanceId: string,
     targetAppInstanceId: string,
   ) {
-    this.logger.debug(`Getting detailed comparison for ConfigMap: ${configMapName}`);
+    this.logger.debug(
+      `Getting detailed comparison for ConfigMap: ${configMapName}`,
+    );
 
     // Get ConfigMaps from both app instances
     const [sourceConfigMaps, targetConfigMaps] = await Promise.all([
@@ -259,11 +299,17 @@ export class ConfigMapsService {
       this.getConfigMapsByAppInstance(targetAppInstanceId),
     ]);
 
-    const sourceConfigMap = sourceConfigMaps.find(cm => cm.name === configMapName);
-    const targetConfigMap = targetConfigMaps.find(cm => cm.name === configMapName);
+    const sourceConfigMap = sourceConfigMaps.find(
+      (cm) => cm.name === configMapName,
+    );
+    const targetConfigMap = targetConfigMaps.find(
+      (cm) => cm.name === configMapName,
+    );
 
     if (!sourceConfigMap && !targetConfigMap) {
-      throw new NotFoundException(`ConfigMap '${configMapName}' not found in either app instance`);
+      throw new NotFoundException(
+        `ConfigMap '${configMapName}' not found in either app instance`,
+      );
     }
 
     // Get all unique keys from both ConfigMaps
@@ -271,10 +317,10 @@ export class ConfigMapsService {
     const targetKeys = Object.keys(targetConfigMap?.data || {});
     const allKeys = new Set([...sourceKeys, ...targetKeys]);
 
-    const keyComparisons = Array.from(allKeys).map(key => {
+    const keyComparisons = Array.from(allKeys).map((key) => {
       const sourceValue = sourceConfigMap?.data?.[key];
       const targetValue = targetConfigMap?.data?.[key];
-      
+
       return {
         key,
         sourceValue: sourceValue || null,
@@ -295,22 +341,29 @@ export class ConfigMapsService {
       keyComparisons,
       summary: {
         totalKeys: allKeys.size,
-        identical: keyComparisons.filter(k => k.identical).length,
-        different: keyComparisons.filter(k => k.isDifferent && !k.missingInSource && !k.missingInTarget).length,
-        missingInSource: keyComparisons.filter(k => k.missingInSource).length,
-        missingInTarget: keyComparisons.filter(k => k.missingInTarget).length,
+        identical: keyComparisons.filter((k) => k.identical).length,
+        different: keyComparisons.filter(
+          (k) => k.isDifferent && !k.missingInSource && !k.missingInTarget,
+        ).length,
+        missingInSource: keyComparisons.filter((k) => k.missingInSource).length,
+        missingInTarget: keyComparisons.filter((k) => k.missingInTarget).length,
       },
     };
   }
 
-  async syncConfigMapKey(syncData: {
-    sourceAppInstanceId: string;
-    targetAppInstanceId: string;
-    configMapName: string;
-    key: string;
-    value: string;
-  }, initiatedBy?: string) {
-    this.logger.debug(`Syncing single ConfigMap key: ${syncData.key} in ${syncData.configMapName}`);
+  async syncConfigMapKey(
+    syncData: {
+      sourceAppInstanceId: string;
+      targetAppInstanceId: string;
+      configMapName: string;
+      key: string;
+      value: string;
+    },
+    initiatedBy?: string,
+  ) {
+    this.logger.debug(
+      `Syncing single ConfigMap key: ${syncData.key} in ${syncData.configMapName}`,
+    );
 
     const startTime = Date.now();
 
@@ -327,11 +380,15 @@ export class ConfigMapsService {
     ]);
 
     if (!sourceAppInstance) {
-      throw new NotFoundException(`Source app instance with ID ${syncData.sourceAppInstanceId} not found`);
+      throw new NotFoundException(
+        `Source app instance with ID ${syncData.sourceAppInstanceId} not found`,
+      );
     }
 
     if (!targetAppInstance) {
-      throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
+      throw new NotFoundException(
+        `Target app instance with ID ${syncData.targetAppInstanceId} not found`,
+      );
     }
 
     // Create sync operation record
@@ -436,13 +493,19 @@ export class ConfigMapsService {
     }
   }
 
-  async syncConfigMapKeys(syncData: {
-    sourceAppInstanceId: string;
-    targetAppInstanceId: string;
-    configMapName: string;
-    keys: Record<string, string>;
-  }, initiatedBy?: string) {
-    this.logger.debug(`Syncing multiple ConfigMap keys in ${syncData.configMapName}:`, Object.keys(syncData.keys));
+  async syncConfigMapKeys(
+    syncData: {
+      sourceAppInstanceId: string;
+      targetAppInstanceId: string;
+      configMapName: string;
+      keys: Record<string, string>;
+    },
+    initiatedBy?: string,
+  ) {
+    this.logger.debug(
+      `Syncing multiple ConfigMap keys in ${syncData.configMapName}:`,
+      Object.keys(syncData.keys),
+    );
 
     const startTime = Date.now();
 
@@ -459,11 +522,15 @@ export class ConfigMapsService {
     ]);
 
     if (!sourceAppInstance) {
-      throw new NotFoundException(`Source app instance with ID ${syncData.sourceAppInstanceId} not found`);
+      throw new NotFoundException(
+        `Source app instance with ID ${syncData.sourceAppInstanceId} not found`,
+      );
     }
 
     if (!targetAppInstance) {
-      throw new NotFoundException(`Target app instance with ID ${syncData.targetAppInstanceId} not found`);
+      throw new NotFoundException(
+        `Target app instance with ID ${syncData.targetAppInstanceId} not found`,
+      );
     }
 
     // Create sync operation record

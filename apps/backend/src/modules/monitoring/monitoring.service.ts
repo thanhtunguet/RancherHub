@@ -44,7 +44,9 @@ export class MonitoringService {
     }
   }
 
-  async createOrUpdateConfig(dto: CreateMonitoringConfigDto): Promise<MonitoringConfig> {
+  async createOrUpdateConfig(
+    dto: CreateMonitoringConfigDto,
+  ): Promise<MonitoringConfig> {
     const existingConfig = await this.getConfig();
 
     if (existingConfig) {
@@ -56,7 +58,9 @@ export class MonitoringService {
     }
   }
 
-  async updateConfig(dto: UpdateMonitoringConfigDto): Promise<MonitoringConfig> {
+  async updateConfig(
+    dto: UpdateMonitoringConfigDto,
+  ): Promise<MonitoringConfig> {
     const config = await this.getConfig();
     if (!config) {
       throw new NotFoundException('Monitoring configuration not found');
@@ -110,7 +114,9 @@ export class MonitoringService {
     return instance;
   }
 
-  async createMonitoredInstance(dto: CreateMonitoredInstanceDto): Promise<MonitoredInstance> {
+  async createMonitoredInstance(
+    dto: CreateMonitoredInstanceDto,
+  ): Promise<MonitoredInstance> {
     // Verify app instance exists
     const appInstance = await this.appInstanceRepository.findOne({
       where: { id: dto.appInstanceId },
@@ -152,10 +158,13 @@ export class MonitoringService {
     instanceId?: string,
     days: number = 7,
   ): Promise<MonitoringHistory[]> {
-    const queryBuilder = this.monitoringHistoryRepository.createQueryBuilder('history');
+    const queryBuilder =
+      this.monitoringHistoryRepository.createQueryBuilder('history');
 
     if (instanceId) {
-      queryBuilder.where('history.monitoredInstanceId = :instanceId', { instanceId });
+      queryBuilder.where('history.monitoredInstanceId = :instanceId', {
+        instanceId,
+      });
     }
 
     const cutoffDate = new Date();
@@ -193,10 +202,13 @@ export class MonitoringService {
     instanceId?: string,
     resolved?: boolean,
   ): Promise<AlertHistory[]> {
-    const queryBuilder = this.alertHistoryRepository.createQueryBuilder('alert');
+    const queryBuilder =
+      this.alertHistoryRepository.createQueryBuilder('alert');
 
     if (instanceId) {
-      queryBuilder.where('alert.monitoredInstanceId = :instanceId', { instanceId });
+      queryBuilder.where('alert.monitoredInstanceId = :instanceId', {
+        instanceId,
+      });
     }
 
     if (resolved !== undefined) {
@@ -220,14 +232,14 @@ export class MonitoringService {
 
   async resolveAlert(id: string): Promise<AlertHistory> {
     const alert = await this.alertHistoryRepository.findOne({ where: { id } });
-    
+
     if (!alert) {
       throw new NotFoundException('Alert not found');
     }
 
     alert.resolved = true;
     alert.resolvedAt = new Date();
-    
+
     return this.alertHistoryRepository.save(alert);
   }
 
@@ -247,7 +259,11 @@ export class MonitoringService {
   async getActiveMonitoredInstances(): Promise<MonitoredInstance[]> {
     return this.monitoredInstanceRepository.find({
       where: { monitoringEnabled: true },
-      relations: ['appInstance', 'appInstance.environment', 'appInstance.rancherSite'],
+      relations: [
+        'appInstance',
+        'appInstance.environment',
+        'appInstance.rancherSite',
+      ],
     });
   }
 }

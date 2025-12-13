@@ -9,7 +9,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -61,17 +66,29 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '2FA verified and enabled' })
   @ApiResponse({ status: 400, description: 'Invalid 2FA token' })
   async verify2FA(@Request() req, @Body() verify2FADto: Verify2FADto) {
-    const isValid = await this.authService.verify2FA(req.user.userId, verify2FADto);
-    return { success: isValid, message: isValid ? '2FA enabled successfully' : 'Invalid token' };
+    const isValid = await this.authService.verify2FA(
+      req.user.userId,
+      verify2FADto,
+    );
+    return {
+      success: isValid,
+      message: isValid ? '2FA enabled successfully' : 'Invalid token',
+    };
   }
 
   @Post('disable-2fa')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Disable 2FA for authenticated user (requires 2FA token verification)' })
+  @ApiOperation({
+    summary:
+      'Disable 2FA for authenticated user (requires 2FA token verification)',
+  })
   @ApiResponse({ status: 200, description: '2FA disabled successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized or invalid 2FA token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized or invalid 2FA token',
+  })
   @ApiResponse({ status: 400, description: '2FA not enabled or invalid token' })
   async disable2FA(@Request() req, @Body() disable2FADto: Disable2FADto) {
     await this.authService.disable2FA(req.user.userId, disable2FADto.token);
@@ -85,12 +102,18 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized or incorrect current password' })
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized or incorrect current password',
+  })
+  async changePassword(
+    @Request() req,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
     await this.authService.changePassword(
       req.user.userId,
       changePasswordDto.currentPassword,
-      changePasswordDto.newPassword
+      changePasswordDto.newPassword,
     );
     return { success: true, message: 'Password changed successfully' };
   }
@@ -107,7 +130,7 @@ export class AuthController {
     if (!user) {
       return null;
     }
-    
+
     const { password, twoFactorSecret, ...profile } = user;
     return profile;
   }

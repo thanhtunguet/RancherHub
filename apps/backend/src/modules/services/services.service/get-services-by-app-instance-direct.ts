@@ -2,11 +2,17 @@ import { Service } from 'src/entities';
 import { ServicesService } from './index';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 
-export async function getServicesByAppInstanceDirect(service: ServicesService, appInstanceId: string): Promise<Service[]> {
-  service.logger.debug(`Fetching services directly from Rancher for app instance: ${appInstanceId}`);
+export async function getServicesByAppInstanceDirect(
+  service: ServicesService,
+  appInstanceId: string,
+): Promise<Service[]> {
+  service.logger.debug(
+    `Fetching services directly from Rancher for app instance: ${appInstanceId}`,
+  );
 
   // Validate that appInstanceId is a valid UUID
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(appInstanceId)) {
     throw new BadRequestException(
       `Invalid app instance ID format. Expected UUID, got: ${appInstanceId}`,
@@ -31,18 +37,19 @@ export async function getServicesByAppInstanceDirect(service: ServicesService, a
 
   try {
     // Fetch deployments directly from Rancher Kubernetes API
-    const deployments = await service.rancherApiService.getDeploymentsFromK8sApi(
-      appInstance.rancherSite,
-      appInstance.cluster,
-      appInstance.namespace,
-    );
-    
+    const deployments =
+      await service.rancherApiService.getDeploymentsFromK8sApi(
+        appInstance.rancherSite,
+        appInstance.cluster,
+        appInstance.namespace,
+      );
+
     service.logger.debug(
       `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
     );
 
     // Convert deployments to Service objects without database operations
-    const services: Service[] = deployments.map(dep => {
+    const services: Service[] = deployments.map((dep) => {
       const service = new Service();
       service.id = `${appInstanceId}-${dep.name}`; // Generate a consistent ID for frontend
       service.name = dep.name;

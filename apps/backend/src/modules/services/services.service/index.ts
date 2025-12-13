@@ -63,8 +63,19 @@ export class ServicesService {
     return syncServices(this, syncDto, initiatedBy);
   }
 
-  async syncSingleService(serviceId: string, targetAppInstanceId: string, syncOperationId: string, initiatedBy?: string) {
-    return syncSingleService(this, serviceId, targetAppInstanceId, syncOperationId, initiatedBy);
+  async syncSingleService(
+    serviceId: string,
+    targetAppInstanceId: string,
+    syncOperationId: string,
+    initiatedBy?: string,
+  ) {
+    return syncSingleService(
+      this,
+      serviceId,
+      targetAppInstanceId,
+      syncOperationId,
+      initiatedBy,
+    );
   }
 
   async getSyncHistory(environmentId?: string) {
@@ -75,12 +86,22 @@ export class ServicesService {
     return getDetailedSyncHistory(this, environmentId);
   }
 
-  async compareServices(sourceEnvironmentId: string, targetEnvironmentId: string) {
+  async compareServices(
+    sourceEnvironmentId: string,
+    targetEnvironmentId: string,
+  ) {
     return compareServices(this, sourceEnvironmentId, targetEnvironmentId);
   }
 
-  async compareServicesByInstance(sourceAppInstanceId: string, targetAppInstanceId: string) {
-    return compareServicesByInstance(this, sourceAppInstanceId, targetAppInstanceId);
+  async compareServicesByInstance(
+    sourceAppInstanceId: string,
+    targetAppInstanceId: string,
+  ) {
+    return compareServicesByInstance(
+      this,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    );
   }
 
   getComparisonStatus(sourceService: Service, targetService: Service) {
@@ -108,4 +129,4 @@ export class ServicesService {
   }
 
   // ... All methods from ServicesService ...
-} 
+}

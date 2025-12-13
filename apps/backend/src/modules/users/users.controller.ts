@@ -12,7 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -31,7 +36,10 @@ export class UsersController {
   @Post()
   @ApiOperation({ summary: 'Create a new user (requires admin 2FA token)' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - user exists or invalid 2FA token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - user exists or invalid 2FA token',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid 2FA token' })
   async create(@Body() createUserDto: CreateUserDto, @Request() req) {
     return this.usersService.create(createUserDto, req.user.userId);
@@ -46,7 +54,10 @@ export class UsersController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get user statistics' })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
   async getStats() {
     return this.usersService.getStats();
   }
@@ -62,13 +73,16 @@ export class UsersController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a user (requires admin 2FA token)' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - duplicate username/email or invalid 2FA token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - duplicate username/email or invalid 2FA token',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid 2FA token' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.usersService.update(id, updateUserDto, req.user.userId);
   }
@@ -77,15 +91,22 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a user (requires admin 2FA token)' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 400, description: 'Bad request - cannot delete own account or invalid 2FA token' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - cannot delete own account or invalid 2FA token',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid 2FA token' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(
     @Param('id') id: string,
     @Body() deleteUserDto: DeleteUserDto,
-    @Request() req
+    @Request() req,
   ) {
-    await this.usersService.remove(id, deleteUserDto.adminTwoFactorToken, req.user.userId);
+    await this.usersService.remove(
+      id,
+      deleteUserDto.adminTwoFactorToken,
+      req.user.userId,
+    );
     return { success: true, message: 'User deleted successfully' };
   }
 }

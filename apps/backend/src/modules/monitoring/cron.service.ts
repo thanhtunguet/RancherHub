@@ -49,7 +49,9 @@ export class MonitoringCronService {
             results,
             config,
           );
-          this.logger.log('Daily health check summary with image sent to Telegram');
+          this.logger.log(
+            'Daily health check summary with image sent to Telegram',
+          );
         } catch (error) {
           this.logger.error(
             `Failed to send Telegram notification: ${error.message}`,

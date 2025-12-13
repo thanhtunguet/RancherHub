@@ -13,7 +13,8 @@ export class UpdateMessageTemplateDto {
 
   @ApiProperty({
     description: 'Message template with placeholders',
-    example: '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}',
+    example:
+      '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}',
     required: false,
   })
   @IsString()

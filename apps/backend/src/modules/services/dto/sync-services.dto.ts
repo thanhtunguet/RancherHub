@@ -28,7 +28,8 @@ export class SyncServicesDto {
   serviceIds: string[];
 
   @ApiProperty({
-    description: 'Array of target app instance IDs (services will be synced to all selected instances)',
+    description:
+      'Array of target app instance IDs (services will be synced to all selected instances)',
     example: ['app-instance-1', 'app-instance-2'],
     type: [String],
   })

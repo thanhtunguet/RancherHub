@@ -71,7 +71,10 @@ export class EnvironmentsController {
   @ApiResponse({ status: 404, description: 'Environment not found' })
   @ApiParam({ name: 'id', description: 'Environment ID' })
   @ApiBody({ type: UpdateEnvironmentDto })
-  update(@Param('id') id: string, @Body() updateEnvironmentDto: UpdateEnvironmentDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateEnvironmentDto: UpdateEnvironmentDto,
+  ) {
     return this.environmentsService.update(id, updateEnvironmentDto);
   }
 

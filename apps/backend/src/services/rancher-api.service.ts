@@ -435,7 +435,7 @@ export class RancherApiService {
         'statefulsets',
         'replicasets',
       ];
-      let allWorkloads: RancherWorkload[] = [];
+      const allWorkloads: RancherWorkload[] = [];
 
       // First try specific workload type endpoints
       for (const workloadType of workloadTypes) {
@@ -793,7 +793,7 @@ export class RancherApiService {
     if (!configMap.data) {
       configMap.data = {};
     }
-    
+
     Object.entries(keysToSync).forEach(([key, value]) => {
       configMap.data[key] = value;
     });
@@ -805,7 +805,9 @@ export class RancherApiService {
     );
 
     const response = await client.put(putEndpoint, configMap);
-    this.logger.debug(`ConfigMap keys synced successfully: ${Object.keys(keysToSync).join(', ')}`);
+    this.logger.debug(
+      `ConfigMap keys synced successfully: ${Object.keys(keysToSync).join(', ')}`,
+    );
 
     return response.data;
   }
@@ -933,8 +935,8 @@ export class RancherApiService {
 
       // Determine the correct API endpoint based on workload type
       let apiPath: string;
-      let apiVersion = 'apps/v1';
-      
+      const apiVersion = 'apps/v1';
+
       switch (workloadType.toLowerCase()) {
         case 'deployment':
           apiPath = `apis/${apiVersion}/namespaces/${namespace}/deployments/${workloadName}`;
@@ -961,7 +963,7 @@ export class RancherApiService {
       // Get the current workload
       const getResponse: AxiosResponse = await k8sClient.get(apiPath);
       const workload = getResponse.data;
-      
+
       this.logger.log(
         `Retrieved ${workloadType} ${workload.metadata?.name} (current image: ${workload.spec?.template?.spec?.containers?.[0]?.image})`,
       );
@@ -973,10 +975,8 @@ export class RancherApiService {
       ) {
         const oldImage = workload.spec.template.spec.containers[0].image;
         workload.spec.template.spec.containers[0].image = newImageTag;
-        
-        this.logger.log(
-          `Updating image from ${oldImage} to ${newImageTag}`,
-        );
+
+        this.logger.log(`Updating image from ${oldImage} to ${newImageTag}`);
 
         // Update the workload
         const updateResponse: AxiosResponse = await k8sClient.put(

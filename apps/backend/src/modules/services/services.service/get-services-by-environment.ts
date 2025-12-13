@@ -2,7 +2,10 @@ import { Service } from 'src/entities';
 import { ServicesService } from './index';
 import { In } from 'typeorm';
 
-export async function getServicesByEnvironment(service: ServicesService, environmentId: string): Promise<Service[]> {
+export async function getServicesByEnvironment(
+  service: ServicesService,
+  environmentId: string,
+): Promise<Service[]> {
   service.logger.debug(`Fetching services for environment: ${environmentId}`);
 
   // Get all app instances for this environment
@@ -64,9 +67,7 @@ export async function getServicesByEnvironment(service: ServicesService, environ
         }
         await service.serviceRepository.save(svc);
         allServices.push(svc);
-        service.logger.debug(
-          `Saved service: ${svc.name} (${svc.imageTag})`,
-        );
+        service.logger.debug(`Saved service: ${svc.name} (${svc.imageTag})`);
       }
     } catch (error) {
       service.logger.error(
@@ -83,9 +84,9 @@ export async function getServicesByEnvironment(service: ServicesService, environ
       allServices.push(...cachedServices);
     }
   }
-  
+
   // Load appInstance relations for all services before returning
-  const serviceIds = allServices.map(svc => svc.id);
+  const serviceIds = allServices.map((svc) => svc.id);
   if (serviceIds.length > 0) {
     const servicesWithRelations = await service.serviceRepository.find({
       where: { id: In(serviceIds) },
@@ -96,9 +97,9 @@ export async function getServicesByEnvironment(service: ServicesService, environ
     );
     return servicesWithRelations;
   }
-  
+
   service.logger.debug(
     `Total services returned for environment ${environmentId}: ${allServices.length}`,
   );
   return allServices;
-} 
+}

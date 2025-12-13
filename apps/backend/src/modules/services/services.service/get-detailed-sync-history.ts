@@ -1,7 +1,10 @@
 import { SyncHistory } from 'src/entities';
 import { ServicesService } from './index';
 
-export async function getDetailedSyncHistory(service: ServicesService, environmentId?: string): Promise<SyncHistory[]> {
+export async function getDetailedSyncHistory(
+  service: ServicesService,
+  environmentId?: string,
+): Promise<SyncHistory[]> {
   const queryBuilder = service.syncHistoryRepository
     .createQueryBuilder('history')
     .leftJoinAndSelect('history.syncOperation', 'operation')
@@ -17,4 +20,4 @@ export async function getDetailedSyncHistory(service: ServicesService, environme
   }
 
   return queryBuilder.getMany();
-} 
+}

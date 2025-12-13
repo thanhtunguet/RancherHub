@@ -19,6 +19,15 @@ You MUST ensure:
 - API endpoints tested and functional
 - UI components rendering correctly
 
+## Don't
+
+During development, I will run development server by myself. Therefore, you don't:
+
+- Run dev server to test the code.
+- Build the project because it will override development artifacts
+
+To test your code, run type checking and eslint only. For complex tasks, you may need to write a test case to test it.
+
 ## Documentation
 
 - Keep documentation UP-TO-DATE

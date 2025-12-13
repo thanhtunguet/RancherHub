@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RancherSite } from '../../entities/rancher-site.entity';
@@ -48,7 +52,7 @@ export class SitesService {
 
   async testConnection(id: string): Promise<TestConnectionResponseDto> {
     const site = await this.findOne(id);
-    
+
     try {
       const response = await axios.get(`${site.url}/v3`, {
         headers: {
@@ -92,11 +96,11 @@ export class SitesService {
 
   async setActive(id: string, active: boolean): Promise<RancherSite> {
     const site = await this.findOne(id);
-    
+
     if (active) {
       await this.sitesRepository.update({ active: true }, { active: false });
     }
-    
+
     site.active = active;
     return await this.sitesRepository.save(site);
   }

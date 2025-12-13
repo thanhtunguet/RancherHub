@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppInstance } from '../../entities/app-instance.entity';
@@ -18,7 +22,9 @@ export class AppInstancesService {
     private environmentsRepository: Repository<Environment>,
   ) {}
 
-  async create(createAppInstanceDto: CreateAppInstanceDto): Promise<AppInstance> {
+  async create(
+    createAppInstanceDto: CreateAppInstanceDto,
+  ): Promise<AppInstance> {
     const site = await this.sitesRepository.findOne({
       where: { id: createAppInstanceDto.rancherSiteId },
     });
@@ -48,7 +54,8 @@ export class AppInstancesService {
       );
     }
 
-    const appInstance = this.appInstancesRepository.create(createAppInstanceDto);
+    const appInstance =
+      this.appInstancesRepository.create(createAppInstanceDto);
     return await this.appInstancesRepository.save(appInstance);
   }
 
@@ -82,7 +89,10 @@ export class AppInstancesService {
     return appInstance;
   }
 
-  async update(id: string, updateAppInstanceDto: UpdateAppInstanceDto): Promise<AppInstance> {
+  async update(
+    id: string,
+    updateAppInstanceDto: UpdateAppInstanceDto,
+  ): Promise<AppInstance> {
     const appInstance = await this.findOne(id);
 
     if (updateAppInstanceDto.rancherSiteId) {

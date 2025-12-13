@@ -1,11 +1,16 @@
 import { ServicesService } from './index';
 
-export async function getServicesWithImageSizes(service: ServicesService, appInstanceId: string): Promise<any[]> {
-  service.logger.debug(`Fetching services with image sizes for app instance: ${appInstanceId}`);
+export async function getServicesWithImageSizes(
+  service: ServicesService,
+  appInstanceId: string,
+): Promise<any[]> {
+  service.logger.debug(
+    `Fetching services with image sizes for app instance: ${appInstanceId}`,
+  );
 
   // Get services from the app instance
   const services = await service.getServicesByAppInstance(appInstanceId);
-  
+
   // Get active Harbor site
   const harborSite = await service.harborSitesService.getActiveSite();
 
@@ -29,10 +34,16 @@ export async function getServicesWithImageSizes(service: ServicesService, appIns
         let sizeInfo = null;
 
         // First, try to get size from Harbor if available and image appears to be from Harbor
-        if (harborSite && !service.dockerHubApiService.isDockerHubImage(imageTag)) {
+        if (
+          harborSite &&
+          !service.dockerHubApiService.isDockerHubImage(imageTag)
+        ) {
           service.logger.debug(`Trying Harbor API for image: ${imageTag}`);
           try {
-            const harborSizeInfo = await service.harborApiService.getImageSize(harborSite, imageTag);
+            const harborSizeInfo = await service.harborApiService.getImageSize(
+              harborSite,
+              imageTag,
+            );
             if (harborSizeInfo) {
               sizeInfo = {
                 size: harborSizeInfo.size,
@@ -43,15 +54,21 @@ export async function getServicesWithImageSizes(service: ServicesService, appIns
               };
             }
           } catch (harborError) {
-            service.logger.debug(`Harbor API failed for ${imageTag}: ${harborError.message}`);
+            service.logger.debug(
+              `Harbor API failed for ${imageTag}: ${harborError.message}`,
+            );
           }
         }
 
         // If Harbor didn't work or image is from DockerHub, try DockerHub
-        if (!sizeInfo && service.dockerHubApiService.isDockerHubImage(imageTag)) {
+        if (
+          !sizeInfo &&
+          service.dockerHubApiService.isDockerHubImage(imageTag)
+        ) {
           service.logger.debug(`Trying DockerHub API for image: ${imageTag}`);
           try {
-            const dockerHubSizeInfo = await service.dockerHubApiService.getImageSize(imageTag);
+            const dockerHubSizeInfo =
+              await service.dockerHubApiService.getImageSize(imageTag);
             if (dockerHubSizeInfo) {
               sizeInfo = {
                 size: dockerHubSizeInfo.size,
@@ -62,20 +79,25 @@ export async function getServicesWithImageSizes(service: ServicesService, appIns
               };
             }
           } catch (dockerHubError) {
-            service.logger.debug(`DockerHub API failed for ${imageTag}: ${dockerHubError.message}`);
+            service.logger.debug(
+              `DockerHub API failed for ${imageTag}: ${dockerHubError.message}`,
+            );
           }
         }
-        
+
         return {
           ...svc,
           imageSize: sizeInfo?.size || null,
           imageSizeFormatted: sizeInfo?.sizeFormatted || null,
           compressedImageSize: sizeInfo?.compressedSize || null,
-          compressedImageSizeFormatted: sizeInfo?.compressedSizeFormatted || null,
+          compressedImageSizeFormatted:
+            sizeInfo?.compressedSizeFormatted || null,
           imageSource: sizeInfo?.source || null,
         };
       } catch (error) {
-        service.logger.warn(`Failed to get image size for ${svc.name}: ${error.message}`);
+        service.logger.warn(
+          `Failed to get image size for ${svc.name}: ${error.message}`,
+        );
         return {
           ...svc,
           imageSize: null,
@@ -85,8 +107,8 @@ export async function getServicesWithImageSizes(service: ServicesService, appIns
           imageSource: null,
         };
       }
-    })
+    }),
   );
 
   return enrichedServices;
-} 
+}

@@ -6,10 +6,7 @@ import { MessageTemplatesController } from './message-templates.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([MessageTemplate]),
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([MessageTemplate]), AuthModule],
   controllers: [MessageTemplatesController],
   providers: [MessageTemplatesService],
   exports: [MessageTemplatesService],

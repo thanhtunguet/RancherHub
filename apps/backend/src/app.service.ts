@@ -5,7 +5,9 @@ import { MessageTemplatesService } from './modules/message-templates/message-tem
 export class AppService implements OnModuleInit {
   private readonly logger = new Logger(AppService.name);
 
-  constructor(private readonly messageTemplatesService: MessageTemplatesService) { }
+  constructor(
+    private readonly messageTemplatesService: MessageTemplatesService,
+  ) {}
 
   async onModuleInit() {
     // Seed default message templates on application startup

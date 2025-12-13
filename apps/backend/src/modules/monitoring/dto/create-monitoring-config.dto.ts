@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsBoolean, IsOptional, IsIn, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  IsIn,
+  IsArray,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateMonitoringConfigDto {

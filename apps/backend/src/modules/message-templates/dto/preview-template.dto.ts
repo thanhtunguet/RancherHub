@@ -12,7 +12,8 @@ export class PreviewTemplateDto {
 
   @ApiProperty({
     description: 'Message template to preview',
-    example: '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}',
+    example:
+      '🔍 **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}',
   })
   @IsString()
   @IsNotEmpty()

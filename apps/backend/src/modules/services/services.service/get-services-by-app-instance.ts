@@ -3,11 +3,15 @@ import { ServicesService } from './index';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { In } from 'typeorm';
 
-export async function getServicesByAppInstance(service: ServicesService, appInstanceId: string): Promise<Service[]> {
+export async function getServicesByAppInstance(
+  service: ServicesService,
+  appInstanceId: string,
+): Promise<Service[]> {
   service.logger.debug(`Fetching services for app instance: ${appInstanceId}`);
 
   // Validate that appInstanceId is a valid UUID
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(appInstanceId)) {
     throw new BadRequestException(
       `Invalid app instance ID format. Expected UUID, got: ${appInstanceId}`,
@@ -32,11 +36,12 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
 
   try {
     // Fetch deployments from Rancher Kubernetes API
-    const deployments = await service.rancherApiService.getDeploymentsFromK8sApi(
-      appInstance.rancherSite,
-      appInstance.cluster,
-      appInstance.namespace,
-    );
+    const deployments =
+      await service.rancherApiService.getDeploymentsFromK8sApi(
+        appInstance.rancherSite,
+        appInstance.cluster,
+        appInstance.namespace,
+      );
     service.logger.debug(
       `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
     );
@@ -66,13 +71,11 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
       }
       await service.serviceRepository.save(svc);
       services.push(svc);
-      service.logger.debug(
-        `Saved service: ${svc.name} (${svc.imageTag})`,
-      );
+      service.logger.debug(`Saved service: ${svc.name} (${svc.imageTag})`);
     }
-    
+
     // Load appInstance relations for all services before returning
-    const serviceIds = services.map(svc => svc.id);
+    const serviceIds = services.map((svc) => svc.id);
     if (serviceIds.length > 0) {
       const servicesWithRelations = await service.serviceRepository.find({
         where: { id: In(serviceIds) },
@@ -83,7 +86,7 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
       );
       return servicesWithRelations;
     }
-    
+
     service.logger.debug(
       `Total services returned for app instance ${appInstanceId}: ${services.length}`,
     );
@@ -102,4 +105,4 @@ export async function getServicesByAppInstance(service: ServicesService, appInst
     );
     return cachedServices;
   }
-} 
+}

@@ -126,11 +126,13 @@ export class DockerHubApiService {
 
       while (page <= maxPages && !tagInfo) {
         this.logger.debug(`Searching for tag '${tag}' on page ${page}`);
-        
+
         const tagsResponse = await this.getTags(namespace, repository, page);
 
         if (!tagsResponse.results || tagsResponse.results.length === 0) {
-          this.logger.warn(`No tags found for ${namespace}/${repository} on page ${page}`);
+          this.logger.warn(
+            `No tags found for ${namespace}/${repository} on page ${page}`,
+          );
           break;
         }
 
@@ -185,7 +187,7 @@ export class DockerHubApiService {
       this.logger.debug(`Parsing DockerHub image tag: ${imageTag}`);
 
       // Remove any registry prefix if present (should not have any for DockerHub)
-      let cleanImageTag = imageTag;
+      const cleanImageTag = imageTag;
 
       // Handle cases like:
       // - nginx:latest -> library/nginx:latest
@@ -202,7 +204,7 @@ export class DockerHubApiService {
         const lastColonIndex = cleanImageTag.lastIndexOf(':');
         imagePart = cleanImageTag.substring(0, lastColonIndex);
         tag = cleanImageTag.substring(lastColonIndex + 1);
-        
+
         // Validate that the tag part doesn't look like a port number
         // (e.g., "localhost:5000/myimage" should not be parsed as "localhost" with tag "5000/myimage")
         if (tag.includes('/')) {

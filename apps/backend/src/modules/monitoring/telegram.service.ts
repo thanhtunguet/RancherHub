@@ -60,17 +60,17 @@ export class TelegramService {
     config?: MonitoringConfig,
   ): Promise<string> {
     const axiosConfig = this.createAxiosConfig(config);
-    
+
     // Use FormData for multipart/form-data
     const FormData = require('form-data');
     const formData = new FormData();
-    
+
     formData.append('chat_id', chatId);
     formData.append('photo', imageBuffer, {
       filename: 'status-report.png',
       contentType: 'image/png',
     });
-    
+
     if (caption) {
       formData.append('caption', caption);
       formData.append('parse_mode', 'Markdown');
@@ -107,7 +107,9 @@ export class TelegramService {
       // Send the image with the message as caption
       return await this.sendPhoto(chatId, imageBuffer, message, config);
     } catch (error) {
-      this.logger.error(`Failed to send message with image, falling back to text: ${error.message}`);
+      this.logger.error(
+        `Failed to send message with image, falling back to text: ${error.message}`,
+      );
       // Fallback to text message if image fails
       return await this.sendMessage(chatId, message, config);
     }
@@ -122,11 +124,16 @@ export class TelegramService {
 
     try {
       // Render message from template
-      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
-      const testMessage = await this.messageTemplatesService.renderTemplate('test_connection', {
-        timestamp: new Date().toISOString(),
-        tagged_users: taggedUsers,
-      });
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(
+        config.taggedUsers || [],
+      );
+      const testMessage = await this.messageTemplatesService.renderTemplate(
+        'test_connection',
+        {
+          timestamp: new Date().toISOString(),
+          tagged_users: taggedUsers,
+        },
+      );
 
       const formData = new URLSearchParams({
         chat_id: config.telegramChatId,
@@ -242,7 +249,6 @@ export class TelegramService {
     return proxyUrl;
   }
 
-
   async sendHealthCheckSummaryWithVisual(
     chatId: string,
     results: HealthCheckResult[],
@@ -250,28 +256,37 @@ export class TelegramService {
   ): Promise<string> {
     try {
       // Generate visual status representation
-      const visualSummary = this.visualStatus.generateHealthCheckVisualSummary(results);
+      const visualSummary =
+        this.visualStatus.generateHealthCheckVisualSummary(results);
 
       const now = new Date();
-      const avgResponseTime = results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / results.length;
-      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
+      const avgResponseTime =
+        results.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) /
+        results.length;
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(
+        config.taggedUsers || [],
+      );
 
       // Render message from template
-      const message = await this.messageTemplatesService.renderTemplate('daily_health_check', {
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().split(' ')[0],
-        visual_summary: visualSummary,
-        avg_response_time: (avgResponseTime / 1000).toFixed(1),
-        tagged_users: taggedUsers,
-      });
+      const message = await this.messageTemplatesService.renderTemplate(
+        'daily_health_check',
+        {
+          date: now.toISOString().split('T')[0],
+          time: now.toTimeString().split(' ')[0],
+          visual_summary: visualSummary,
+          avg_response_time: (avgResponseTime / 1000).toFixed(1),
+          tagged_users: taggedUsers,
+        },
+      );
 
       return await this.sendMessage(chatId, message, config);
     } catch (error) {
-      this.logger.error(`Failed to send health check summary with visual: ${error.message}`);
+      this.logger.error(
+        `Failed to send health check summary with visual: ${error.message}`,
+      );
       throw error;
     }
   }
-
 
   async sendCriticalAlertWithVisual(
     chatId: string,
@@ -289,19 +304,26 @@ export class TelegramService {
       });
 
       const now = new Date();
-      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(config.taggedUsers || []);
+      const taggedUsers = this.messageTemplatesService.formatTaggedUsers(
+        config.taggedUsers || [],
+      );
 
       // Render message from template
-      const message = await this.messageTemplatesService.renderTemplate('critical_alert', {
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().split(' ')[0],
-        visual_alert: visualAlert,
-        tagged_users: taggedUsers,
-      });
+      const message = await this.messageTemplatesService.renderTemplate(
+        'critical_alert',
+        {
+          date: now.toISOString().split('T')[0],
+          time: now.toTimeString().split(' ')[0],
+          visual_alert: visualAlert,
+          tagged_users: taggedUsers,
+        },
+      );
 
       return await this.sendMessage(chatId, message, config);
     } catch (error) {
-      this.logger.error(`Failed to send critical alert with visual: ${error.message}`);
+      this.logger.error(
+        `Failed to send critical alert with visual: ${error.message}`,
+      );
       throw error;
     }
   }

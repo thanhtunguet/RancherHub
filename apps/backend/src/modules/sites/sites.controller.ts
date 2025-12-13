@@ -132,8 +132,15 @@ export class SitesController {
   @ApiResponse({ status: 200, description: 'List of namespaces' })
   @ApiResponse({ status: 404, description: 'Site not found' })
   @ApiParam({ name: 'id', description: 'Site ID' })
-  @ApiQuery({ name: 'clusterId', required: false, description: 'Filter by cluster ID' })
-  getNamespaces(@Param('id') id: string, @Query('clusterId') clusterId?: string) {
+  @ApiQuery({
+    name: 'clusterId',
+    required: false,
+    description: 'Filter by cluster ID',
+  })
+  getNamespaces(
+    @Param('id') id: string,
+    @Query('clusterId') clusterId?: string,
+  ) {
     return this.sitesService.getNamespaces(id, clusterId);
   }
 }

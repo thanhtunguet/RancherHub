@@ -11,7 +11,14 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MonitoringService } from './monitoring.service';
 import { MonitoringCronService } from './cron.service';
 import { CreateMonitoringConfigDto } from './dto/create-monitoring-config.dto';
@@ -40,7 +47,10 @@ export class MonitoringController {
   // Monitoring Configuration Endpoints
   @Get('config')
   @ApiOperation({ summary: 'Get monitoring configuration' })
-  @ApiResponse({ status: 200, description: 'Monitoring configuration retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitoring configuration retrieved successfully',
+  })
   async getConfig() {
     try {
       return await this.monitoringService.getConfig();
@@ -52,14 +62,20 @@ export class MonitoringController {
 
   @Post('config')
   @ApiOperation({ summary: 'Create or update monitoring configuration' })
-  @ApiResponse({ status: 201, description: 'Monitoring configuration created/updated successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Monitoring configuration created/updated successfully',
+  })
   async createOrUpdateConfig(@Body() dto: CreateMonitoringConfigDto) {
     return this.monitoringService.createOrUpdateConfig(dto);
   }
 
   @Put('config')
   @ApiOperation({ summary: 'Update monitoring configuration' })
-  @ApiResponse({ status: 200, description: 'Monitoring configuration updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitoring configuration updated successfully',
+  })
   async updateConfig(@Body() dto: UpdateMonitoringConfigDto) {
     return this.monitoringService.updateConfig(dto);
   }
@@ -67,7 +83,10 @@ export class MonitoringController {
   @Post('config/test-telegram')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Test Telegram connection' })
-  @ApiResponse({ status: 200, description: 'Telegram connection test completed' })
+  @ApiResponse({
+    status: 200,
+    description: 'Telegram connection test completed',
+  })
   async testTelegramConnection(@Body() dto: TestTelegramConnectionDto) {
     return this.monitoringService.testTelegramConnection(dto);
   }
@@ -75,7 +94,10 @@ export class MonitoringController {
   // Monitored Instances Endpoints
   @Get('instances')
   @ApiOperation({ summary: 'Get all monitored instances' })
-  @ApiResponse({ status: 200, description: 'Monitored instances retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitored instances retrieved successfully',
+  })
   async getMonitoredInstances() {
     return this.monitoringService.getMonitoredInstances();
   }
@@ -83,14 +105,20 @@ export class MonitoringController {
   @Get('instances/:id')
   @ApiOperation({ summary: 'Get monitored instance by ID' })
   @ApiParam({ name: 'id', description: 'Monitored instance ID' })
-  @ApiResponse({ status: 200, description: 'Monitored instance retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitored instance retrieved successfully',
+  })
   async getMonitoredInstance(@Param('id') id: string) {
     return this.monitoringService.getMonitoredInstance(id);
   }
 
   @Post('instances')
   @ApiOperation({ summary: 'Add instance to monitoring' })
-  @ApiResponse({ status: 201, description: 'Instance added to monitoring successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Instance added to monitoring successfully',
+  })
   async createMonitoredInstance(@Body() dto: CreateMonitoredInstanceDto) {
     return this.monitoringService.createMonitoredInstance(dto);
   }
@@ -98,7 +126,10 @@ export class MonitoringController {
   @Put('instances/:id')
   @ApiOperation({ summary: 'Update monitored instance' })
   @ApiParam({ name: 'id', description: 'Monitored instance ID' })
-  @ApiResponse({ status: 200, description: 'Monitored instance updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitored instance updated successfully',
+  })
   async updateMonitoredInstance(
     @Param('id') id: string,
     @Body() dto: UpdateMonitoredInstanceDto,
@@ -110,7 +141,10 @@ export class MonitoringController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove instance from monitoring' })
   @ApiParam({ name: 'id', description: 'Monitored instance ID' })
-  @ApiResponse({ status: 204, description: 'Instance removed from monitoring successfully' })
+  @ApiResponse({
+    status: 204,
+    description: 'Instance removed from monitoring successfully',
+  })
   async deleteMonitoredInstance(@Param('id') id: string) {
     await this.monitoringService.deleteMonitoredInstance(id);
   }
@@ -118,9 +152,20 @@ export class MonitoringController {
   // Monitoring History Endpoints
   @Get('history')
   @ApiOperation({ summary: 'Get monitoring history' })
-  @ApiQuery({ name: 'instanceId', required: false, description: 'Filter by monitored instance ID' })
-  @ApiQuery({ name: 'days', required: false, description: 'Number of days to retrieve (default: 7)' })
-  @ApiResponse({ status: 200, description: 'Monitoring history retrieved successfully' })
+  @ApiQuery({
+    name: 'instanceId',
+    required: false,
+    description: 'Filter by monitored instance ID',
+  })
+  @ApiQuery({
+    name: 'days',
+    required: false,
+    description: 'Number of days to retrieve (default: 7)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Monitoring history retrieved successfully',
+  })
   async getMonitoringHistory(
     @Query('instanceId') instanceId?: string,
     @Query('days') days?: number,
@@ -131,9 +176,20 @@ export class MonitoringController {
   // Alert History Endpoints
   @Get('alerts')
   @ApiOperation({ summary: 'Get alert history' })
-  @ApiQuery({ name: 'instanceId', required: false, description: 'Filter by monitored instance ID' })
-  @ApiQuery({ name: 'resolved', required: false, description: 'Filter by resolution status' })
-  @ApiResponse({ status: 200, description: 'Alert history retrieved successfully' })
+  @ApiQuery({
+    name: 'instanceId',
+    required: false,
+    description: 'Filter by monitored instance ID',
+  })
+  @ApiQuery({
+    name: 'resolved',
+    required: false,
+    description: 'Filter by resolution status',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Alert history retrieved successfully',
+  })
   async getAlertHistory(
     @Query('instanceId') instanceId?: string,
     @Query('resolved') resolved?: boolean,
@@ -153,7 +209,10 @@ export class MonitoringController {
   @Post('trigger/daily-check')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Manually trigger daily health check' })
-  @ApiResponse({ status: 200, description: 'Daily health check triggered successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Daily health check triggered successfully',
+  })
   async triggerDailyCheck() {
     await this.monitoringCronService.triggerDailyCheck();
     return { message: 'Daily health check triggered successfully' };
@@ -162,7 +221,10 @@ export class MonitoringController {
   @Post('trigger/hourly-check')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Manually trigger hourly health check' })
-  @ApiResponse({ status: 200, description: 'Hourly health check triggered successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Hourly health check triggered successfully',
+  })
   async triggerHourlyCheck() {
     await this.monitoringCronService.triggerHourlyCheck();
     return { message: 'Hourly health check triggered successfully' };

@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -24,8 +28,8 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       where: [{ username }, { email: username }],
     });
-    
-    if (user && await user.validatePassword(password)) {
+
+    if (user && (await user.validatePassword(password))) {
       const { password: _, ...result } = user;
       return result;
     }
@@ -34,7 +38,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.username, loginDto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -50,7 +54,7 @@ export class AuthService {
         message: 'Please enter your 2FA token to complete login',
         tempToken: this.jwtService.sign(
           { sub: user.id, username: user.username, temp: true },
-          { expiresIn: '5m' }
+          { expiresIn: '5m' },
         ),
       };
     }
@@ -65,14 +69,16 @@ export class AuthService {
       });
 
       if (!isValid) {
-        throw new UnauthorizedException('Invalid 2FA token. Please check the code from your authenticator app and try again.');
+        throw new UnauthorizedException(
+          'Invalid 2FA token. Please check the code from your authenticator app and try again.',
+        );
       }
     }
 
     // Update last login
-    await this.userRepository.update(user.id, { 
+    await this.userRepository.update(user.id, {
       lastLoginAt: new Date(),
-      isFirstLogin: false 
+      isFirstLogin: false,
     });
 
     const payload = { username: user.username, sub: user.id };
@@ -90,10 +96,7 @@ export class AuthService {
 
   async register(registerDto: RegisterDto) {
     const existingUser = await this.userRepository.findOne({
-      where: [
-        { username: registerDto.username },
-        { email: registerDto.email }
-      ],
+      where: [{ username: registerDto.username }, { email: registerDto.email }],
     });
 
     if (existingUser) {
@@ -114,7 +117,7 @@ export class AuthService {
 
   async setup2FA(userId: string): Promise<Setup2FADto> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    
+
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
@@ -137,9 +140,12 @@ export class AuthService {
     };
   }
 
-  async verify2FA(userId: string, verify2FADto: Verify2FADto): Promise<boolean> {
+  async verify2FA(
+    userId: string,
+    verify2FADto: Verify2FADto,
+  ): Promise<boolean> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    
+
     if (!user || !user.twoFactorSecret) {
       throw new BadRequestException('2FA not set up');
     }
@@ -181,7 +187,9 @@ export class AuthService {
     });
 
     if (!isValid) {
-      throw new UnauthorizedException('Invalid 2FA token. Please enter the correct code from your authenticator app.');
+      throw new UnauthorizedException(
+        'Invalid 2FA token. Please enter the correct code from your authenticator app.',
+      );
     }
 
     // Token is valid, disable 2FA
@@ -191,7 +199,11 @@ export class AuthService {
     });
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {

@@ -38,8 +38,12 @@ export class ConfigMapsController {
     description: 'List of ConfigMaps in the app instance',
   })
   @ApiResponse({ status: 404, description: 'App instance not found' })
-  async getConfigMapsByAppInstance(@Param('appInstanceId') appInstanceId: string) {
-    this.logger.debug(`getConfigMapsByAppInstance called with: ${appInstanceId}`);
+  async getConfigMapsByAppInstance(
+    @Param('appInstanceId') appInstanceId: string,
+  ) {
+    this.logger.debug(
+      `getConfigMapsByAppInstance called with: ${appInstanceId}`,
+    );
     return this.configMapsService.getConfigMapsByAppInstance(appInstanceId);
   }
 
@@ -72,7 +76,10 @@ export class ConfigMapsController {
               source: { type: 'object', nullable: true },
               target: { type: 'object', nullable: true },
               differences: { type: 'object' },
-              status: { type: 'string', enum: ['identical', 'different', 'missing'] },
+              status: {
+                type: 'string',
+                enum: ['identical', 'different', 'missing'],
+              },
             },
           },
         },
@@ -98,11 +105,17 @@ export class ConfigMapsController {
       targetAppInstanceId,
     });
 
-    return this.configMapsService.compareConfigMapsByInstance(sourceAppInstanceId, targetAppInstanceId);
+    return this.configMapsService.compareConfigMapsByInstance(
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    );
   }
 
   @Get(':configMapName/details')
-  @ApiOperation({ summary: 'Get detailed comparison of a specific ConfigMap between two app instances' })
+  @ApiOperation({
+    summary:
+      'Get detailed comparison of a specific ConfigMap between two app instances',
+  })
   @ApiResponse({
     status: 200,
     description: 'Detailed ConfigMap comparison with key-by-key differences',
@@ -128,39 +141,55 @@ export class ConfigMapsController {
       targetAppInstanceId,
     });
 
-    return this.configMapsService.getConfigMapDetails(configMapName, sourceAppInstanceId, targetAppInstanceId);
+    return this.configMapsService.getConfigMapDetails(
+      configMapName,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    );
   }
 
   @Post('sync-key')
-  @ApiOperation({ summary: 'Sync a single key from source ConfigMap to target ConfigMap' })
+  @ApiOperation({
+    summary: 'Sync a single key from source ConfigMap to target ConfigMap',
+  })
   @ApiResponse({
     status: 200,
     description: 'Key synced successfully',
   })
-  async syncConfigMapKey(@Body() syncData: {
-    sourceAppInstanceId: string;
-    targetAppInstanceId: string;
-    configMapName: string;
-    key: string;
-    value: string;
-  }, @Request() req) {
+  async syncConfigMapKey(
+    @Body()
+    syncData: {
+      sourceAppInstanceId: string;
+      targetAppInstanceId: string;
+      configMapName: string;
+      key: string;
+      value: string;
+    },
+    @Request() req,
+  ) {
     this.logger.debug(`syncConfigMapKey called with:`, syncData);
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.configMapsService.syncConfigMapKey(syncData, initiatedBy);
   }
 
   @Post('sync-keys')
-  @ApiOperation({ summary: 'Sync multiple keys from source ConfigMap to target ConfigMap' })
+  @ApiOperation({
+    summary: 'Sync multiple keys from source ConfigMap to target ConfigMap',
+  })
   @ApiResponse({
     status: 200,
     description: 'Keys synced successfully',
   })
-  async syncConfigMapKeys(@Body() syncData: {
-    sourceAppInstanceId: string;
-    targetAppInstanceId: string;
-    configMapName: string;
-    keys: Record<string, string>;
-  }, @Request() req) {
+  async syncConfigMapKeys(
+    @Body()
+    syncData: {
+      sourceAppInstanceId: string;
+      targetAppInstanceId: string;
+      configMapName: string;
+      keys: Record<string, string>;
+    },
+    @Request() req,
+  ) {
     this.logger.debug(`syncConfigMapKeys called with:`, syncData);
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.configMapsService.syncConfigMapKeys(syncData, initiatedBy);

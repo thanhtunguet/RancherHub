@@ -232,8 +232,12 @@ export class ServicesController {
   })
   @ApiResponse({ status: 404, description: 'App instance not found' })
   @ApiParam({ name: 'appInstanceId', description: 'App instance ID' })
-  async getServicesWithImageSizes(@Param('appInstanceId') appInstanceId: string) {
-    this.logger.debug(`getServicesWithImageSizes called for app instance: ${appInstanceId}`);
+  async getServicesWithImageSizes(
+    @Param('appInstanceId') appInstanceId: string,
+  ) {
+    this.logger.debug(
+      `getServicesWithImageSizes called for app instance: ${appInstanceId}`,
+    );
     return this.servicesService.getServicesWithImageSizes(appInstanceId);
   }
 
@@ -391,7 +395,10 @@ export class ServicesController {
               source: { type: 'object', nullable: true },
               target: { type: 'object', nullable: true },
               differences: { type: 'object' },
-              status: { type: 'string', enum: ['identical', 'different', 'missing'] },
+              status: {
+                type: 'string',
+                enum: ['identical', 'different', 'missing'],
+              },
             },
           },
         },
@@ -417,7 +424,10 @@ export class ServicesController {
       targetEnvironmentId,
     });
 
-    return this.servicesService.compareServices(sourceEnvironmentId, targetEnvironmentId);
+    return this.servicesService.compareServices(
+      sourceEnvironmentId,
+      targetEnvironmentId,
+    );
   }
 
   @Get('compare/by-instance')
@@ -450,7 +460,10 @@ export class ServicesController {
               source: { type: 'object', nullable: true },
               target: { type: 'object', nullable: true },
               differences: { type: 'object' },
-              status: { type: 'string', enum: ['identical', 'different', 'missing'] },
+              status: {
+                type: 'string',
+                enum: ['identical', 'different', 'missing'],
+              },
             },
           },
         },
@@ -476,7 +489,10 @@ export class ServicesController {
       targetAppInstanceId,
     });
 
-    return this.servicesService.compareServicesByInstance(sourceAppInstanceId, targetAppInstanceId);
+    return this.servicesService.compareServicesByInstance(
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    );
   }
 
   @Get('debug/app-instances/:environmentId')
@@ -570,7 +586,7 @@ export class ServicesController {
   @ApiParam({ name: 'serviceId', description: 'Service ID' })
   async debugImageInfo(@Param('serviceId') serviceId: string) {
     this.logger.debug(`debugImageInfo called for service: ${serviceId}`);
-    
+
     const service = await this.servicesService.serviceRepository.findOne({
       where: { id: serviceId },
       relations: ['appInstance', 'appInstance.rancherSite'],

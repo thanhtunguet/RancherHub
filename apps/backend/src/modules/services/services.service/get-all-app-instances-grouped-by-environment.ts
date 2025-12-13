@@ -1,6 +1,8 @@
 import { ServicesService } from './index';
 
-export async function getAllAppInstancesGroupedByEnvironment(service: ServicesService): Promise<any> {
+export async function getAllAppInstancesGroupedByEnvironment(
+  service: ServicesService,
+): Promise<any> {
   service.logger.debug('Fetching all app instances grouped by environment');
 
   const appInstances = await service.appInstanceRepository.find({
@@ -15,7 +17,7 @@ export async function getAllAppInstancesGroupedByEnvironment(service: ServicesSe
   const grouped = appInstances.reduce((acc, appInstance) => {
     const envId = appInstance.environmentId;
     const envName = appInstance.environment?.name || 'Unknown Environment';
-    
+
     if (!acc[envId]) {
       acc[envId] = {
         id: envId,
@@ -23,7 +25,7 @@ export async function getAllAppInstancesGroupedByEnvironment(service: ServicesSe
         appInstances: [],
       };
     }
-    
+
     acc[envId].appInstances.push({
       id: appInstance.id,
       name: appInstance.name,
@@ -34,10 +36,10 @@ export async function getAllAppInstancesGroupedByEnvironment(service: ServicesSe
         name: appInstance.rancherSite?.name,
       },
     });
-    
+
     return acc;
   }, {});
 
   // Convert to array format
   return Object.values(grouped);
-} 
+}

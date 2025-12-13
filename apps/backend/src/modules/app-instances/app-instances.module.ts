@@ -8,7 +8,10 @@ import { AppInstancesController } from './app-instances.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AppInstance, RancherSite, Environment]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([AppInstance, RancherSite, Environment]),
+    AuthModule,
+  ],
   controllers: [AppInstancesController],
   providers: [AppInstancesService],
   exports: [AppInstancesService],
