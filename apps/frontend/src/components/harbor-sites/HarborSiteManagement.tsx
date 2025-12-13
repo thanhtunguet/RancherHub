@@ -101,14 +101,34 @@ export const HarborSiteManagement: React.FC = () => {
     }
   };
 
-  const handleTestConnection = async () => {
-    return new Promise<void>((resolve) => {
-      Modal.info({
-        title: 'Test Connection',
-        content: 'This will test the connection using the stored credentials.',
-        onOk: resolve,
+  const handleTestConnection = async (site: HarborSite) => {
+    try {
+      const result = await harborSitesApi.testSiteConnection(site.id);
+
+      if (result.success) {
+        Modal.success({
+          title: 'Connection Test Successful',
+          content: result.message || 'Successfully connected to Harbor registry.',
+        });
+        message.success('Harbor connection test passed');
+      } else {
+        Modal.error({
+          title: 'Connection Test Failed',
+          content: result.message || 'Failed to connect to Harbor registry.',
+        });
+      }
+    } catch (err: any) {
+      const errorMessage = 
+        err?.response?.data?.message || 
+        err?.message || 
+        'Failed to test Harbor connection';
+      
+      Modal.error({
+        title: 'Connection Test Error',
+        content: errorMessage,
       });
-    });
+      message.error('Harbor connection test failed');
+    }
   };
 
   const activeSite = sites.find(site => site.active);

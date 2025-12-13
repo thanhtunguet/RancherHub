@@ -106,6 +106,20 @@ export class HarborSitesController {
     return this.harborSitesService.testConnection(testConnectionDto);
   }
 
+  @Post(':id/test')
+  @ApiOperation({ summary: 'Test connection to a Harbor site using stored credentials' })
+  @ApiResponse({ status: 200, description: 'Connection test result' })
+  @ApiResponse({ status: 404, description: 'Harbor site not found' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  async testSiteConnection(@Param('id') id: string) {
+    const site = await this.harborSitesService.findOne(id);
+    return this.harborSitesService.testConnection({
+      url: site.url,
+      username: site.username,
+      password: site.password,
+    });
+  }
+
   @Post(':id/activate')
   @ApiOperation({ summary: 'Set a Harbor site as active' })
   @ApiResponse({ status: 200, description: 'Harbor site activated successfully' })

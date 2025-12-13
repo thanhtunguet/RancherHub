@@ -272,6 +272,8 @@ export const harborSitesApi = {
 
   testConnection: (data: TestHarborConnectionRequest): Promise<{ success: boolean; message: string }> =>
     api.post("/api/harbor-sites/test-connection", data).then((res) => res.data),
+  testSiteConnection: (id: string): Promise<{ success: boolean; message: string }> =>
+    api.post(`/api/harbor-sites/${id}/test`).then((res) => res.data),
 
   testImageSize: (id: string, imageTag: string): Promise<any> =>
     api

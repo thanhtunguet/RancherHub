@@ -8,14 +8,14 @@
     "apps/backend"
   ],
   "devDependencies": {
-    "nx": "18.0.4",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "nx": "^22.2.3"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "18.0.4",
     "@nx/nx-darwin-x64": "18.0.4",
-    "@nx/nx-linux-x64-gnu": "18.0.4",
     "@nx/nx-linux-arm64-gnu": "18.0.4",
+    "@nx/nx-linux-x64-gnu": "18.0.4",
     "@nx/nx-win32-x64-msvc": "18.0.4"
   },
   "scripts": {

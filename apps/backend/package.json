@@ -28,7 +28,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^6.0.0",
-    "@nestjs/swagger": "^7.0.0",
+    "@nestjs/swagger": "^11.2.3",
     "@nestjs/typeorm": "^10.0.0",
     "@types/form-data": "^2.2.1",
     "@types/jimp": "^0.2.1",
@@ -48,7 +48,8 @@
     "socks-proxy-agent": "^8.0.5",
     "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.6",
-    "typeorm": "^0.3.17"
+    "typeorm": "^0.3.17",
+    "vite": "7.2.7"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
