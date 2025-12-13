@@ -5,8 +5,13 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "rootDir": "./src",
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   }
 }

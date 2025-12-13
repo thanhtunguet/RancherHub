@@ -17,16 +17,19 @@ COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
 
 # Install all dependencies for the workspace including optional dependencies
-RUN npm install --include=optional
+# Use npm ci for reproducible builds and proper workspace hoisting
+RUN if [ -f package-lock.json ]; then npm ci --include=optional; else npm install --include=optional; fi
 
 # Copy the rest of the source code
 COPY . .
 
-# Build the backend application from within the workspace directory
-# This ensures TypeScript resolves types from a single node_modules location
-WORKDIR /app/apps/backend
-RUN npm run build
-WORKDIR /app
+# Remove any node_modules in workspace directories to ensure TypeScript only resolves from root
+# This prevents duplicate type definitions that cause build errors
+RUN rm -rf apps/backend/node_modules apps/frontend/node_modules || true
+
+# Build the backend application
+# Ensure we're in the root directory so TypeScript resolves from root node_modules
+RUN cd apps/backend && NODE_PATH=/app/node_modules npm run build
 
 # 2. Production stage
 FROM node:20-slim AS production
