@@ -22,8 +22,11 @@ RUN npm install --include=optional
 # Copy the rest of the source code
 COPY . .
 
-# Build the backend application
-RUN npm run build --workspace=rancher-hub-backend
+# Build the backend application from within the workspace directory
+# This ensures TypeScript resolves types from a single node_modules location
+WORKDIR /app/apps/backend
+RUN npm run build
+WORKDIR /app
 
 # 2. Production stage
 FROM node:20-slim AS production
