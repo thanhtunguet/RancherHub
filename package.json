@@ -9,7 +9,8 @@
   ],
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "nx": "^22.2.3"
+    "nx": "^22.2.3",
+    "vite-react-ssg": "^0.8.9"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "18.0.4",
@@ -17,10 +18,10 @@
     "@nx/nx-linux-arm64-gnu": "18.0.4",
     "@nx/nx-linux-x64-gnu": "18.0.4",
     "@nx/nx-win32-x64-msvc": "18.0.4",
-    "@rollup/rollup-linux-x64-gnu": "^4.53.3",
-    "@rollup/rollup-linux-arm64-gnu": "^4.53.3",
-    "@rollup/rollup-darwin-x64": "^4.53.3",
     "@rollup/rollup-darwin-arm64": "^4.53.3",
+    "@rollup/rollup-darwin-x64": "^4.53.3",
+    "@rollup/rollup-linux-arm64-gnu": "^4.53.3",
+    "@rollup/rollup-linux-x64-gnu": "^4.53.3",
     "@rollup/rollup-win32-x64-msvc": "^4.53.3"
   },
   "scripts": {

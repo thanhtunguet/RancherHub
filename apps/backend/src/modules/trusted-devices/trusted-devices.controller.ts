@@ -15,10 +15,9 @@ import {
 import { TrustedDevicesService } from './trusted-devices.service';
 import { TrustedDeviceResponseDto } from './dto/trusted-device-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
 
 @Controller('trusted-devices')
-@UseGuards(JwtAuthGuard, Require2FAGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @ApiTags('Trusted Devices')
 export class TrustedDevicesController {
