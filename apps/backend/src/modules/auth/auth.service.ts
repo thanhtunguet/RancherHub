@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,6 +17,7 @@ import { Setup2FADto } from './dto/setup-2fa.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Disable2FADto } from './dto/disable-2fa.dto';
+import { TrustedDevicesService } from '../trusted-devices/trusted-devices.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,8 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    @Inject(forwardRef(() => TrustedDevicesService))
+    private trustedDevicesService: TrustedDevicesService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -36,7 +41,7 @@ export class AuthService {
     return null;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, ipAddress?: string) {
     const user = await this.validateUser(loginDto.username, loginDto.password);
 
     if (!user) {
@@ -47,8 +52,25 @@ export class AuthService {
       throw new UnauthorizedException('Account is disabled');
     }
 
-    // If 2FA is enabled, require token verification
-    if (user.twoFactorEnabled && !loginDto.twoFactorToken) {
+    // Check if device is trusted (skip 2FA if trusted and not expired)
+    let deviceTrusted = false;
+    if (user.twoFactorEnabled && loginDto.deviceFingerprint) {
+      deviceTrusted = await this.trustedDevicesService.isDeviceTrusted(
+        user.id,
+        loginDto.deviceFingerprint,
+      );
+
+      if (deviceTrusted) {
+        // Update last used timestamp
+        await this.trustedDevicesService.updateLastUsed(
+          user.id,
+          loginDto.deviceFingerprint,
+        );
+      }
+    }
+
+    // If 2FA is enabled, device not trusted, and no token provided - require 2FA
+    if (user.twoFactorEnabled && !deviceTrusted && !loginDto.twoFactorToken) {
       return {
         requiresTwoFactor: true,
         message: 'Please enter your 2FA token to complete login',
@@ -59,8 +81,8 @@ export class AuthService {
       };
     }
 
-    // Verify 2FA token if provided
-    if (user.twoFactorEnabled && loginDto.twoFactorToken) {
+    // Verify 2FA token if provided (and device not trusted)
+    if (user.twoFactorEnabled && !deviceTrusted && loginDto.twoFactorToken) {
       const isValid = speakeasy.totp.verify({
         secret: user.twoFactorSecret,
         encoding: 'base32',
@@ -71,6 +93,23 @@ export class AuthService {
       if (!isValid) {
         throw new UnauthorizedException(
           'Invalid 2FA token. Please check the code from your authenticator app and try again.',
+        );
+      }
+
+      // If user wants to trust this device, create trusted device record
+      if (
+        loginDto.trustDevice &&
+        loginDto.deviceFingerprint &&
+        loginDto.deviceName
+      ) {
+        await this.trustedDevicesService.trustDevice(
+          user.id,
+          {
+            deviceFingerprint: loginDto.deviceFingerprint,
+            deviceName: loginDto.deviceName,
+            userAgent: loginDto.userAgent,
+          },
+          ipAddress || null,
         );
       }
     }
@@ -219,6 +258,9 @@ export class AuthService {
     // Update to new password
     user.password = newPassword;
     await this.userRepository.save(user);
+
+    // CRITICAL: Revoke ALL trusted devices when password changes
+    await this.trustedDevicesService.revokeAllUserDevices(userId);
   }
 
   async findById(id: string): Promise<User | null> {

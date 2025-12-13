@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import { Button, Dropdown, Avatar, Space, Modal } from "antd";
-import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined } from "@ant-design/icons";
+import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined, LaptopOutlined } from "@ant-design/icons";
 import {
   ServerIcon,
   LayersIcon,
@@ -34,6 +34,7 @@ import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { Disable2FAConfirm } from "./components/auth/Disable2FAConfirm";
 import { Require2FA } from "./components/auth/Require2FA";
+import { TrustedDevicesManagement } from "./components/auth/TrustedDevicesManagement";
 import "./App.css";
 
 const { Header, Content, Sider } = Layout;
@@ -45,6 +46,7 @@ function DashboardLayout() {
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDisable2FA, setShowDisable2FA] = useState(false);
+  const [showTrustedDevices, setShowTrustedDevices] = useState(false);
 
   // Redirect to landing page if not authenticated
   useEffect(() => {
@@ -91,6 +93,12 @@ function DashboardLayout() {
       icon: <SafetyOutlined />,
       label: user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA',
       onClick: handle2FAToggle,
+    },
+    {
+      key: 'trusted-devices',
+      icon: <LaptopOutlined />,
+      label: 'Trusted Devices',
+      onClick: () => setShowTrustedDevices(true),
     },
     {
       type: 'divider' as const,
@@ -251,6 +259,17 @@ function DashboardLayout() {
           onComplete={() => setShowDisable2FA(false)}
           onCancel={() => setShowDisable2FA(false)}
         />
+      </Modal>
+
+      <Modal
+        title="Trusted Devices"
+        open={showTrustedDevices}
+        onCancel={() => setShowTrustedDevices(false)}
+        footer={null}
+        width={800}
+        centered
+      >
+        <TrustedDevicesManagement />
       </Modal>
     </Layout>
   );

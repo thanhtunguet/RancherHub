@@ -14,6 +14,10 @@ export interface LoginRequest {
   username: string;
   password: string;
   twoFactorToken?: string;
+  deviceFingerprint?: string;
+  deviceName?: string;
+  userAgent?: string;
+  trustDevice?: boolean;
 }
 
 export interface LoginResponse {
@@ -37,6 +41,16 @@ export interface Setup2FAResponse {
 
 export interface Verify2FARequest {
   token: string;
+}
+
+export interface TrustedDevice {
+  id: string;
+  deviceName: string;
+  ipAddress: string | null;
+  lastUsedAt: Date;
+  expiresAt: Date;
+  createdAt: Date;
+  isCurrentDevice: boolean;
 }
 
 export interface AuthContextType {

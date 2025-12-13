@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Alert, Card, Typography, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Alert, Card, Typography, Space, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import type { LoginRequest } from '../../types/auth';
+import { getDeviceFingerprint, getDeviceName } from '../../utils/deviceFingerprint';
 
 const { Title, Text } = Typography;
 
@@ -16,14 +17,39 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const [, setTempToken] = useState<string | null>(null);
+  const [deviceFingerprint, setDeviceFingerprint] = useState<string | null>(null);
+  const [deviceName, setDeviceName] = useState<string>('');
   const [form] = Form.useForm();
+
+  // Generate device fingerprint on mount
+  useEffect(() => {
+    const initFingerprint = async () => {
+      try {
+        const fp = await getDeviceFingerprint();
+        const name = getDeviceName();
+        setDeviceFingerprint(fp);
+        setDeviceName(name);
+      } catch (error) {
+        console.error('Failed to generate device fingerprint:', error);
+        // Continue without fingerprint - don't block login
+      }
+    };
+    initFingerprint();
+  }, []);
 
   const handleSubmit = async (values: LoginRequest) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await login(values);
+      const loginData = {
+        ...values,
+        deviceFingerprint: deviceFingerprint || undefined,
+        deviceName: deviceName || undefined,
+        userAgent: navigator.userAgent,
+      };
+
+      const response = await login(loginData);
 
       if (response.requiresTwoFactor) {
         setRequiresTwoFactor(true);
@@ -43,7 +69,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   };
 
-  const handle2FASubmit = async (values: { twoFactorToken: string }) => {
+  const handle2FASubmit = async (values: { twoFactorToken: string; trustDevice?: boolean }) => {
     setLoading(true);
     setError(null);
 
@@ -51,6 +77,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       const loginData = {
         ...form.getFieldsValue(['username', 'password']),
         twoFactorToken: values.twoFactorToken,
+        trustDevice: values.trustDevice || false,
+        deviceFingerprint: deviceFingerprint || undefined,
+        deviceName: deviceName || undefined,
+        userAgent: navigator.userAgent,
       };
 
       const response = await login(loginData);
@@ -98,6 +128,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                 style={{ textAlign: 'center', fontSize: 18, letterSpacing: 2 }}
                 autoComplete="one-time-code"
               />
+            </Form.Item>
+
+            <Form.Item name="trustDevice" valuePropName="checked">
+              <Checkbox>
+                Trust this device for 30 days (skip 2FA on this device)
+              </Checkbox>
             </Form.Item>
 
             <Form.Item>

@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  OneToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { TrustedDevice } from './trusted-device.entity';
 
 @Entity('users')
 export class User {
@@ -37,6 +39,9 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lastLoginAt: Date | null;
+
+  @OneToMany(() => TrustedDevice, (device) => device.user)
+  trustedDevices: TrustedDevice[];
 
   @CreateDateColumn()
   createdAt: Date;

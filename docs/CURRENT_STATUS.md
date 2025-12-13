@@ -16,6 +16,12 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 ### 🔐 Authentication & User Management (Complete)
 - **JWT-based Authentication** - Secure token-based authentication
 - **Two-Factor Authentication (2FA)** - Mandatory TOTP with QR code setup
+- **Trusted Devices** - Option to trust browsers for 30 days and skip 2FA verification
+  - Device fingerprinting with FingerprintJS for stable device identification
+  - Maximum 3 trusted devices per user (auto-removes oldest when limit exceeded)
+  - Full device management UI to view and revoke trusted devices
+  - Automatic revocation of all trusted devices on password change
+  - IP address logging and last used timestamp tracking
 - **User CRUD Operations** - Complete user lifecycle management
 - **Password Management** - Secure password changes and recovery
 - **Activity Tracking** - User login history and statistics
@@ -89,7 +95,7 @@ Technology Stack:
 └── Axios (HTTP client)
 
 Component Structure:
-├── Authentication (login, 2FA, user management)
+├── Authentication (login, 2FA, user management, trusted devices)
 ├── Sites (Rancher and Harbor management)
 ├── Environments (environment organization)
 ├── App Instances (cluster/namespace mapping)
@@ -107,12 +113,14 @@ Technology Stack:
 ├── SQLite (development) / PostgreSQL (production)
 ├── JWT (authentication)
 ├── bcrypt (password hashing)
+├── @fingerprintjs/fingerprintjs (device fingerprinting)
 ├── Swagger (API documentation)
 ├── node-cron (scheduled tasks)
 └── Telegram Bot API
 
 Module Structure:
 ├── Auth Module (JWT, 2FA, guards)
+├── Trusted Devices Module (device trust management)
 ├── Users Module (user management)
 ├── Sites Module (Rancher sites)
 ├── Harbor Sites Module (Docker registries)
@@ -127,6 +135,7 @@ Module Structure:
 ```
 Entities Implemented:
 ├── User (authentication and user data)
+├── TrustedDevice (device trust tracking with fingerprints and expiration)
 ├── RancherSite (Rancher instance connections)
 ├── HarborSite (Docker registry connections)
 ├── Environment (environment organization)

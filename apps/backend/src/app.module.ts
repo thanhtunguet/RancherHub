@@ -18,6 +18,7 @@ import {
   AlertHistory,
   User,
   MessageTemplate,
+  TrustedDevice,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
 import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
@@ -29,6 +30,7 @@ import { ConfigMapsModule } from './modules/configmaps/configmaps.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MessageTemplatesModule } from './modules/message-templates/message-templates.module';
+import { TrustedDevicesModule } from './modules/trusted-devices/trusted-devices.module';
 import { RancherApiService } from './services/rancher-api.service';
 import { HarborApiService } from './services/harbor-api.service';
 
@@ -65,6 +67,7 @@ import { HarborApiService } from './services/harbor-api.service';
               AlertHistory,
               User,
               MessageTemplate,
+              TrustedDevice,
             ],
             synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
             logging: process.env.NODE_ENV === 'development',
@@ -86,6 +89,7 @@ import { HarborApiService } from './services/harbor-api.service';
               AlertHistory,
               User,
               MessageTemplate,
+              TrustedDevice,
             ],
             synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
             logging:
@@ -103,6 +107,7 @@ import { HarborApiService } from './services/harbor-api.service';
     AuthModule,
     UsersModule,
     MessageTemplatesModule,
+    TrustedDevicesModule,
   ],
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],

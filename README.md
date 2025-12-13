@@ -15,10 +15,15 @@ A comprehensive tool for managing and synchronizing services across different en
 
 ### Advanced Features
 
-- **User Management**: 
+- **User Management**:
   - Secure authentication system with JWT tokens
   - Two-Factor Authentication (2FA) with QR code setup
   - Mandatory 2FA for enhanced security
+  - **Trusted Devices**: Option to trust browsers for 30 days to skip 2FA
+    - Device fingerprinting for stable device identification
+    - Maximum 3 trusted devices per user
+    - Full device management UI to view and revoke devices
+    - Automatic device revocation on password change
   - User CRUD operations (Create, Read, Update, Delete)
   - Password management and change functionality
   - User activity tracking (last login, active/inactive status)
@@ -68,6 +73,18 @@ Rancher Hub includes a comprehensive user management system with enterprise-grad
   - QR code generation for easy setup
   - Backup codes for account recovery
   - Enable/disable 2FA with verification
+- **Trusted Devices**: Enhanced user experience with device trust management
+  - Option to trust browsers/devices for 30 days to skip repeated 2FA
+  - Secure device fingerprinting using FingerprintJS
+  - Maximum 3 trusted devices per user (oldest auto-removed when limit exceeded)
+  - Full device management interface:
+    - View all trusted devices with browser/OS info, last used date, and expiration
+    - Revoke individual devices or all devices at once
+    - Current device indicator for easy identification
+  - Automatic security measures:
+    - All trusted devices revoked on password change
+    - IP address logging for audit trail
+    - 30-day expiration with daily cleanup
 - **User Administration**: Complete user lifecycle management
   - Create and manage multiple users
   - Set active/inactive status
