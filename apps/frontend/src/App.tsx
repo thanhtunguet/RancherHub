@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import { Button, Dropdown, Avatar, Space, Modal } from "antd";
@@ -17,6 +17,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
+import { LandingPage } from "./pages/LandingPage";
 import { SiteManagement } from "./components/sites/SiteManagement";
 import { EnvironmentManagement } from "./components/environments/EnvironmentManagement";
 import { AppInstanceManagement } from "./components/app-instances/AppInstanceManagement";
@@ -29,7 +30,6 @@ import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
 import UserManagement from "./pages/users/UserManagement";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import { ChangePassword } from "./components/auth/ChangePassword";
 import { Disable2FAConfirm } from "./components/auth/Disable2FAConfirm";
@@ -38,13 +38,20 @@ import "./App.css";
 
 const { Header, Content, Sider } = Layout;
 
-function AppContent() {
+function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDisable2FA, setShowDisable2FA] = useState(false);
+
+  // Redirect to landing page if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleMenuClick = (key: string) => {
     navigate(key);
@@ -125,7 +132,7 @@ function AppContent() {
             onClick={({ key }) => handleMenuClick(key)}
             items={[
               {
-                key: "/",
+                key: "/dashboard",
                 icon: <HomeIcon size={16} />,
                 label: "Dashboard",
               },
@@ -185,7 +192,7 @@ function AppContent() {
 
         <Content className="bg-gray-50">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/dashboard" element={<HomePage />} />
             <Route path="/sites" element={<SiteManagement />} />
             <Route path="/environments" element={<EnvironmentManagement />} />
             <Route
@@ -249,15 +256,32 @@ function AppContent() {
   );
 }
 
+function ProtectedDashboard() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <Require2FA>
+      <DashboardLayout />
+    </Require2FA>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <ProtectedRoute>
-          <Require2FA>
-            <AppContent />
-          </Require2FA>
-        </ProtectedRoute>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/*" element={<ProtectedDashboard />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

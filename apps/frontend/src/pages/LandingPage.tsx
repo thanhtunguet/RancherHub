@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button, Card, Modal } from 'antd';
 import { ServerIcon, GitCompareIcon, PackageIcon, FileTextIcon, ArrowRightIcon, CheckCircle2Icon } from 'lucide-react';
@@ -6,6 +7,12 @@ import { LoginForm } from '../components/auth/LoginForm';
 
 export const LandingPage: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLoginSuccess = () => {
+    setShowLogin(false);
+    navigate('/dashboard');
+  };
 
   const siteTitle = 'Rancher Hub - Service Sync Manager for Kubernetes Clusters';
   const siteDescription = 'Streamline your Kubernetes operations with unified service management, environment comparison, and automated synchronization across multiple Rancher clusters.';
@@ -252,7 +259,7 @@ export const LandingPage: React.FC = () => {
         centered
         destroyOnClose
       >
-        <LoginForm onSuccess={() => setShowLogin(false)} />
+        <LoginForm onSuccess={handleLoginSuccess} />
       </Modal>
     </div>
   );
