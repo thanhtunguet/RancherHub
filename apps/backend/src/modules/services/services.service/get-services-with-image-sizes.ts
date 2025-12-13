@@ -11,8 +11,8 @@ export async function getServicesWithImageSizes(
   // Get services from the app instance
   const services = await service.getServicesByAppInstance(appInstanceId);
 
-  // Get active Harbor site
-  const harborSite = await service.harborSitesService.getActiveSite();
+  // Get all Harbor sites (not just active) to check which registry each image belongs to
+  const harborSites = await service.harborSitesService.findAll();
 
   // Enrich services with image size information from Harbor or DockerHub
   const enrichedServices = await Promise.all(
@@ -32,16 +32,34 @@ export async function getServicesWithImageSizes(
         }
 
         let sizeInfo = null;
+        let matchedHarborSite = null;
 
-        // First, try to get size from Harbor if available and image appears to be from Harbor
-        if (
-          harborSite &&
-          !service.dockerHubApiService.isDockerHubImage(imageTag)
-        ) {
-          service.logger.debug(`Trying Harbor API for image: ${imageTag}`);
+        // Check if image belongs to any Harbor site by checking if it contains a domain name
+        if (harborSites && harborSites.length > 0) {
+          for (const harborSite of harborSites) {
+            // Remove protocol from Harbor URL for comparison
+            const harborDomain = harborSite.url.replace(/^https?:\/\//, '');
+            
+            // Check if image tag starts with this Harbor site's domain
+            // Image format: domain.com/project/repo:tag or domain.com/project/repo
+            if (imageTag.startsWith(harborDomain)) {
+              matchedHarborSite = harborSite;
+              service.logger.debug(
+                `Image ${imageTag} matches Harbor site: ${harborSite.name} (${harborDomain})`,
+              );
+              break;
+            }
+          }
+        }
+
+        // If image belongs to a Harbor site, try to get size from Harbor API
+        if (matchedHarborSite) {
+          service.logger.debug(
+            `Trying Harbor API for image: ${imageTag} from site: ${matchedHarborSite.name}`,
+          );
           try {
             const harborSizeInfo = await service.harborApiService.getImageSize(
-              harborSite,
+              matchedHarborSite,
               imageTag,
             );
             if (harborSizeInfo) {
@@ -58,14 +76,11 @@ export async function getServicesWithImageSizes(
               `Harbor API failed for ${imageTag}: ${harborError.message}`,
             );
           }
-        }
-
-        // If Harbor didn't work or image is from DockerHub, try DockerHub
-        if (
-          !sizeInfo &&
-          service.dockerHubApiService.isDockerHubImage(imageTag)
-        ) {
-          service.logger.debug(`Trying DockerHub API for image: ${imageTag}`);
+        } else {
+          // Image doesn't have a domain name from any Harbor site, treat as Docker Hub public
+          service.logger.debug(
+            `Image ${imageTag} doesn't match any Harbor site, treating as Docker Hub public`,
+          );
           try {
             const dockerHubSizeInfo =
               await service.dockerHubApiService.getImageSize(imageTag);

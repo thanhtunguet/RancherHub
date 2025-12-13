@@ -1,4 +1,5 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { Service } from 'src/entities';
 import { ServicesService } from './index';
 
 export async function updateServiceImage(
@@ -8,11 +9,87 @@ export async function updateServiceImage(
 ): Promise<any> {
   servicesService.logger.log(`Updating service ${serviceId} to tag: ${newTag}`);
 
-  // Get the service with its app instance and rancher site
-  const service = await servicesService.serviceRepository.findOne({
-    where: { id: serviceId },
-    relations: ['appInstance', 'appInstance.rancherSite'],
-  });
+  // Check if serviceId is a valid UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isUuid = uuidRegex.test(serviceId);
+
+  let service;
+
+  if (isUuid) {
+    // Try to find by UUID first
+    service = await servicesService.serviceRepository.findOne({
+      where: { id: serviceId },
+      relations: ['appInstance', 'appInstance.rancherSite'],
+    });
+  } else {
+    // Handle composite ID format: ${appInstanceId}-${serviceName}
+    // This happens when services are fetched directly from Rancher without database lookup
+    const parts = serviceId.split('-');
+    if (parts.length >= 2) {
+      // Try to extract appInstanceId (first part should be UUID) and serviceName (rest)
+      // Find the longest UUID prefix
+      let appInstanceId = '';
+      let serviceName = '';
+      
+      // Try different split points to find valid UUID
+      for (let i = 1; i < parts.length; i++) {
+        const potentialUuid = parts.slice(0, i).join('-');
+        if (uuidRegex.test(potentialUuid)) {
+          appInstanceId = potentialUuid;
+          serviceName = parts.slice(i).join('-');
+          break;
+        }
+      }
+
+      if (appInstanceId && serviceName) {
+        servicesService.logger.debug(
+          `Parsed composite ID: appInstanceId=${appInstanceId}, serviceName=${serviceName}`,
+        );
+        // Try to find service in database by name and appInstanceId
+        service = await servicesService.serviceRepository.findOne({
+          where: { name: serviceName, appInstanceId: appInstanceId },
+          relations: ['appInstance', 'appInstance.rancherSite'],
+        });
+
+        // If not found in database, try to fetch directly from Rancher
+        if (!service) {
+          servicesService.logger.debug(
+            `Service not found in database, fetching directly from Rancher`,
+          );
+          // Get app instance to fetch service directly
+          const appInstance = await servicesService.appInstanceRepository.findOne({
+            where: { id: appInstanceId },
+            relations: ['rancherSite'],
+          });
+
+          if (appInstance) {
+            // Fetch deployments from Rancher and find the matching service
+            const deployments =
+              await servicesService.rancherApiService.getDeploymentsFromK8sApi(
+                appInstance.rancherSite,
+                appInstance.cluster,
+                appInstance.namespace,
+              );
+
+            const deployment = deployments.find((dep) => dep.name === serviceName);
+            if (deployment) {
+              // Create a temporary service object from the deployment
+              service = new Service();
+              service.id = serviceId; // Keep the composite ID
+              service.name = deployment.name;
+              service.appInstanceId = appInstance.id;
+              service.status = deployment.state;
+              service.replicas = deployment.scale;
+              service.availableReplicas = deployment.availableReplicas;
+              service.imageTag = deployment.image;
+              service.workloadType = deployment.type;
+              service.appInstance = appInstance;
+            }
+          }
+        }
+      }
+    }
+  }
 
   if (!service) {
     throw new NotFoundException(`Service with ID ${serviceId} not found`);
@@ -64,10 +141,17 @@ export async function updateServiceImage(
       newImageTag,
     );
 
-    // Update the service record in our database
-    service.imageTag = newImageTag;
-    service.status = 'updating';
-    await servicesService.serviceRepository.save(service);
+    // Update the service record in our database (only if it exists in database with UUID)
+    // If service was fetched directly from Rancher (composite ID), skip database update
+    if (isUuid || (service.id && uuidRegex.test(service.id))) {
+      service.imageTag = newImageTag;
+      service.status = 'updating';
+      await servicesService.serviceRepository.save(service);
+    } else {
+      servicesService.logger.debug(
+        `Skipping database update for service with composite ID: ${serviceId}`,
+      );
+    }
 
     servicesService.logger.log(
       `Successfully updated service ${service.name} to ${newImageTag}`,

@@ -47,32 +47,70 @@ export function UpdateImageModal({
 
   const updateMutation = useUpdateServiceImage();
 
+  const getNewImageTag = () => {
+    if (!service?.imageTag || !selectedTag) return null;
+    const parts = service.imageTag.split(":");
+    if (parts.length > 1) {
+      const imageWithoutTag = parts.slice(0, -1).join(":");
+      return `${imageWithoutTag}:${selectedTag}`;
+    }
+    return `${service.imageTag}:${selectedTag}`;
+  };
+
   const handleUpdate = async () => {
     if (!selectedTag || !service) return;
 
-    try {
-      await updateMutation.mutateAsync({
-        serviceId: service.id,
-        tag: selectedTag,
-      });
+    const newImageTag = getNewImageTag();
+    const currentTag = getCurrentTag();
 
-      message.success(
-        `Successfully updated ${service.name} to ${selectedTag}`
-      );
+    Modal.confirm({
+      title: "Confirm Update",
+      content: (
+        <div>
+          <p>Are you sure you want to update the image tag?</p>
+          <Space direction="vertical" size={4} style={{ marginTop: 8 }}>
+            <Text type="secondary">Service: <Text strong>{service.name}</Text></Text>
+            <Text type="secondary">
+              Current: <Text code>{service.imageTag}</Text>
+            </Text>
+            <Text type="secondary">
+              New: <Text code>{newImageTag}</Text>
+            </Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              (Replacing tag <Text code>{currentTag}</Text> with <Text code>{selectedTag}</Text>)
+            </Text>
+          </Space>
+        </div>
+      ),
+      okText: "Update",
+      okType: "primary",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await updateMutation.mutateAsync({
+            serviceId: service.id,
+            tag: selectedTag,
+          });
 
-      onClose();
-      setSelectedTag(null);
+          message.success(
+            `Successfully updated ${service.name} to ${selectedTag}`
+          );
 
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error: any) {
-      message.error(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to update service image"
-      );
-    }
+          onClose();
+          setSelectedTag(null);
+
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch (error: any) {
+          message.error(
+            error.response?.data?.message ||
+              error.message ||
+              "Failed to update service image"
+          );
+        }
+      },
+    });
   };
 
   const handleCancel = () => {
