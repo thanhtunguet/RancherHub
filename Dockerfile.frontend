@@ -1,35 +1,10 @@
 # Dockerfile.frontend
 
-# 1. Builder stage
-FROM node:20-slim AS builder
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy all package.json files and the lock file
-COPY package.json package-lock.json* ./
-COPY apps/backend/package.json ./apps/backend/
-COPY apps/frontend/package.json ./apps/frontend/
-
-# Install all dependencies for the workspace including optional dependencies
-RUN npm install --include=optional
-
-# Copy the rest of the source code
-COPY . .
-
-# Build the frontend application
-RUN npm run build --workspace=rancher-hub-frontend
-
-# 2. Production stage
-FROM nginx:stable AS production
+# Production stage
+FROM nginx:alpine AS production
 
 # Copy nginx configuration
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the built application from the builder stage
-COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
+# Copy the built application (built in GitHub Actions)
+COPY apps/frontend/dist /usr/share/nginx/html
