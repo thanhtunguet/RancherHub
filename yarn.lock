@@ -1745,7 +1745,7 @@
   resolved "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-beta.11.tgz"
   integrity sha512-L/gAA/hyCSuzTF1ftlzUSI/IKr2POHsv1Dd78GfqkR83KMNuswWD61JxGV2L7nRwBBBSDr6R1gCkdTmoN7W4ag==
 
-"@rollup/rollup-darwin-arm64@4.53.3":
+"@rollup/rollup-darwin-arm64@^4.53.3", "@rollup/rollup-darwin-arm64@4.53.3":
   version "4.53.3"
   resolved "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.53.3.tgz"
   integrity sha512-Nr7SlQeqIBpOV6BHHGZgYBuSdanCXuw09hon14MGOLGmXAFYjx1wNvquVPmpZnl0tLjg25dEdr4IQ6GgyToCUA==
@@ -7359,15 +7359,15 @@ queue-microtask@^1.2.2:
   resolved "file:apps/backend"
   dependencies:
     "@kubernetes/client-node" "^1.3.0"
-    "@nestjs/common" "^10.4.20"
+    "@nestjs/common" "^11.1.9"
     "@nestjs/config" "^3.3.0"
-    "@nestjs/core" "^10.4.20"
+    "@nestjs/core" "^11.1.9"
     "@nestjs/jwt" "^11.0.2"
     "@nestjs/passport" "^11.0.5"
-    "@nestjs/platform-express" "^10.4.20"
+    "@nestjs/platform-express" "^11.1.9"
     "@nestjs/schedule" "^6.1.0"
     "@nestjs/swagger" "^11.2.3"
-    "@nestjs/typeorm" "^10.0.2"
+    "@nestjs/typeorm" "^11.0.0"
     "@types/form-data" "^2.2.1"
     "@types/jimp" "^0.2.1"
     axios "^1.4.0"
