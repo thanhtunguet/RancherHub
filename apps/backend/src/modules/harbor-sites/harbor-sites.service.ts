@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HarborSite } from '../../entities/harbor-site.entity';
@@ -9,6 +9,8 @@ import axios from 'axios';
 
 @Injectable()
 export class HarborSitesService {
+  private readonly logger = new Logger(HarborSitesService.name);
+
   constructor(
     @InjectRepository(HarborSite)
     private harborSitesRepository: Repository<HarborSite>,
@@ -51,58 +53,200 @@ export class HarborSitesService {
     testConnectionDto: TestHarborConnectionDto,
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-      const basicAuth = Buffer.from(
-        `${testConnectionDto.username}:${testConnectionDto.password}`,
-      ).toString('base64');
+      const credentials = `${testConnectionDto.username}:${testConnectionDto.password}`;
+      const base64Credentials = Buffer.from(credentials).toString('base64');
+      const basicAuth = base64Credentials;
+
+      // Log authorization header in development mode only
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[Harbor Test Connection Debug] Username: ${testConnectionDto.username}`,
+        );
+        console.log(
+          `[Harbor Test Connection Debug] Credentials (username:password): ${credentials}`,
+        );
+        console.log(
+          `[Harbor Test Connection Debug] Base64 encoded: ${base64Credentials}`,
+        );
+        console.log(
+          `[Harbor Test Connection Debug] Full Authorization header: Basic ${basicAuth}`,
+        );
+      }
 
       // Normalize the URL by removing trailing slashes
       let baseUrl = testConnectionDto.url.replace(/\/+$/, '');
+
+      this.logger.log(`[Harbor Test Connection] Starting connection test`);
+      this.logger.log(
+        `[Harbor Test Connection] Original URL: ${testConnectionDto.url}`,
+      );
+      this.logger.log(
+        `[Harbor Test Connection] User: ${testConnectionDto.username}`,
+      );
 
       // Check if the URL already contains /api/v2.0 or /api/v2
       // If not, append /api/v2.0
       if (!baseUrl.includes('/api/v2')) {
         baseUrl = `${baseUrl}/api/v2.0`;
+        this.logger.log(`[Harbor Test Connection] Appended /api/v2.0 to URL`);
       }
 
-      // Construct the full API endpoint URL
-      const apiUrl = `${baseUrl}/projects`;
+      this.logger.log(`[Harbor Test Connection] Final base URL: ${baseUrl}`);
 
-      // Use the /projects endpoint as it's a simple endpoint that requires authentication
-      // and will verify that the Harbor API is accessible
-      const response = await axios.get(apiUrl, {
+      // Use /users/current endpoint to verify both Harbor server and authentication
+      // This endpoint requires Basic auth and returns current user info if successful
+      const currentUserUrl = `${baseUrl}/users/current`;
+      this.logger.log(
+        `[Harbor Test Connection] Calling: GET ${currentUserUrl}`,
+      );
+      this.logger.log(
+        `[Harbor Test Connection] Headers: Authorization=Basic (user: ${testConnectionDto.username}), Content-Type=application/json`,
+      );
+
+      const authHeaderValue = `Basic ${basicAuth}`;
+
+      // Log full request details in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[Harbor Test Connection Debug] Full request URL: ${currentUserUrl}`,
+        );
+        console.log(`[Harbor Test Connection Debug] Request method: GET`);
+        console.log(
+          `[Harbor Test Connection Debug] Full Authorization header value: ${authHeaderValue}`,
+        );
+        console.log(
+          `[Harbor Test Connection Debug] Request headers: ${JSON.stringify({
+            Authorization: authHeaderValue,
+            'Content-Type': 'application/json',
+          })}`,
+        );
+      }
+
+      const userResponse = await axios.get(currentUserUrl, {
         headers: {
-          Authorization: `Basic ${basicAuth}`,
+          Authorization: authHeaderValue,
           'Content-Type': 'application/json',
         },
         timeout: 10000,
       });
 
-      if (response.status === 200) {
-        const projectCount = Array.isArray(response.data)
-          ? response.data.length
-          : 0;
+      // Log response details in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[Harbor Test Connection Debug] Response status: ${userResponse.status} ${userResponse.statusText}`,
+        );
+        console.log(
+          `[Harbor Test Connection Debug] Response headers: ${JSON.stringify(userResponse.headers)}`,
+        );
+      }
+
+      this.logger.log(
+        `[Harbor Test Connection] ✅ Response status: ${userResponse.status} ${userResponse.statusText}`,
+      );
+      this.logger.log(
+        `[Harbor Test Connection] Response data: ${JSON.stringify(userResponse.data)}`,
+      );
+
+      if (userResponse.status === 200) {
+        // Authentication successful, get user info and also fetch projects count
+        const userInfo = userResponse.data;
+        let projectCount = 0;
+
+        try {
+          // Optionally get projects count to provide more info
+          const projectsUrl = `${baseUrl}/projects`;
+          this.logger.log(
+            `[Harbor Test Connection] Fetching projects: GET ${projectsUrl}`,
+          );
+
+          // Log full authorization header in development
+          if (process.env.NODE_ENV === 'development') {
+            console.log(
+              `[Harbor Test Connection Debug] Projects API - Full Authorization header value: Basic ${basicAuth}`,
+            );
+          }
+
+          const projectsResponse = await axios.get(projectsUrl, {
+            headers: {
+              Authorization: `Basic ${basicAuth}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 5000,
+          });
+
+          this.logger.log(
+            `[Harbor Test Connection] Projects response status: ${projectsResponse.status}`,
+          );
+
+          if (projectsResponse.status === 200) {
+            projectCount = Array.isArray(projectsResponse.data)
+              ? projectsResponse.data.length
+              : 0;
+            this.logger.log(
+              `[Harbor Test Connection] Found ${projectCount} projects`,
+            );
+          }
+        } catch (projectsError: any) {
+          // Ignore projects error, we already verified auth with /users/current
+          // This is just for additional info
+          this.logger.warn(
+            `[Harbor Test Connection] ⚠️ Failed to fetch projects (non-critical): ${projectsError.message}`,
+          );
+        }
+
         return {
           success: true,
-          message: `Connection successful - Found ${projectCount} projects`,
+          message: `Connection successful - Authenticated as ${userInfo.username || 'user'}`,
           data: {
+            user: {
+              username: userInfo.username,
+              email: userInfo.email,
+              realname: userInfo.realname,
+              admin: userInfo.sysadmin_flag || false,
+            },
             projectCount,
             harborUrl: testConnectionDto.url,
           },
         };
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${userResponse.status}`);
       }
-    } catch (error) {
+    } catch (error: any) {
+      this.logger.error(`[Harbor Test Connection] ❌ Connection test failed`);
+      this.logger.error(
+        `[Harbor Test Connection] Error code: ${error.code || 'N/A'}`,
+      );
+      this.logger.error(
+        `[Harbor Test Connection] Error message: ${error.message}`,
+      );
+      if (error.response) {
+        this.logger.error(
+          `[Harbor Test Connection] Response status: ${error.response.status} ${error.response.statusText}`,
+        );
+        this.logger.error(
+          `[Harbor Test Connection] Response data: ${JSON.stringify(error.response.data)}`,
+        );
+        this.logger.error(
+          `[Harbor Test Connection] Request URL: ${error.config?.url || 'unknown'}`,
+        );
+      } else if (error.config) {
+        this.logger.error(
+          `[Harbor Test Connection] Request URL: ${error.config.url || 'unknown'}`,
+        );
+      }
+
       let message = 'Connection failed';
       if (error.code === 'ECONNREFUSED') {
         message = 'Connection refused - Harbor server may be down';
       } else if (error.code === 'ENOTFOUND') {
         message = 'Server not found - check Harbor URL';
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+        message = 'Connection timeout - Harbor server may be unreachable';
       } else if (error.response?.status === 401) {
         message = 'Authentication failed - check Harbor username and password';
       } else if (error.response?.status === 403) {
         message =
-          'Access forbidden - user may not have permission to access projects';
+          'Access forbidden - user may not have permission to access Harbor';
       } else if (error.response?.status === 404) {
         message =
           'Harbor API not found - verify the Harbor URL (e.g., http://harbor.example.com without /api/v2.0)';

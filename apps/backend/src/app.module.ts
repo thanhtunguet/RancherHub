@@ -88,7 +88,9 @@ import { HarborApiService } from './services/harbor-api.service';
               MessageTemplate,
             ],
             synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
-            logging: process.env.NODE_ENV === 'development',
+            logging:
+              process.env.NODE_ENV === 'development' &&
+              process.env.DATABASE_LOGGING === 'true',
           },
     ),
     SitesModule,

@@ -82,7 +82,10 @@ export class HarborApiService {
   }
 
   private normalizeEndpoint(endpoint: string): string {
-    return endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    // Ensure endpoint starts with /
+    const normalized = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    // Remove any double slashes (except after http:// or https://)
+    return normalized.replace(/([^:]\/)\/+/g, '$1');
   }
 
   private buildApiBaseOptions(rootBase: string): string[] {
@@ -120,18 +123,36 @@ export class HarborApiService {
   }
 
   private encodeProjectName(projectName: string): string {
+    // Project name should be URL encoded once
     return encodeURIComponent(projectName);
   }
 
   private encodeRepositoryName(repositoryName: string): string {
-    const onceEncoded = encodeURIComponent(repositoryName);
-    return repositoryName.includes('/')
-      ? encodeURIComponent(onceEncoded)
-      : onceEncoded;
+    // According to Harbor API spec: "If it contains slash, encode it twice over with URL encoding. e.g. a/b -> a%2Fb -> a%252Fb"
+    if (repositoryName.includes('/')) {
+      const onceEncoded = encodeURIComponent(repositoryName);
+      return encodeURIComponent(onceEncoded);
+    }
+    // If no slash, single encoding is sufficient
+    return encodeURIComponent(repositoryName);
   }
 
   private getAuthHeader(harborSite: HarborSite): string {
-    return `Basic ${Buffer.from(`${harborSite.username}:${harborSite.password}`).toString('base64')}`;
+    const credentials = `${harborSite.username}:${harborSite.password}`;
+    const base64Credentials = Buffer.from(credentials).toString('base64');
+    const authHeader = `Basic ${base64Credentials}`;
+
+    // Log authorization header in development mode only
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Harbor Auth Debug] Username: ${harborSite.username}`);
+      console.log(
+        `[Harbor Auth Debug] Credentials (username:password): ${credentials}`,
+      );
+      console.log(`[Harbor Auth Debug] Base64 encoded: ${base64Credentials}`);
+      console.log(`[Harbor Auth Debug] Authorization header: ${authHeader}`);
+    }
+
+    return authHeader;
   }
 
   private async makeRequest<T>(
@@ -153,25 +174,97 @@ export class HarborApiService {
 
     let lastError: AxiosError | null = null;
 
+    this.logger.log(`[Harbor API] Making request to endpoint: ${endpointPath}`);
+    this.logger.log(
+      `[Harbor API] Base URL candidates (${baseCandidates.length}): ${baseCandidates.join(', ')}`,
+    );
+    this.logger.log(
+      `[Harbor API] Harbor site: ${harborSite.name || 'unknown'} (${harborSite.url})`,
+    );
+    this.logger.log(`[Harbor API] User: ${harborSite.username}`);
+
     for (let index = 0; index < baseCandidates.length; index++) {
       const baseUrl = baseCandidates[index];
-      const url = `${baseUrl}${endpointPath}`;
+      // Ensure no double slashes in URL
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+      const cleanEndpoint = endpointPath.replace(/^\/+/, ''); // Remove leading slashes from endpoint
+      const url = `${cleanBaseUrl}/${cleanEndpoint}`;
 
       try {
-        this.logger.debug(
-          `Harbor API GET ${url} params=${JSON.stringify(params || {})} (candidate ${index + 1}/${baseCandidates.length})`,
+        const authHeader = this.getAuthHeader(harborSite);
+        this.logger.log(
+          `[Harbor API] Attempt ${index + 1}/${baseCandidates.length}: GET ${url}`,
         );
+        if (params && Object.keys(params).length > 0) {
+          this.logger.log(
+            `[Harbor API] Query params: ${JSON.stringify(params)}`,
+          );
+        }
+        this.logger.log(
+          `[Harbor API] Headers: Authorization=Basic (user: ${harborSite.username}), Content-Type=application/json`,
+        );
+
+        // Log full authorization header in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `[Harbor API Debug] Full Authorization header value: ${authHeader}`,
+          );
+        }
+
+        // Log full request details in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Harbor API Debug] Full request URL: ${url}`);
+          console.log(`[Harbor API Debug] Request method: GET`);
+          console.log(
+            `[Harbor API Debug] Request headers: ${JSON.stringify({
+              Authorization: authHeader,
+              'Content-Type': 'application/json',
+            })}`,
+          );
+          if (params && Object.keys(params).length > 0) {
+            console.log(
+              `[Harbor API Debug] Request query params: ${JSON.stringify(params)}`,
+            );
+          }
+        }
 
         const response: AxiosResponse<T> = await axios.get(url, {
           headers: {
-            Authorization: this.getAuthHeader(harborSite),
+            Authorization: authHeader,
             'Content-Type': 'application/json',
           },
           params,
           timeout: 30000,
         });
 
+        this.logger.log(
+          `[Harbor API] ✅ Success! Status: ${response.status} ${response.statusText}`,
+        );
+
+        // Log response details in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `[Harbor API Debug] Response status: ${response.status} ${response.statusText}`,
+          );
+          console.log(
+            `[Harbor API Debug] Response headers: ${JSON.stringify(response.headers)}`,
+          );
+        }
+        this.logger.debug(
+          `[Harbor API] Response data type: ${typeof response.data}, isArray: ${Array.isArray(response.data)}`,
+        );
+        if (Array.isArray(response.data)) {
+          this.logger.debug(
+            `[Harbor API] Response array length: ${response.data.length}`,
+          );
+        } else if (response.data && typeof response.data === 'object') {
+          this.logger.debug(
+            `[Harbor API] Response keys: ${Object.keys(response.data).join(', ')}`,
+          );
+        }
+
         this.resolvedBaseUrls.set(cacheKey, baseUrl);
+        this.logger.log(`[Harbor API] Cached resolved base URL: ${baseUrl}`);
         return response.data;
       } catch (error) {
         const axiosError = error as AxiosError;
@@ -180,10 +273,26 @@ export class HarborApiService {
         const statusText = axiosError.response?.statusText;
         const responseData = axiosError.response?.data;
 
+        this.logger.error(`[Harbor API] ❌ Request failed for URL: ${url}`);
         this.logger.error(
-          `Harbor API request failed (${status} ${statusText}) for ${url}: ${axiosError.message}`,
-          axiosError.stack,
+          `[Harbor API] Status: ${status || 'N/A'} ${statusText || ''}`,
         );
+        this.logger.error(`[Harbor API] Error message: ${axiosError.message}`);
+        if (axiosError.code) {
+          this.logger.error(`[Harbor API] Error code: ${axiosError.code}`);
+        }
+        if (responseData) {
+          this.logger.error(
+            `[Harbor API] Response body: ${JSON.stringify(responseData)}`,
+          );
+        }
+
+        // For 401/403, the auth might be wrong, don't retry with different base URL
+        if (status === 401 || status === 403) {
+          throw new Error(
+            `Harbor API authentication failed (${status}): Check your username and password`,
+          );
+        }
 
         if (
           index < baseCandidates.length - 1 &&
@@ -191,9 +300,7 @@ export class HarborApiService {
           (status === 404 || status === 405 || status === 400)
         ) {
           this.logger.warn(
-            `Retrying Harbor API request with next base candidate due to ${status}. Response body: ${JSON.stringify(
-              responseData,
-            )}`,
+            `[Harbor API] Will retry with next base URL candidate due to status ${status}`,
           );
           continue;
         }
@@ -215,6 +322,149 @@ export class HarborApiService {
     );
   }
 
+  async getHealth(harborSite: HarborSite): Promise<any> {
+    // Use /users/current endpoint to verify both Harbor server and authentication
+    // This is more reliable than /health endpoint as it verifies credentials too
+    const cacheKey = this.getSiteCacheKey(harborSite);
+    const endpointPath = '/users/current';
+
+    let baseCandidates = this.getBaseUrlCandidates(harborSite);
+    if (this.resolvedBaseUrls.has(cacheKey)) {
+      const cached = this.resolvedBaseUrls.get(cacheKey)!;
+      baseCandidates = [
+        cached,
+        ...baseCandidates.filter((candidate) => candidate !== cached),
+      ];
+    }
+
+    let lastError: AxiosError | null = null;
+
+    this.logger.log(
+      `[Harbor Health] Checking health for Harbor site: ${harborSite.name || 'unknown'} (${harborSite.url})`,
+    );
+    this.logger.log(
+      `[Harbor Health] Base URL candidates (${baseCandidates.length}): ${baseCandidates.join(', ')}`,
+    );
+    this.logger.log(`[Harbor Health] User: ${harborSite.username}`);
+
+    for (let index = 0; index < baseCandidates.length; index++) {
+      const baseUrl = baseCandidates[index];
+      // Ensure no double slashes in URL
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+      const cleanEndpoint = endpointPath.replace(/^\/+/, ''); // Remove leading slashes from endpoint
+      const url = `${cleanBaseUrl}/${cleanEndpoint}`;
+
+      try {
+        const authHeader = this.getAuthHeader(harborSite);
+        this.logger.log(
+          `[Harbor Health] Attempt ${index + 1}/${baseCandidates.length}: GET ${url}`,
+        );
+        this.logger.log(
+          `[Harbor Health] Headers: Authorization=Basic (user: ${harborSite.username}), Content-Type=application/json`,
+        );
+
+        // Log full authorization header in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `[Harbor Health Debug] Full Authorization header value: ${authHeader}`,
+          );
+        }
+
+        const response: AxiosResponse<any> = await axios.get(url, {
+          headers: {
+            Authorization: authHeader,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        });
+
+        this.logger.log(
+          `[Harbor Health] ✅ Success! Status: ${response.status} ${response.statusText}`,
+        );
+        this.logger.log(
+          `[Harbor Health] User authenticated: ${response.data.username || 'unknown'}`,
+        );
+        this.logger.debug(
+          `[Harbor Health] User data: ${JSON.stringify({
+            username: response.data.username,
+            email: response.data.email,
+            admin: response.data.sysadmin_flag,
+          })}`,
+        );
+
+        this.resolvedBaseUrls.set(cacheKey, baseUrl);
+        this.logger.log(`[Harbor Health] Cached resolved base URL: ${baseUrl}`);
+
+        // Return health status with user info
+        return {
+          status: 'healthy',
+          user: {
+            username: response.data.username,
+            email: response.data.email,
+            realname: response.data.realname,
+            admin: response.data.sysadmin_flag || false,
+          },
+          authenticated: true,
+        };
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        lastError = axiosError;
+        const status = axiosError.response?.status;
+        const responseData = axiosError.response?.data;
+
+        this.logger.error(
+          `[Harbor Health] ❌ Health check failed for URL: ${url}`,
+        );
+        this.logger.error(`[Harbor Health] Status: ${status || 'N/A'}`);
+        this.logger.error(
+          `[Harbor Health] Error message: ${axiosError.message}`,
+        );
+        if (axiosError.code) {
+          this.logger.error(`[Harbor Health] Error code: ${axiosError.code}`);
+        }
+        if (responseData) {
+          this.logger.error(
+            `[Harbor Health] Response body: ${JSON.stringify(responseData)}`,
+          );
+        }
+
+        // For 401/403, don't retry with different base URL - auth is wrong
+        if (status === 401 || status === 403) {
+          throw new Error(
+            `Harbor API authentication failed (${status}): Check your username and password`,
+          );
+        }
+
+        if (
+          index < baseCandidates.length - 1 &&
+          status &&
+          (status === 404 || status === 405 || status === 400)
+        ) {
+          this.logger.warn(
+            `Retrying Harbor API health check with next base candidate due to ${status}`,
+          );
+          continue;
+        }
+
+        if (index === baseCandidates.length - 1) {
+          throw new Error(
+            `Failed to check Harbor health (${status ?? 'unknown status'}): ${axiosError.message}`,
+          );
+        }
+      }
+    }
+
+    if (lastError) {
+      throw new Error(
+        `Failed to check Harbor health (${lastError.response?.status ?? 'unknown status'}): ${lastError.message}`,
+      );
+    }
+
+    throw new Error(
+      'Failed to check Harbor health: no base URL candidates succeeded',
+    );
+  }
+
   async getProjects(harborSite: HarborSite): Promise<HarborProject[]> {
     return this.makeRequest<HarborProject[]>(harborSite, '/projects');
   }
@@ -224,10 +474,28 @@ export class HarborApiService {
     projectName: string,
   ): Promise<HarborRepository[]> {
     const encodedProjectName = this.encodeProjectName(projectName);
+    // According to Harbor API spec, this endpoint returns repositories for the specified project
+    // The repository name in response should be just the repository name (without project prefix)
     return this.makeRequest<HarborRepository[]>(
       harborSite,
       `/projects/${encodedProjectName}/repositories`,
     );
+  }
+
+  /**
+   * Normalize repository name by removing project prefix if present
+   * Harbor API may return repository names with or without project prefix
+   */
+  private normalizeRepositoryName(
+    repositoryName: string,
+    projectName: string,
+  ): string {
+    // If repository name starts with project name, remove it
+    const prefix = `${projectName}/`;
+    if (repositoryName.startsWith(prefix)) {
+      return repositoryName.substring(prefix.length);
+    }
+    return repositoryName;
   }
 
   async getArtifacts(
@@ -235,14 +503,20 @@ export class HarborApiService {
     projectName: string,
     repositoryName: string,
   ): Promise<HarborArtifact[]> {
+    // Normalize repository name to remove project prefix if present
+    const normalizedRepoName = this.normalizeRepositoryName(
+      repositoryName,
+      projectName,
+    );
     const encodedProjectName = this.encodeProjectName(projectName);
-    const encodedRepoName = this.encodeRepositoryName(repositoryName);
+    const encodedRepoName = this.encodeRepositoryName(normalizedRepoName);
+    // According to Harbor API spec, these are query parameters
     return this.makeRequest<HarborArtifact[]>(
       harborSite,
       `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts`,
       {
         with_tag: true,
-        with_label: true,
+        with_label: false,
         with_scan_overview: false,
         with_signature: false,
         with_immutable_status: false,
@@ -272,8 +546,13 @@ export class HarborApiService {
     repositoryName: string,
     reference: string,
   ): Promise<any> {
+    // Normalize repository name to remove project prefix if present
+    const normalizedRepoName = this.normalizeRepositoryName(
+      repositoryName,
+      projectName,
+    );
     const encodedProjectName = this.encodeProjectName(projectName);
-    const encodedRepoName = this.encodeRepositoryName(repositoryName);
+    const encodedRepoName = this.encodeRepositoryName(normalizedRepoName);
     const encodedReference = encodeURIComponent(reference);
 
     try {
@@ -299,7 +578,7 @@ export class HarborApiService {
           'application/vnd.oci.image.index.v1+json'
       ) {
         this.logger.debug(
-          `Multi-platform image detected for ${projectName}/${repositoryName}:${reference}`,
+          `Multi-platform image detected for ${projectName}/${normalizedRepoName}:${reference}`,
         );
 
         // Get references (different platform manifests)
@@ -317,7 +596,9 @@ export class HarborApiService {
 
           return await this.makeRequest<any>(
             harborSite,
-            `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodeURIComponent(platformManifest.digest)}`,
+            `/projects/${encodedProjectName}/repositories/${encodedRepoName}/artifacts/${encodeURIComponent(
+              platformManifest.digest,
+            )}`,
             {
               with_tag: true,
               with_label: false,
@@ -333,7 +614,7 @@ export class HarborApiService {
       return manifest;
     } catch (error) {
       this.logger.error(
-        `Failed to get artifact layers for ${projectName}/${repositoryName}:${reference}`,
+        `Failed to get artifact layers for ${projectName}/${normalizedRepoName}:${reference}`,
         error.stack,
       );
       throw error;
@@ -346,8 +627,13 @@ export class HarborApiService {
     repositoryName: string,
     tag: string,
   ): Promise<HarborArtifact | null> {
+    // Normalize repository name to remove project prefix if present
+    const normalizedRepoName = this.normalizeRepositoryName(
+      repositoryName,
+      projectName,
+    );
     const encodedProjectName = this.encodeProjectName(projectName);
-    const encodedRepoName = this.encodeRepositoryName(repositoryName);
+    const encodedRepoName = this.encodeRepositoryName(normalizedRepoName);
     const encodedTag = encodeURIComponent(tag);
     try {
       return await this.makeRequest<HarborArtifact>(
@@ -364,7 +650,7 @@ export class HarborApiService {
       );
     } catch (error) {
       this.logger.warn(
-        `No artifact found with tag '${tag}' for ${projectName}/${repositoryName}: ${error.message}`,
+        `No artifact found with tag '${tag}' for ${projectName}/${normalizedRepoName}: ${error.message}`,
       );
       return null;
     }
