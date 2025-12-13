@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rancher-hub-frontend
+  namespace: rancher-hub
+  labels:
+    app: rancher-hub-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rancher-hub-frontend
+  template:
+    metadata:
+      labels:
+        app: rancher-hub-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: thanhtunguet/rancher-hub-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rancher-hub-frontend
+  namespace: rancher-hub
+  labels:
+    app: rancher-hub-frontend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  selector:
+    app: rancher-hub-frontend
+
+

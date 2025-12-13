@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rancher-hub-config
+  namespace: rancher-hub
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DATABASE_TYPE: "postgres"
+  DATABASE_HOST: "postgres"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "rancher_hub"
+  DATABASE_USERNAME: "rancher_hub"
+  DATABASE_SSL: "false"
+  DATABASE_SYNCHRONIZE: "true"
+  FRONTEND_URL: "http://localhost:8080"
+

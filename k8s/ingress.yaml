@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rancher-hub-ingress
+  namespace: rancher-hub
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Uncomment the following lines if you want to enable SSL/TLS
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Enable CORS for API requests
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+spec:
+  ingressClassName: nginx
+  # Uncomment the following section if you have TLS certificates
+  # tls:
+  # - hosts:
+  #   - rancher-hub.example.com
+  #   secretName: rancher-hub-tls
+  rules:
+  - host: rancher-hub.example.com  # Change this to your domain
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: rancher-hub-backend
+            port:
+              number: 3000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rancher-hub-frontend
+            port:
+              number: 80
+

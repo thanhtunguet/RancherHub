@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rancher-hub-backend
+  namespace: rancher-hub
+  labels:
+    app: rancher-hub-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rancher-hub-backend
+  template:
+    metadata:
+      labels:
+        app: rancher-hub-backend
+    spec:
+      containers:
+      - name: backend
+        image: thanhtunguet/rancher-hub-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: PORT
+        - name: DATABASE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_TYPE
+        - name: DATABASE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_HOST
+        - name: DATABASE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_PORT
+        - name: DATABASE_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_NAME
+        - name: DATABASE_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_USERNAME
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rancher-hub-secret
+              key: DATABASE_PASSWORD
+        - name: DATABASE_SSL
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_SSL
+        - name: DATABASE_SYNCHRONIZE
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: DATABASE_SYNCHRONIZE
+        - name: FRONTEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: rancher-hub-config
+              key: FRONTEND_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: rancher-hub-secret
+              key: JWT_SECRET
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rancher-hub-backend
+  namespace: rancher-hub
+  labels:
+    app: rancher-hub-backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: rancher-hub-backend
+
+
