@@ -1,0 +1,87 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+  <!-- Header -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">ConfigMap Comparison</h3>
+    <div class="flex gap-4 text-sm">
+      <div class="flex-1">
+        <div class="font-medium text-gray-700 mb-1">Source</div>
+        <div class="text-gray-600">Staging - api-config</div>
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-700 mb-1">Target</div>
+        <div class="text-gray-600">Production - api-config</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ConfigMap Diff -->
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left">
+            <input type="checkbox" class="rounded" checked>
+          </th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Key</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Staging</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Production</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <tr class="bg-orange-50">
+          <td class="px-4 py-2">
+            <input type="checkbox" class="rounded" checked>
+          </td>
+          <td class="px-4 py-2">
+            <code class="text-xs font-medium bg-gray-100 px-1 py-0.5 rounded">API_TIMEOUT</code>
+          </td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">30000</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">20000</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Different</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2">
+            <input type="checkbox" class="rounded">
+          </td>
+          <td class="px-4 py-2">
+            <code class="text-xs font-medium bg-gray-100 px-1 py-0.5 rounded">LOG_LEVEL</code>
+          </td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">debug</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">info</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Different</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2">
+            <input type="checkbox" class="rounded">
+          </td>
+          <td class="px-4 py-2">
+            <code class="text-xs font-medium bg-gray-100 px-1 py-0.5 rounded">MAX_CONNECTIONS</code>
+          </td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">100</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">100</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Synced</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex gap-3">
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+      Sync Selected Keys
+    </button>
+    <button
+      class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded text-sm font-medium border border-gray-300 transition-colors">
+      Sync All
+    </button>
+  </div>
+</div>

@@ -1,0 +1,72 @@
+<div class="p-6 bg-gradient-to-br from-gray-50 to-blue-50">
+  <!-- Header -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Compare Environments</h3>
+    <div class="flex gap-4 items-center">
+      <select class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+        <option>Staging - API Gateway</option>
+        <option>Staging - Auth Service</option>
+      </select>
+      <button class="p-2 text-gray-600 hover:text-gray-800 rounded">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+          </path>
+        </svg>
+      </button>
+      <select class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm">
+        <option>Production - API Gateway</option>
+        <option>Production - Auth Service</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Service</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Staging</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Production</th>
+          <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <tr>
+          <td class="px-4 py-2 font-medium text-gray-900">api-gateway</td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v2.1.4</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v2.1.3</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Different</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2 font-medium text-gray-900">auth-service</td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v1.8.2</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v1.8.2</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Synced</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-4 py-2 font-medium text-gray-900">database</td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v3.2.1</code></td>
+          <td class="px-4 py-2"><code class="text-xs bg-gray-100 px-1 py-0.5 rounded">v3.2.0</code></td>
+          <td class="px-4 py-2">
+            <span
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Different</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
+      Sync Selected Services
+    </button>
+  </div>
+</div>
