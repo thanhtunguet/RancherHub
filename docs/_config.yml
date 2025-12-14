@@ -1,0 +1,71 @@
+# Jekyll Configuration for Rancher Hub Documentation
+
+title: Rancher Hub
+description: Service Sync Manager for managing and synchronizing services across different environments in Rancher clusters
+url: https://thanhtunguet.github.io
+baseurl: /RancherHub
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Theme settings
+theme: null
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .gitignore
+  - README.md
+
+# Collections
+collections:
+  guides:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+  - scope:
+      path: ""
+      type: "guides"
+    values:
+      layout: "guide"
+
+# Navigation
+navigation:
+  - title: Home
+    url: /
+  - title: Getting Started
+    url: /getting-started
+  - title: Features
+    url: /features
+  - title: API Documentation
+    url: /api
+  - title: Guides
+    url: /guides
+
+# Social links
+github_username: thanhtunguet
+github_repo: RancherHub
+
+# SEO
+author: Rancher Hub Team
+twitter:
+  username: ""
+  card: summary_large_image
+# Analytics (optional - can be configured later)
+# google_analytics: UA-XXXXXXXXX-X

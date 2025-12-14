@@ -1,0 +1,125 @@
+---
+layout: default
+---
+
+<!-- Hero Section -->
+<div class="relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 pt-8 pb-20">
+    <div class="text-center max-w-4xl mx-auto">
+      <h1 class="font-heading text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        Service Sync Manager for
+        <span class="text-blue-600"> Rancher Clusters</span>
+      </h1>
+      <p class="font-body text-xl text-gray-600 mb-10 leading-relaxed">
+        Streamline your Kubernetes operations with unified service management, environment comparison,
+        and automated synchronization across multiple Rancher clusters.
+      </p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="{{ '/getting-started' | relative_url }}"
+          class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-body px-8 py-3 rounded-lg text-base transition-colors no-underline">
+          Get Started
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+          </svg>
+        </a>
+        <a href="{{ '/features' | relative_url }}"
+          class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-body px-8 py-3 rounded-lg text-base border border-gray-300 transition-colors no-underline">
+          Learn More
+        </a>
+      </div>
+    </div>
+
+    <!-- Benefits Grid -->
+    <div class="mt-16 grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+      {% for benefit in site.data.benefits %}
+      <div class="flex items-center gap-2 text-gray-700">
+        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="font-body text-sm">{{ benefit }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div id="features" class="max-w-7xl mx-auto px-6 py-20">
+  <div class="text-center mb-20">
+    <h2 class="font-heading text-4xl font-bold text-gray-900 mb-4">
+      Everything You Need to Manage Your Infrastructure
+    </h2>
+    <p class="font-body text-lg text-gray-600 max-w-2xl mx-auto">
+      Powerful features designed to simplify DevOps workflows and accelerate deployments
+    </p>
+  </div>
+
+  <div class="space-y-32">
+    {% for feature in site.data.features %}
+    <div
+      class="flex flex-col {% if feature.reverse %}lg:flex-row-reverse{% else %}lg:flex-row{% endif %} gap-12 items-center">
+      <!-- Feature Description -->
+      <div class="flex-1 space-y-6">
+        <div class="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center">
+          <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg">
+            {{ feature.icon_path }}
+          </svg>
+        </div>
+        <h3 class="font-heading text-3xl font-bold text-gray-900">
+          {{ feature.title }}
+        </h3>
+        <p class="font-body text-lg text-gray-600 leading-relaxed">
+          {{ feature.description }}
+        </p>
+      </div>
+
+      <!-- Feature Mockup Placeholder -->
+      <div class="flex-1 w-full">
+        <div class="w-full rounded-lg overflow-hidden shadow-2xl bg-gray-900">
+          <div class="bg-gray-800 px-4 py-3 flex items-center gap-2 border-b border-gray-700">
+            <div class="flex gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <div class="flex-1 ml-4 bg-gray-700 rounded px-3 py-1 text-xs text-gray-400 font-mono">
+              {{ feature.title }}
+            </div>
+          </div>
+          <div class="bg-white p-6">
+            <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg p-8 text-center">
+              <p class="text-gray-500 font-body">{{ feature.mockup_description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="max-w-7xl mx-auto px-6 py-20">
+  <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl overflow-hidden shadow-xl">
+    <div class="relative py-12 px-8 text-center">
+      <h3 class="font-heading text-3xl md:text-4xl font-bold text-white mb-4">
+        Ready to Streamline Your DevOps Workflow?
+      </h3>
+      <p class="font-body text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+        Join teams using Rancher Hub to manage their Kubernetes infrastructure efficiently
+      </p>
+      <a href="{{ '/getting-started' | relative_url }}"
+        class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-body px-10 py-3 rounded-lg text-base transition-colors no-underline">
+        Start Managing Your Clusters
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+{{ content }}

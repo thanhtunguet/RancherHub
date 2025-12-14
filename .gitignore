@@ -59,3 +59,11 @@ postgres_data/
 .nx/cache/
 .nx/workspace-data/
 __pycache__
+
+# Jekyll build artifacts
+docs/_site/
+docs/.sass-cache/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+docs/Gemfile.lock
+docs/vendor/
