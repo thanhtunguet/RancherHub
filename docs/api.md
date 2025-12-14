@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: api
 title: API Documentation
 description: Complete API reference for Rancher Hub backend
 ---
@@ -99,16 +99,32 @@ All API endpoints (except login) require authentication via JWT tokens.
 
 ## Interactive API Documentation
 
-For detailed API documentation with interactive testing, visit:
-
-**http://localhost:3000/api/docs**
-
-This Swagger UI provides:
+The interactive Swagger UI below provides complete API documentation with:
 - Complete endpoint documentation
 - Request/response schemas
 - Interactive API testing
 - Authentication support
 - Example requests and responses
+
+### Using the Swagger UI
+
+1. **Configure Server URL**: Click the server dropdown at the top of the Swagger UI to select or configure your API server:
+   - **Local Development**: `http://localhost:3000`
+   - **Docker Compose**: `http://localhost:8080/api` (if using Nginx proxy)
+   - **Production**: Your configured domain
+
+2. **Authenticate**: 
+   - Click the "Authorize" button at the top
+   - Enter your JWT token (obtained from `/api/auth/login`)
+   - Click "Authorize" to enable authenticated requests
+
+3. **Test Endpoints**: 
+   - Expand any endpoint to see details
+   - Click "Try it out" to test the endpoint
+   - Fill in required parameters
+   - Click "Execute" to send the request
+
+> **Note**: The Swagger UI loads the API specification from the repository. Make sure your API server is running and accessible at the configured server URL.
 
 ## Response Format
 

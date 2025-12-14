@@ -1,0 +1,2848 @@
+openapi: 3.0.0
+paths:
+    "/":
+        get:
+            operationId: AppController_getHello
+            parameters: []
+            responses:
+                "200":
+                    description: Service is healthy
+            summary: Health check endpoint
+            tags:
+                - health
+    "/health":
+        get:
+            operationId: AppController_getHealth
+            parameters: []
+            responses:
+                "200":
+                    description: Detailed health status
+            summary: Detailed health check
+            tags:
+                - health
+    "/api/sites":
+        post:
+            operationId: SitesController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateSiteDto"
+            responses:
+                "201":
+                    description: Site created successfully
+                "400":
+                    description: Invalid input data
+            security:
+                - bearer: []
+            summary: Create a new Rancher site
+            tags:
+                - sites
+        get:
+            operationId: SitesController_findAll
+            parameters: []
+            responses:
+                "200":
+                    description: List of all sites
+            security:
+                - bearer: []
+            summary: Get all Rancher sites
+            tags:
+                - sites
+    "/api/sites/active":
+        get:
+            operationId: SitesController_getActiveSite
+            parameters: []
+            responses:
+                "200":
+                    description: Active site details
+                "404":
+                    description: No active site found
+            security:
+                - bearer: []
+            summary: Get the currently active site
+            tags:
+                - sites
+    "/api/sites/{id}":
+        get:
+            operationId: SitesController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Site details
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Get a specific site by ID
+            tags:
+                - sites
+        patch:
+            operationId: SitesController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateSiteDto"
+            responses:
+                "200":
+                    description: Site updated successfully
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Update a site
+            tags:
+                - sites
+        delete:
+            operationId: SitesController_remove
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: Site deleted successfully
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Delete a site
+            tags:
+                - sites
+    "/api/sites/{id}/test":
+        post:
+            operationId: SitesController_testConnection
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Connection test result
+                    content:
+                        application/json:
+                            schema:
+                                "$ref": "#/components/schemas/TestConnectionResponseDto"
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Test connection to a Rancher site
+            tags:
+                - sites
+    "/api/sites/{id}/activate":
+        post:
+            operationId: SitesController_activateSite
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Site activated successfully
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Set a site as active
+            tags:
+                - sites
+    "/api/sites/{id}/deactivate":
+        post:
+            operationId: SitesController_deactivateSite
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Site deactivated successfully
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Deactivate a site
+            tags:
+                - sites
+    "/api/sites/{id}/clusters":
+        get:
+            operationId: SitesController_getClusters
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of clusters
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Get clusters from a Rancher site
+            tags:
+                - sites
+    "/api/sites/{id}/namespaces":
+        get:
+            operationId: SitesController_getNamespaces
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+                - name: clusterId
+                  required: false
+                  in: query
+                  description: Filter by cluster ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of namespaces
+                "404":
+                    description: Site not found
+            security:
+                - bearer: []
+            summary: Get namespaces from a Rancher site
+            tags:
+                - sites
+    "/auth/login":
+        post:
+            operationId: AuthController_login
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/LoginDto"
+            responses:
+                "200":
+                    description: Login successful
+                "401":
+                    description: Invalid credentials
+            summary: User login
+            tags:
+                - Authentication
+    "/auth/register":
+        post:
+            operationId: AuthController_register
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/RegisterDto"
+            responses:
+                "201":
+                    description: User registered successfully
+                "400":
+                    description: User already exists
+            summary: Register new user
+            tags:
+                - Authentication
+    "/auth/setup-2fa":
+        post:
+            operationId: AuthController_setup2FA
+            parameters: []
+            responses:
+                "200":
+                    description: 2FA setup initiated
+                "401":
+                    description: Unauthorized
+            security:
+                - bearer: []
+            summary: Setup 2FA for authenticated user
+            tags:
+                - Authentication
+    "/auth/verify-2fa":
+        post:
+            operationId: AuthController_verify2FA
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/Verify2FADto"
+            responses:
+                "200":
+                    description: 2FA verified and enabled
+                "400":
+                    description: Invalid 2FA token
+            security:
+                - bearer: []
+            summary: Verify and enable 2FA
+            tags:
+                - Authentication
+    "/auth/disable-2fa":
+        post:
+            operationId: AuthController_disable2FA
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/Disable2FADto"
+            responses:
+                "200":
+                    description: 2FA disabled successfully
+                "400":
+                    description: 2FA not enabled or invalid token
+                "401":
+                    description: Unauthorized or invalid 2FA token
+            security:
+                - bearer: []
+            summary: Disable 2FA for authenticated user (requires 2FA token verification)
+            tags:
+                - Authentication
+    "/auth/change-password":
+        post:
+            operationId: AuthController_changePassword
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/ChangePasswordDto"
+            responses:
+                "200":
+                    description: Password changed successfully
+                "401":
+                    description: Unauthorized or incorrect current password
+            security:
+                - bearer: []
+            summary: Change user password
+            tags:
+                - Authentication
+    "/auth/profile":
+        get:
+            operationId: AuthController_getProfile
+            parameters: []
+            responses:
+                "200":
+                    description: User profile retrieved
+                "401":
+                    description: Unauthorized
+            security:
+                - bearer: []
+            summary: Get user profile
+            tags:
+                - Authentication
+    "/trusted-devices":
+        get:
+            operationId: TrustedDevicesController_getTrustedDevices
+            parameters: []
+            responses:
+                "200":
+                    description: List of trusted devices
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    "$ref": "#/components/schemas/TrustedDeviceResponseDto"
+            security:
+                - bearer: []
+            summary: Get all trusted devices for authenticated user
+            tags:
+                - Trusted Devices
+        delete:
+            operationId: TrustedDevicesController_revokeAllDevices
+            parameters: []
+            responses:
+                "200":
+                    description: All devices revoked successfully
+            security:
+                - bearer: []
+            summary: Revoke all trusted devices
+            tags:
+                - Trusted Devices
+    "/trusted-devices/{id}":
+        delete:
+            operationId: TrustedDevicesController_revokeDevice
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Device revoked successfully
+                "404":
+                    description: Device not found
+            security:
+                - bearer: []
+            summary: Revoke a specific trusted device
+            tags:
+                - Trusted Devices
+    "/api/harbor-sites":
+        post:
+            operationId: HarborSitesController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateHarborSiteDto"
+            responses:
+                "201":
+                    description: Harbor site created successfully
+                "400":
+                    description: Invalid input data
+            security:
+                - bearer: []
+            summary: Create a new Harbor site
+            tags:
+                - harbor-sites
+        get:
+            operationId: HarborSitesController_findAll
+            parameters: []
+            responses:
+                "200":
+                    description: List of all Harbor sites
+            security:
+                - bearer: []
+            summary: Get all Harbor sites
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/active":
+        get:
+            operationId: HarborSitesController_getActiveSite
+            parameters: []
+            responses:
+                "200":
+                    description: Active Harbor site details
+                "404":
+                    description: No active Harbor site found
+            security:
+                - bearer: []
+            summary: Get the currently active Harbor site
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}":
+        get:
+            operationId: HarborSitesController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor site details
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Get a specific Harbor site by ID
+            tags:
+                - harbor-sites
+        patch:
+            operationId: HarborSitesController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateHarborSiteDto"
+            responses:
+                "200":
+                    description: Harbor site updated successfully
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Update a Harbor site
+            tags:
+                - harbor-sites
+        delete:
+            operationId: HarborSitesController_remove
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: Harbor site deleted successfully
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Delete a Harbor site
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/test-connection":
+        post:
+            operationId: HarborSitesController_testConnection
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/TestHarborConnectionDto"
+            responses:
+                "200":
+                    description: Connection test result
+            security:
+                - bearer: []
+            summary: Test connection to a Harbor registry
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/test":
+        post:
+            operationId: HarborSitesController_testSiteConnection
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Connection test result
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Test connection to a Harbor site using stored credentials
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/activate":
+        post:
+            operationId: HarborSitesController_activateSite
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor site activated successfully
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Set a Harbor site as active
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/deactivate":
+        post:
+            operationId: HarborSitesController_deactivateSite
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor site deactivated successfully
+                "404":
+                    description: Harbor site not found
+            security:
+                - bearer: []
+            summary: Deactivate a Harbor site
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/projects":
+        get:
+            operationId: HarborSitesController_getProjects
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor projects list
+            security:
+                - bearer: []
+            summary: List projects in Harbor site
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/repositories/{projectName}":
+        get:
+            operationId: HarborSitesController_getRepositories
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+                - name: projectName
+                  required: true
+                  in: path
+                  description: Project name
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor repositories list
+            security:
+                - bearer: []
+            summary: List repositories in Harbor project
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/artifacts/{projectName}/{repositoryName}":
+        get:
+            operationId: HarborSitesController_getArtifacts
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+                - name: projectName
+                  required: true
+                  in: path
+                  description: Project name
+                  schema:
+                      type: string
+                - name: repositoryName
+                  required: true
+                  in: path
+                  description: Repository name
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Harbor artifacts list
+            security:
+                - bearer: []
+            summary: List artifacts in Harbor repository
+            tags:
+                - harbor-sites
+    "/api/harbor-sites/{id}/test-image-size":
+        get:
+            operationId: HarborSitesController_testImageSize
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Harbor site ID
+                  schema:
+                      type: string
+                - name: imageTag
+                  required: true
+                  in: query
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Image size test result
+            security:
+                - bearer: []
+            summary: Test image size retrieval
+            tags:
+                - harbor-sites
+    "/api/environments":
+        post:
+            operationId: EnvironmentsController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateEnvironmentDto"
+            responses:
+                "201":
+                    description: Environment created successfully
+                "400":
+                    description: Invalid input data
+            security:
+                - bearer: []
+            summary: Create a new environment
+            tags:
+                - environments
+        get:
+            operationId: EnvironmentsController_findAll
+            parameters: []
+            responses:
+                "200":
+                    description: List of all environments
+            security:
+                - bearer: []
+            summary: Get all environments
+            tags:
+                - environments
+    "/api/environments/{id}":
+        get:
+            operationId: EnvironmentsController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Environment details
+                "404":
+                    description: Environment not found
+            security:
+                - bearer: []
+            summary: Get a specific environment by ID
+            tags:
+                - environments
+        patch:
+            operationId: EnvironmentsController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateEnvironmentDto"
+            responses:
+                "200":
+                    description: Environment updated successfully
+                "404":
+                    description: Environment not found
+            security:
+                - bearer: []
+            summary: Update an environment
+            tags:
+                - environments
+        delete:
+            operationId: EnvironmentsController_remove
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: Environment deleted successfully
+                "404":
+                    description: Environment not found
+            security:
+                - bearer: []
+            summary: Delete an environment
+            tags:
+                - environments
+    "/api/environments/{id}/with-instances":
+        get:
+            operationId: EnvironmentsController_findWithAppInstances
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Environment with app instances
+                "404":
+                    description: Environment not found
+            security:
+                - bearer: []
+            summary: Get environment with app instances and services
+            tags:
+                - environments
+    "/api/app-instances":
+        post:
+            operationId: AppInstancesController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateAppInstanceDto"
+            responses:
+                "201":
+                    description: App instance created successfully
+                "400":
+                    description: Invalid input data
+            security:
+                - bearer: []
+            summary: Create a new app instance
+            tags:
+                - app-instances
+        get:
+            operationId: AppInstancesController_findAll
+            parameters:
+                - name: env
+                  required: false
+                  in: query
+                  description: Filter by environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of app instances
+            security:
+                - bearer: []
+            summary: Get all app instances
+            tags:
+                - app-instances
+    "/api/app-instances/by-environment/{environmentId}":
+        get:
+            operationId: AppInstancesController_findByEnvironment
+            parameters:
+                - name: environmentId
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: App instances for environment
+            security:
+                - bearer: []
+            summary: Get app instances for a specific environment
+            tags:
+                - app-instances
+    "/api/app-instances/by-site/{siteId}":
+        get:
+            operationId: AppInstancesController_findBySite
+            parameters:
+                - name: siteId
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: App instances for site
+            security:
+                - bearer: []
+            summary: Get app instances for a specific site
+            tags:
+                - app-instances
+    "/api/app-instances/{id}":
+        get:
+            operationId: AppInstancesController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: App instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: App instance details
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Get a specific app instance by ID
+            tags:
+                - app-instances
+        patch:
+            operationId: AppInstancesController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: App instance ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateAppInstanceDto"
+            responses:
+                "200":
+                    description: App instance updated successfully
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Update an app instance
+            tags:
+                - app-instances
+        delete:
+            operationId: AppInstancesController_remove
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: App instance ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: App instance deleted successfully
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Delete an app instance
+            tags:
+                - app-instances
+    "/api/services":
+        get:
+            operationId: ServicesController_getServicesByEnvironment
+            parameters:
+                - name: env
+                  required: true
+                  in: query
+                  description: Environment ID to fetch services for
+                  schema:
+                      type: string
+                - name: type
+                  required: false
+                  in: query
+                  description: Filter by workload type (deployment, daemonset, statefulset)
+                  schema:
+                      type: string
+                - name: search
+                  required: false
+                  in: query
+                  description: Search by service name
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of services in the environment
+                "400":
+                    description: Invalid environment ID
+            security:
+                - bearer: []
+            summary: Get services by environment with optional filtering
+            tags:
+                - services
+    "/api/services/workload-types":
+        get:
+            operationId: ServicesController_getWorkloadTypes
+            parameters:
+                - name: env
+                  required: true
+                  in: query
+                  description: Environment ID to get workload types for
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of available workload types
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    types:
+                                        type: array
+                                        items:
+                                            type: string
+                                        example:
+                                            - deployment
+                                            - daemonset
+                                            - statefulset
+            security:
+                - bearer: []
+            summary: Get available workload types for an environment
+            tags:
+                - services
+    "/api/services/by-app-instance/{appInstanceId}":
+        get:
+            operationId: ServicesController_getServicesByAppInstance
+            parameters:
+                - name: appInstanceId
+                  required: true
+                  in: path
+                  description: App instance ID
+                  schema:
+                      type: string
+                - name: type
+                  required: false
+                  in: query
+                  description: Filter by workload type (deployment, daemonset, statefulset)
+                  schema:
+                      type: string
+                - name: search
+                  required: false
+                  in: query
+                  description: Search by service name
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of services in the app instance
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Get services by app instance with optional filtering
+            tags:
+                - services
+    "/api/services/with-image-sizes/{appInstanceId}":
+        get:
+            operationId: ServicesController_getServicesWithImageSizes
+            parameters:
+                - name: appInstanceId
+                  required: true
+                  in: path
+                  description: App instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of services with image size information
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Get services with image size information from Harbor
+            tags:
+                - services
+    "/api/services/app-instances/tree":
+        get:
+            operationId: ServicesController_getAppInstancesTree
+            parameters: []
+            responses:
+                "200":
+                    description: App instances grouped by environment
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: string
+                                        name:
+                                            type: string
+                                        appInstances:
+                                            type: array
+                                            items:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: string
+                                                    name:
+                                                        type: string
+                                                    cluster:
+                                                        type: string
+                                                    namespace:
+                                                        type: string
+                                                    rancherSite:
+                                                        type: object
+                                                        properties:
+                                                            id:
+                                                                type: string
+                                                            name:
+                                                                type: string
+            security:
+                - bearer: []
+            summary: Get app instances grouped by environment in tree format
+            tags:
+                - services
+    "/api/services/test-api/{siteId}":
+        get:
+            operationId: ServicesController_testApiEndpoints
+            parameters:
+                - name: siteId
+                  required: true
+                  in: path
+                  description: Rancher site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: API test results
+            security:
+                - bearer: []
+            summary: Test Rancher API endpoints
+            tags:
+                - services
+    "/api/services/test-structure/{siteId}":
+        get:
+            operationId: ServicesController_testApiStructure
+            parameters:
+                - name: siteId
+                  required: true
+                  in: path
+                  description: Rancher site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: API structure test results
+            security:
+                - bearer: []
+            summary: Test Rancher API structure
+            tags:
+                - services
+    "/api/services/sync":
+        post:
+            operationId: ServicesController_syncServices
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/SyncServicesDto"
+            responses:
+                "200":
+                    description: Services synchronized successfully
+                "400":
+                    description: Invalid sync request
+            security:
+                - bearer: []
+            summary: Synchronize services between environments
+            tags:
+                - services
+    "/api/services/sync/history":
+        get:
+            operationId: ServicesController_getSyncHistory
+            parameters:
+                - name: env
+                  required: false
+                  in: query
+                  description: Filter by environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Sync history retrieved successfully
+            security:
+                - bearer: []
+            summary: Get sync history
+            tags:
+                - services
+    "/api/services/sync/history/detailed":
+        get:
+            operationId: ServicesController_getDetailedSyncHistory
+            parameters:
+                - name: env
+                  required: false
+                  in: query
+                  description: Filter by environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Detailed sync history retrieved successfully
+            security:
+                - bearer: []
+            summary: Get detailed sync history
+            tags:
+                - services
+    "/api/services/compare":
+        get:
+            operationId: ServicesController_compareServices
+            parameters:
+                - name: source
+                  required: true
+                  in: query
+                  description: Source environment ID
+                  schema:
+                      type: string
+                - name: target
+                  required: true
+                  in: query
+                  description: Target environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Service comparison results
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    sourceEnvironmentId:
+                                        type: string
+                                    targetEnvironmentId:
+                                        type: string
+                                    summary:
+                                        type: object
+                                        properties:
+                                            totalServices:
+                                                type: number
+                                            identical:
+                                                type: number
+                                            different:
+                                                type: number
+                                            missingInSource:
+                                                type: number
+                                            missingInTarget:
+                                                type: number
+                                    comparisons:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                serviceName:
+                                                    type: string
+                                                workloadType:
+                                                    type: string
+                                                source:
+                                                    type: object
+                                                    nullable: true
+                                                target:
+                                                    type: object
+                                                    nullable: true
+                                                differences:
+                                                    type: object
+                                                status:
+                                                    type: string
+                                                    enum:
+                                                        - identical
+                                                        - different
+                                                        - missing
+            security:
+                - bearer: []
+            summary: Compare services between two environments
+            tags:
+                - services
+    "/api/services/compare/by-instance":
+        get:
+            operationId: ServicesController_compareServicesByInstance
+            parameters:
+                - name: source
+                  required: true
+                  in: query
+                  description: Source app instance ID
+                  schema:
+                      type: string
+                - name: target
+                  required: true
+                  in: query
+                  description: Target app instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Service comparison results between app instances
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    sourceAppInstanceId:
+                                        type: string
+                                    targetAppInstanceId:
+                                        type: string
+                                    summary:
+                                        type: object
+                                        properties:
+                                            totalServices:
+                                                type: number
+                                            identical:
+                                                type: number
+                                            different:
+                                                type: number
+                                            missingInSource:
+                                                type: number
+                                            missingInTarget:
+                                                type: number
+                                    comparisons:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                serviceName:
+                                                    type: string
+                                                workloadType:
+                                                    type: string
+                                                source:
+                                                    type: object
+                                                    nullable: true
+                                                target:
+                                                    type: object
+                                                    nullable: true
+                                                differences:
+                                                    type: object
+                                                status:
+                                                    type: string
+                                                    enum:
+                                                        - identical
+                                                        - different
+                                                        - missing
+            security:
+                - bearer: []
+            summary: Compare services between two app instances
+            tags:
+                - services
+    "/api/services/debug/app-instances/{environmentId}":
+        get:
+            operationId: ServicesController_debugAppInstances
+            parameters:
+                - name: environmentId
+                  required: true
+                  in: path
+                  description: Environment ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Debug information for app instances
+            security:
+                - bearer: []
+            summary: Debug app instances for an environment
+            tags:
+                - services
+    "/api/services/debug/clusters/{siteId}":
+        get:
+            operationId: ServicesController_debugClusters
+            parameters:
+                - name: siteId
+                  required: true
+                  in: path
+                  description: Site ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Debug information for clusters
+            security:
+                - bearer: []
+            summary: Debug clusters for a site
+            tags:
+                - services
+    "/api/services/{serviceId}/debug-image-info":
+        get:
+            operationId: ServicesController_debugImageInfo
+            parameters:
+                - name: serviceId
+                  required: true
+                  in: path
+                  description: Service ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Debug information about the service image
+            security:
+                - bearer: []
+            summary: Debug image information for a service
+            tags:
+                - services
+    "/api/services/{serviceId}/image-tags":
+        get:
+            operationId: ServicesController_getImageTags
+            parameters:
+                - name: serviceId
+                  required: true
+                  in: path
+                  description: Service ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of available image tags from the registry
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        name:
+                                            type: string
+                                            example: v1.2.3
+                                        pushedAt:
+                                            type: string
+                                            example: "2025-10-26T00:00:00Z"
+                                        size:
+                                            type: number
+                                            example: 123456789
+                                        sizeFormatted:
+                                            type: string
+                                            example: 117.74 MB
+                "404":
+                    description: Service not found
+            security:
+                - bearer: []
+            summary: Get available image tags for a service
+            tags:
+                - services
+    "/api/services/{serviceId}/update-image":
+        put:
+            operationId: ServicesController_updateServiceImage
+            parameters:
+                - name: serviceId
+                  required: true
+                  in: path
+                  description: Service ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                tag:
+                                    type: string
+                                    example: v1.2.3
+                            required:
+                                - tag
+            responses:
+                "200":
+                    description: Service image updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                    message:
+                                        type: string
+                                    service:
+                                        type: object
+                                        properties:
+                                            id:
+                                                type: string
+                                            name:
+                                                type: string
+                                            oldImageTag:
+                                                type: string
+                                            newImageTag:
+                                                type: string
+                                            fullNewImageTag:
+                                                type: string
+                "400":
+                    description: Invalid update request
+                "404":
+                    description: Service not found
+            security:
+                - bearer: []
+            summary: Update the image tag for a service deployment
+            tags:
+                - services
+    "/api/monitoring/test":
+        get:
+            operationId: MonitoringController_test
+            parameters: []
+            responses:
+                "200":
+                    description: ""
+            security:
+                - bearer: []
+            tags:
+                - monitoring
+    "/api/monitoring/config":
+        get:
+            operationId: MonitoringController_getConfig
+            parameters: []
+            responses:
+                "200":
+                    description: Monitoring configuration retrieved successfully
+            security:
+                - bearer: []
+            summary: Get monitoring configuration
+            tags:
+                - monitoring
+        post:
+            operationId: MonitoringController_createOrUpdateConfig
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateMonitoringConfigDto"
+            responses:
+                "201":
+                    description: Monitoring configuration created/updated successfully
+            security:
+                - bearer: []
+            summary: Create or update monitoring configuration
+            tags:
+                - monitoring
+        put:
+            operationId: MonitoringController_updateConfig
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateMonitoringConfigDto"
+            responses:
+                "200":
+                    description: Monitoring configuration updated successfully
+            security:
+                - bearer: []
+            summary: Update monitoring configuration
+            tags:
+                - monitoring
+    "/api/monitoring/config/test-telegram":
+        post:
+            operationId: MonitoringController_testTelegramConnection
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/TestTelegramConnectionDto"
+            responses:
+                "200":
+                    description: Telegram connection test completed
+            security:
+                - bearer: []
+            summary: Test Telegram connection
+            tags:
+                - monitoring
+    "/api/monitoring/instances":
+        get:
+            operationId: MonitoringController_getMonitoredInstances
+            parameters: []
+            responses:
+                "200":
+                    description: Monitored instances retrieved successfully
+            security:
+                - bearer: []
+            summary: Get all monitored instances
+            tags:
+                - monitoring
+        post:
+            operationId: MonitoringController_createMonitoredInstance
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateMonitoredInstanceDto"
+            responses:
+                "201":
+                    description: Instance added to monitoring successfully
+            security:
+                - bearer: []
+            summary: Add instance to monitoring
+            tags:
+                - monitoring
+    "/api/monitoring/instances/{id}":
+        get:
+            operationId: MonitoringController_getMonitoredInstance
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Monitored instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Monitored instance retrieved successfully
+            security:
+                - bearer: []
+            summary: Get monitored instance by ID
+            tags:
+                - monitoring
+        put:
+            operationId: MonitoringController_updateMonitoredInstance
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Monitored instance ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateMonitoredInstanceDto"
+            responses:
+                "200":
+                    description: Monitored instance updated successfully
+            security:
+                - bearer: []
+            summary: Update monitored instance
+            tags:
+                - monitoring
+        delete:
+            operationId: MonitoringController_deleteMonitoredInstance
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Monitored instance ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: Instance removed from monitoring successfully
+            security:
+                - bearer: []
+            summary: Remove instance from monitoring
+            tags:
+                - monitoring
+    "/api/monitoring/history":
+        get:
+            operationId: MonitoringController_getMonitoringHistory
+            parameters:
+                - name: instanceId
+                  required: false
+                  in: query
+                  description: Filter by monitored instance ID
+                  schema:
+                      type: string
+                - name: days
+                  required: false
+                  in: query
+                  description: "Number of days to retrieve (default: 7)"
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: Monitoring history retrieved successfully
+            security:
+                - bearer: []
+            summary: Get monitoring history
+            tags:
+                - monitoring
+    "/api/monitoring/alerts":
+        get:
+            operationId: MonitoringController_getAlertHistory
+            parameters:
+                - name: instanceId
+                  required: false
+                  in: query
+                  description: Filter by monitored instance ID
+                  schema:
+                      type: string
+                - name: resolved
+                  required: false
+                  in: query
+                  description: Filter by resolution status
+                  schema:
+                      type: boolean
+            responses:
+                "200":
+                    description: Alert history retrieved successfully
+            security:
+                - bearer: []
+            summary: Get alert history
+            tags:
+                - monitoring
+    "/api/monitoring/alerts/{id}/resolve":
+        put:
+            operationId: MonitoringController_resolveAlert
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Alert ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Alert resolved successfully
+            security:
+                - bearer: []
+            summary: Resolve alert
+            tags:
+                - monitoring
+    "/api/monitoring/trigger/daily-check":
+        post:
+            operationId: MonitoringController_triggerDailyCheck
+            parameters: []
+            responses:
+                "200":
+                    description: Daily health check triggered successfully
+            security:
+                - bearer: []
+            summary: Manually trigger daily health check
+            tags:
+                - monitoring
+    "/api/monitoring/trigger/hourly-check":
+        post:
+            operationId: MonitoringController_triggerHourlyCheck
+            parameters: []
+            responses:
+                "200":
+                    description: Hourly health check triggered successfully
+            security:
+                - bearer: []
+            summary: Manually trigger hourly health check
+            tags:
+                - monitoring
+    "/api/message-templates":
+        get:
+            operationId: MessageTemplatesController_findAll
+            parameters: []
+            responses:
+                "200":
+                    description: Message templates retrieved successfully
+            security:
+                - bearer: []
+            summary: Get all message templates
+            tags:
+                - message-templates
+        post:
+            operationId: MessageTemplatesController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateMessageTemplateDto"
+            responses:
+                "201":
+                    description: Message template created successfully
+            security:
+                - bearer: []
+            summary: Create new message template
+            tags:
+                - message-templates
+    "/api/message-templates/{id}":
+        get:
+            operationId: MessageTemplatesController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Template ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Message template retrieved successfully
+            security:
+                - bearer: []
+            summary: Get message template by ID
+            tags:
+                - message-templates
+        put:
+            operationId: MessageTemplatesController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Template ID
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateMessageTemplateDto"
+            responses:
+                "200":
+                    description: Message template updated successfully
+            security:
+                - bearer: []
+            summary: Update message template
+            tags:
+                - message-templates
+        delete:
+            operationId: MessageTemplatesController_delete
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Template ID
+                  schema:
+                      type: string
+            responses:
+                "204":
+                    description: Message template deleted successfully
+            security:
+                - bearer: []
+            summary: Delete message template
+            tags:
+                - message-templates
+    "/api/message-templates/type/{type}":
+        get:
+            operationId: MessageTemplatesController_findByType
+            parameters:
+                - name: type
+                  required: true
+                  in: path
+                  description: Template type
+                  schema:
+                      enum:
+                          - test_connection
+                          - daily_health_check
+                          - critical_alert
+                      type: string
+            responses:
+                "200":
+                    description: Message template retrieved successfully
+            security:
+                - bearer: []
+            summary: Get message template by type
+            tags:
+                - message-templates
+    "/api/message-templates/{id}/restore":
+        post:
+            operationId: MessageTemplatesController_restoreDefault
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  description: Template ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Template restored to default successfully
+            security:
+                - bearer: []
+            summary: Restore template to default
+            tags:
+                - message-templates
+    "/api/message-templates/preview":
+        post:
+            operationId: MessageTemplatesController_preview
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/PreviewTemplateDto"
+            responses:
+                "200":
+                    description: Template preview generated successfully
+            security:
+                - bearer: []
+            summary: Preview template with sample data
+            tags:
+                - message-templates
+    "/api/configmaps/by-app-instance/{appInstanceId}":
+        get:
+            operationId: ConfigMapsController_getConfigMapsByAppInstance
+            parameters:
+                - name: appInstanceId
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: List of ConfigMaps in the app instance
+                "404":
+                    description: App instance not found
+            security:
+                - bearer: []
+            summary: Get ConfigMaps by app instance
+            tags:
+                - configmaps
+    "/api/configmaps/compare/by-instance":
+        get:
+            operationId: ConfigMapsController_compareConfigMapsByInstance
+            parameters:
+                - name: source
+                  required: true
+                  in: query
+                  description: Source app instance ID
+                  schema:
+                      type: string
+                - name: target
+                  required: true
+                  in: query
+                  description: Target app instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: ConfigMap comparison results between app instances
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    sourceAppInstanceId:
+                                        type: string
+                                    targetAppInstanceId:
+                                        type: string
+                                    summary:
+                                        type: object
+                                        properties:
+                                            totalConfigMaps:
+                                                type: number
+                                            identical:
+                                                type: number
+                                            different:
+                                                type: number
+                                            missingInSource:
+                                                type: number
+                                            missingInTarget:
+                                                type: number
+                                    comparisons:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                configMapName:
+                                                    type: string
+                                                source:
+                                                    type: object
+                                                    nullable: true
+                                                target:
+                                                    type: object
+                                                    nullable: true
+                                                differences:
+                                                    type: object
+                                                status:
+                                                    type: string
+                                                    enum:
+                                                        - identical
+                                                        - different
+                                                        - missing
+            security:
+                - bearer: []
+            summary: Compare ConfigMaps between two app instances
+            tags:
+                - configmaps
+    "/api/configmaps/{configMapName}/details":
+        get:
+            operationId: ConfigMapsController_getConfigMapDetails
+            parameters:
+                - name: configMapName
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+                - name: source
+                  required: true
+                  in: query
+                  description: Source app instance ID
+                  schema:
+                      type: string
+                - name: target
+                  required: true
+                  in: query
+                  description: Target app instance ID
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Detailed ConfigMap comparison with key-by-key differences
+            security:
+                - bearer: []
+            summary: Get detailed comparison of a specific ConfigMap between two app instances
+            tags:
+                - configmaps
+    "/api/configmaps/sync-key":
+        post:
+            operationId: ConfigMapsController_syncConfigMapKey
+            parameters: []
+            responses:
+                "200":
+                    description: Key synced successfully
+            security:
+                - bearer: []
+            summary: Sync a single key from source ConfigMap to target ConfigMap
+            tags:
+                - configmaps
+    "/api/configmaps/sync-keys":
+        post:
+            operationId: ConfigMapsController_syncConfigMapKeys
+            parameters: []
+            responses:
+                "200":
+                    description: Keys synced successfully
+            security:
+                - bearer: []
+            summary: Sync multiple keys from source ConfigMap to target ConfigMap
+            tags:
+                - configmaps
+    "/api/users":
+        post:
+            operationId: UsersController_create
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/CreateUserDto"
+            responses:
+                "201":
+                    description: User created successfully
+                "400":
+                    description: Bad request - user exists or invalid 2FA token
+                "401":
+                    description: Unauthorized - invalid 2FA token
+            security:
+                - bearer: []
+            summary: Create a new user (requires admin 2FA token)
+            tags:
+                - Users
+        get:
+            operationId: UsersController_findAll
+            parameters:
+                - name: search
+                  required: false
+                  in: query
+                  description: Search by username or email
+                  schema:
+                      type: string
+                - name: active
+                  required: false
+                  in: query
+                  description: Filter by active status
+                  schema:
+                      type: boolean
+                - name: page
+                  required: false
+                  in: query
+                  description: Page number
+                  schema:
+                      default: 1
+                      type: number
+                - name: limit
+                  required: false
+                  in: query
+                  description: Items per page
+                  schema:
+                      default: 10
+                      type: number
+            responses:
+                "200":
+                    description: Users retrieved successfully
+            security:
+                - bearer: []
+            summary: Get all users with pagination and filtering
+            tags:
+                - Users
+    "/api/users/stats":
+        get:
+            operationId: UsersController_getStats
+            parameters: []
+            responses:
+                "200":
+                    description: Statistics retrieved successfully
+            security:
+                - bearer: []
+            summary: Get user statistics
+            tags:
+                - Users
+    "/api/users/{id}":
+        get:
+            operationId: UsersController_findOne
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: User retrieved successfully
+                "404":
+                    description: User not found
+            security:
+                - bearer: []
+            summary: Get a user by ID
+            tags:
+                - Users
+        patch:
+            operationId: UsersController_update
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/UpdateUserDto"
+            responses:
+                "200":
+                    description: User updated successfully
+                "400":
+                    description: Bad request - duplicate username/email or invalid 2FA token
+                "401":
+                    description: Unauthorized - invalid 2FA token
+                "404":
+                    description: User not found
+            security:
+                - bearer: []
+            summary: Update a user (requires admin 2FA token)
+            tags:
+                - Users
+        delete:
+            operationId: UsersController_remove
+            parameters:
+                - name: id
+                  required: true
+                  in: path
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            "$ref": "#/components/schemas/DeleteUserDto"
+            responses:
+                "200":
+                    description: User deleted successfully
+                "400":
+                    description: Bad request - cannot delete own account or invalid 2FA token
+                "401":
+                    description: Unauthorized - invalid 2FA token
+                "404":
+                    description: User not found
+            security:
+                - bearer: []
+            summary: Delete a user (requires admin 2FA token)
+            tags:
+                - Users
+info:
+    title: Rancher Hub API
+    description: API for managing Rancher services across environments
+    version: "1.0"
+    contact: {}
+tags:
+    - name: sites
+      description: ""
+    - name: environments
+      description: ""
+    - name: app-instances
+      description: ""
+    - name: services
+      description: ""
+    - name: sync
+      description: ""
+servers:
+    - url: http://localhost:3000
+      description: Local development server
+    - url: https://your-domain.com
+      description: Production server (configure your domain)
+components:
+    securitySchemes:
+        bearer:
+            scheme: bearer
+            bearerFormat: JWT
+            type: http
+    schemas:
+        CreateSiteDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Production Rancher
+                    description: Display name for the Rancher site
+                url:
+                    type: string
+                    example: https://rancher.example.com
+                    description: Rancher server URL
+                token:
+                    type: string
+                    example: token-abc123:xyz789
+                    description: Rancher API token
+            required:
+                - name
+                - url
+                - token
+        UpdateSiteDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Production Rancher
+                    description: Display name for the Rancher site
+                url:
+                    type: string
+                    example: https://rancher.example.com
+                    description: Rancher server URL
+                token:
+                    type: string
+                    example: token-abc123:xyz789
+                    description: Rancher API token
+        TestConnectionResponseDto:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    example: true
+                    description: Whether the connection test was successful
+                message:
+                    type: string
+                    example: Connection successful
+                    description: Message describing the test result
+                data:
+                    type: object
+                    example:
+                        clusters: 5
+                        projects: 12
+                    description: Additional information about the Rancher instance
+            required:
+                - success
+                - message
+        LoginDto:
+            type: object
+            properties:
+                username:
+                    type: string
+                    description: Username or email
+                password:
+                    type: string
+                    description: Password
+                twoFactorToken:
+                    type: string
+                    description: 2FA token (6 digits)
+                deviceFingerprint:
+                    type: string
+                    description: Device fingerprint for trusted device check
+                deviceName:
+                    type: string
+                    description: Device name (e.g., Chrome 120 on macOS)
+                userAgent:
+                    type: string
+                    description: User agent string
+                trustDevice:
+                    type: boolean
+                    description: Trust this device for 30 days (skip 2FA)
+            required:
+                - username
+                - password
+        RegisterDto:
+            type: object
+            properties:
+                username:
+                    type: string
+                    description: Username
+                email:
+                    type: string
+                    description: Email address
+                password:
+                    type: string
+                    description: Password (minimum 8 characters)
+            required:
+                - username
+                - email
+                - password
+        Verify2FADto:
+            type: object
+            properties:
+                token:
+                    type: string
+                    description: 6-digit 2FA token from authenticator app
+            required:
+                - token
+        Disable2FADto:
+            type: object
+            properties:
+                token:
+                    type: string
+                    description: 6-digit 2FA token from authenticator app to confirm disabling
+            required:
+                - token
+        ChangePasswordDto:
+            type: object
+            properties:
+                currentPassword:
+                    type: string
+                    description: Current password
+                newPassword:
+                    type: string
+                    description: New password (minimum 6 characters)
+            required:
+                - currentPassword
+                - newPassword
+        TrustedDeviceResponseDto:
+            type: object
+            properties:
+                id:
+                    type: string
+                deviceName:
+                    type: string
+                ipAddress:
+                    type: string
+                lastUsedAt:
+                    format: date-time
+                    type: string
+                expiresAt:
+                    format: date-time
+                    type: string
+                createdAt:
+                    format: date-time
+                    type: string
+                isCurrentDevice:
+                    type: boolean
+            required:
+                - id
+                - deviceName
+                - ipAddress
+                - lastUsedAt
+                - expiresAt
+                - createdAt
+                - isCurrentDevice
+        CreateHarborSiteDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: Name of the Harbor site
+                url:
+                    type: string
+                    description: Harbor registry URL
+                username:
+                    type: string
+                    description: Harbor username
+                password:
+                    type: string
+                    description: Harbor password
+                active:
+                    type: boolean
+                    description: Whether the site is active
+                    default: true
+            required:
+                - name
+                - url
+                - username
+                - password
+                - active
+        UpdateHarborSiteDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: Name of the Harbor site
+                url:
+                    type: string
+                    description: Harbor registry URL
+                username:
+                    type: string
+                    description: Harbor username
+                password:
+                    type: string
+                    description: Harbor password
+                active:
+                    type: boolean
+                    description: Whether the site is active
+                    default: true
+        TestHarborConnectionDto:
+            type: object
+            properties:
+                url:
+                    type: string
+                    description: Harbor registry URL
+                username:
+                    type: string
+                    description: Harbor username
+                password:
+                    type: string
+                    description: Harbor password
+            required:
+                - url
+                - username
+                - password
+        CreateEnvironmentDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Development
+                    description: Environment name
+                description:
+                    type: string
+                    example: Development environment for feature testing
+                    description: Optional description
+                color:
+                    type: string
+                    example: "#4CAF50"
+                    description: Color code for UI display (hex format)
+                    default: "#1890ff"
+            required:
+                - name
+                - color
+        UpdateEnvironmentDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Development
+                    description: Environment name
+                description:
+                    type: string
+                    example: Development environment for feature testing
+                    description: Optional description
+                color:
+                    type: string
+                    example: "#4CAF50"
+                    description: Color code for UI display (hex format)
+                    default: "#1890ff"
+        CreateAppInstanceDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Web Frontend Dev
+                    description: Display name for the app instance
+                cluster:
+                    type: string
+                    example: c-12345:p-67890
+                    description: Rancher cluster ID
+                namespace:
+                    type: string
+                    example: frontend-dev
+                    description: Kubernetes namespace
+                rancherSiteId:
+                    type: string
+                    example: 550e8400-e29b-41d4-a716-446655440000
+                    description: ID of the associated Rancher site
+                environmentId:
+                    type: string
+                    example: 550e8400-e29b-41d4-a716-446655440001
+                    description: ID of the associated environment
+            required:
+                - name
+                - cluster
+                - namespace
+                - rancherSiteId
+                - environmentId
+        UpdateAppInstanceDto:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Web Frontend Dev
+                    description: Display name for the app instance
+                cluster:
+                    type: string
+                    example: c-12345:p-67890
+                    description: Rancher cluster ID
+                namespace:
+                    type: string
+                    example: frontend-dev
+                    description: Kubernetes namespace
+                rancherSiteId:
+                    type: string
+                    example: 550e8400-e29b-41d4-a716-446655440000
+                    description: ID of the associated Rancher site
+                environmentId:
+                    type: string
+                    example: 550e8400-e29b-41d4-a716-446655440001
+                    description: ID of the associated environment
+        SyncServicesDto:
+            type: object
+            properties:
+                sourceEnvironmentId:
+                    type: string
+                    description: Source environment ID
+                    example: env-123
+                targetEnvironmentId:
+                    type: string
+                    description: Target environment ID
+                    example: env-456
+                serviceIds:
+                    description: Array of service IDs to synchronize
+                    example:
+                        - service-1
+                        - service-2
+                    type: array
+                    items:
+                        type: string
+                targetAppInstanceIds:
+                    description:
+                        Array of target app instance IDs (services will be synced to
+                        all selected instances)
+                    example:
+                        - app-instance-1
+                        - app-instance-2
+                    type: array
+                    items:
+                        type: string
+            required:
+                - sourceEnvironmentId
+                - targetEnvironmentId
+                - serviceIds
+                - targetAppInstanceIds
+        CreateMonitoringConfigDto:
+            type: object
+            properties:
+                telegramBotToken:
+                    type: string
+                    description: Telegram bot token for notifications
+                    example: 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ
+                telegramChatId:
+                    type: string
+                    description: Telegram chat ID to send notifications to
+                    example: "123456789"
+                proxyHost:
+                    type: string
+                    description: SOCKS5 proxy host for Telegram API access
+                    example: proxy.example.com
+                proxyPort:
+                    type: number
+                    description: SOCKS5 proxy port
+                    example: 1080
+                proxyUsername:
+                    type: string
+                    description: Proxy username for authentication
+                    example: proxyuser
+                proxyPassword:
+                    type: string
+                    description: Proxy password for authentication
+                    example: proxypass
+                monitoringEnabled:
+                    type: boolean
+                    description: Enable or disable monitoring
+                    example: true
+                    default: true
+                alertThreshold:
+                    type: number
+                    description: Number of consecutive failures before triggering alert
+                    example: 3
+                    default: 3
+                notificationSchedule:
+                    type: string
+                    description: Notification schedule frequency
+                    example: daily
+                    enum:
+                        - immediate
+                        - hourly
+                        - daily
+                    default: daily
+                taggedUsers:
+                    description: List of usernames to tag in Telegram messages
+                    example:
+                        - thangld19
+                        - tungpt
+                        - devops_team
+                    type: array
+                    items:
+                        type: string
+            required:
+                - monitoringEnabled
+                - alertThreshold
+                - notificationSchedule
+        UpdateMonitoringConfigDto:
+            type: object
+            properties:
+                telegramBotToken:
+                    type: string
+                    description: Telegram bot token for notifications
+                    example: 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ
+                telegramChatId:
+                    type: string
+                    description: Telegram chat ID to send notifications to
+                    example: "123456789"
+                proxyHost:
+                    type: string
+                    description: SOCKS5 proxy host for Telegram API access
+                    example: proxy.example.com
+                proxyPort:
+                    type: number
+                    description: SOCKS5 proxy port
+                    example: 1080
+                proxyUsername:
+                    type: string
+                    description: Proxy username for authentication
+                    example: proxyuser
+                proxyPassword:
+                    type: string
+                    description: Proxy password for authentication
+                    example: proxypass
+                monitoringEnabled:
+                    type: boolean
+                    description: Enable or disable monitoring
+                    example: true
+                    default: true
+                alertThreshold:
+                    type: number
+                    description: Number of consecutive failures before triggering alert
+                    example: 3
+                    default: 3
+                notificationSchedule:
+                    type: string
+                    description: Notification schedule frequency
+                    example: daily
+                    enum:
+                        - immediate
+                        - hourly
+                        - daily
+                    default: daily
+                taggedUsers:
+                    description: List of usernames to tag in Telegram messages
+                    example:
+                        - thangld19
+                        - tungpt
+                        - devops_team
+                    type: array
+                    items:
+                        type: string
+        TestTelegramConnectionDto:
+            type: object
+            properties:
+                telegramBotToken:
+                    type: string
+                    description: Telegram bot token for testing
+                    example: 1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ
+                telegramChatId:
+                    type: string
+                    description: Telegram chat ID for testing
+                    example: "123456789"
+                proxyHost:
+                    type: string
+                    description: SOCKS5 proxy host for testing
+                    example: proxy.example.com
+                proxyPort:
+                    type: number
+                    description: SOCKS5 proxy port for testing
+                    example: 1080
+                proxyUsername:
+                    type: string
+                    description: Proxy username for testing
+                    example: proxyuser
+                proxyPassword:
+                    type: string
+                    description: Proxy password for testing
+                    example: proxypass
+                taggedUsers:
+                    description: List of usernames to tag in test message
+                    example:
+                        - thangld19
+                        - tungpt
+                    type: array
+                    items:
+                        type: string
+            required:
+                - telegramBotToken
+                - telegramChatId
+        CreateMonitoredInstanceDto:
+            type: object
+            properties:
+                appInstanceId:
+                    type: string
+                    description: ID of the app instance to monitor
+                    example: app-instance-uuid
+                monitoringEnabled:
+                    type: boolean
+                    description: Enable or disable monitoring for this instance
+                    example: true
+                    default: true
+                checkIntervalMinutes:
+                    type: number
+                    description: Interval in minutes between health checks
+                    example: 60
+                    default: 60
+            required:
+                - appInstanceId
+                - monitoringEnabled
+                - checkIntervalMinutes
+        UpdateMonitoredInstanceDto:
+            type: object
+            properties:
+                appInstanceId:
+                    type: string
+                    description: ID of the app instance to monitor
+                    example: app-instance-uuid
+                monitoringEnabled:
+                    type: boolean
+                    description: Enable or disable monitoring for this instance
+                    example: true
+                    default: true
+                checkIntervalMinutes:
+                    type: number
+                    description: Interval in minutes between health checks
+                    example: 60
+                    default: 60
+        CreateMessageTemplateDto:
+            type: object
+            properties:
+                templateType:
+                    type: string
+                    description: Template type
+                    enum:
+                        - test_connection
+                        - daily_health_check
+                        - critical_alert
+                    example: daily_health_check
+                templateName:
+                    type: string
+                    description: Display name for the template
+                    example: Daily Health Check Report
+                messageTemplate:
+                    type: string
+                    description: Message template with placeholders (e.g., {{date}}, {{time}})
+                    example: "\U0001F50D **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}\n\n{{tagged_users}}"
+                description:
+                    type: string
+                    description: Description of what this template is used for
+                    example: Sent daily at 11PM with system health summary
+            required:
+                - templateType
+                - templateName
+                - messageTemplate
+        UpdateMessageTemplateDto:
+            type: object
+            properties:
+                templateName:
+                    type: string
+                    description: Display name for the template
+                    example: Daily Health Check Report
+                messageTemplate:
+                    type: string
+                    description: Message template with placeholders
+                    example: "\U0001F50D **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}"
+                description:
+                    type: string
+                    description: Description of what this template is used for
+                    example: Sent daily at 11PM with system health summary
+                isActive:
+                    type: boolean
+                    description: Whether this template is active
+                    example: true
+        PreviewTemplateDto:
+            type: object
+            properties:
+                templateType:
+                    type: string
+                    description: Template type for getting sample data
+                    example: daily_health_check
+                messageTemplate:
+                    type: string
+                    description: Message template to preview
+                    example: "\U0001F50D **Daily Health Check** - {{date}} {{time}}\n\n{{visual_summary}}"
+                sampleData:
+                    type: object
+                    description: Optional custom sample data for preview
+                    example:
+                        date: "2025-01-29"
+                        time: "23:00:00"
+            required:
+                - templateType
+                - messageTemplate
+        CreateUserDto:
+            type: object
+            properties:
+                username:
+                    type: string
+                    example: johndoe
+                    description: Username for the new user
+                email:
+                    type: string
+                    example: john@example.com
+                    description: Email address
+                password:
+                    type: string
+                    example: SecurePassword123!
+                    description: User password
+                adminTwoFactorToken:
+                    type: string
+                    example: "123456"
+                    description:
+                        2FA token from admin's authenticator app (required for creating
+                        users)
+            required:
+                - username
+                - email
+                - password
+                - adminTwoFactorToken
+        UpdateUserDto:
+            type: object
+            properties:
+                username:
+                    type: string
+                    example: johndoe
+                    description: Username
+                email:
+                    type: string
+                    example: john@example.com
+                    description: Email address
+                password:
+                    type: string
+                    example: NewPassword123!
+                    description: New password
+                active:
+                    type: boolean
+                    example: true
+                    description: Active status
+                adminTwoFactorToken:
+                    type: string
+                    example: "123456"
+                    description: 2FA token from admin's authenticator app (required for updates)
+            required:
+                - adminTwoFactorToken
+        DeleteUserDto:
+            type: object
+            properties:
+                adminTwoFactorToken:
+                    type: string
+                    example: "123456"
+                    description:
+                        2FA token from admin's authenticator app (required for deleting
+                        users)
+            required:
+                - adminTwoFactorToken

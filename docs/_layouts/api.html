@@ -1,0 +1,151 @@
+---
+layout: default
+---
+
+<div class="max-w-7xl mx-auto px-6">
+  <article class="prose prose-lg max-w-none mb-8">
+    <header class="mb-8">
+      <h1 class="font-heading text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        {{ page.title }}
+      </h1>
+      {% if page.description %}
+      <p class="font-body text-xl text-gray-600">
+        {{ page.description }}
+      </p>
+      {% endif %}
+    </header>
+
+    <div class="font-body text-gray-700 leading-relaxed">
+      {{ content }}
+    </div>
+  </article>
+
+  <!-- Swagger UI Container -->
+  <div id="swagger-ui-container" class="mt-12"></div>
+</div>
+
+<!-- Swagger UI CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+
+<script>
+  window.onload = function () {
+    // Try local file first, fallback to GitHub raw URL
+    const baseUrl = window.location.origin + '{{ site.baseurl }}';
+    const localUrl = baseUrl + '/assets/swagger.yaml';
+    const githubRawUrl = 'https://raw.githubusercontent.com/{{ site.github_username }}/{{ site.github_repo }}/main/apps/backend/swagger.yaml';
+
+    // Function to initialize Swagger UI
+    function initSwaggerUI(url, isFallback = false) {
+      return SwaggerUIBundle({
+        url: url,
+        dom_id: '#swagger-ui-container',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        validatorUrl: null,
+        tryItOutEnabled: true,
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+        requestInterceptor: function (request) {
+          // Add any custom request headers if needed
+          return request;
+        },
+        responseInterceptor: function (response) {
+          // Handle responses if needed
+          return response;
+        },
+        onComplete: function () {
+          console.log('Swagger UI loaded successfully');
+        },
+        onFailure: function (data) {
+          if (!isFallback) {
+            console.error('Failed to load Swagger UI from local file, trying GitHub raw URL...', data);
+            // Try GitHub raw URL as fallback
+            window.ui = initSwaggerUI(githubRawUrl, true);
+          } else {
+            console.error('Failed to load Swagger UI from both sources:', data);
+            document.getElementById('swagger-ui-container').innerHTML =
+              '<div class="bg-red-50 border border-red-200 rounded-lg p-6">' +
+              '<h3 class="text-red-800 font-semibold mb-2">Failed to load API documentation</h3>' +
+              '<p class="text-red-600 mb-2">Unable to load Swagger specification from local file or GitHub.</p>' +
+              '<p class="text-sm text-red-500">Error: ' + (data.message || 'Unknown error') + '</p>' +
+              '<p class="text-sm text-gray-600 mt-4">Try accessing the file directly:</p>' +
+              '<ul class="text-sm text-gray-600 mt-2 list-disc list-inside">' +
+              '<li><a href="' + localUrl + '" class="text-blue-600 hover:underline" target="_blank">Local: ' + localUrl + '</a></li>' +
+              '<li><a href="' + githubRawUrl + '" class="text-blue-600 hover:underline" target="_blank">GitHub: ' + githubRawUrl + '</a></li>' +
+              '</ul>' +
+              '</div>';
+          }
+        }
+      });
+    }
+
+    // Try local file first
+    window.ui = initSwaggerUI(localUrl, false);
+  };
+</script>
+
+<style>
+  /* Custom Swagger UI styling to match the site design */
+  .swagger-ui {
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  .swagger-ui .topbar {
+    display: none;
+  }
+
+  .swagger-ui .info {
+    margin: 20px 0;
+  }
+
+  .swagger-ui .info .title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2em;
+    color: #111827;
+  }
+
+  .swagger-ui .scheme-container {
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  .swagger-ui .opblock.opblock-post {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+
+  .swagger-ui .opblock.opblock-get {
+    border-color: #10b981;
+    background: #ecfdf5;
+  }
+
+  .swagger-ui .opblock.opblock-put {
+    border-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .swagger-ui .opblock.opblock-delete {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  .swagger-ui .btn.authorize {
+    background-color: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .swagger-ui .btn.authorize:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+</style>
