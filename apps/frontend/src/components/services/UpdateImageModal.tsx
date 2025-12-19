@@ -3,6 +3,7 @@ import {
   ClockCircleOutlined,
   DatabaseOutlined,
   ReloadOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import Modal from "antd/es/modal";
 import Table from "antd/es/table";
@@ -13,7 +14,8 @@ import Tag from "antd/es/tag";
 import message from "antd/es/message";
 import Spin from "antd/es/spin";
 import Alert from "antd/es/alert";
-import { useState } from "react";
+import Input from "antd/es/input";
+import { useState, useMemo } from "react";
 import { useImageTags, useUpdateServiceImage } from "../../hooks/useServices";
 import type { Service, ImageTag } from "../../types";
 import dayjs from "dayjs";
@@ -37,6 +39,7 @@ export function UpdateImageModal({
   onSuccess,
 }: UpdateImageModalProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState<string>("");
 
   const {
     data: imageTags,
@@ -69,7 +72,9 @@ export function UpdateImageModal({
         <div>
           <p>Are you sure you want to update the image tag?</p>
           <Space direction="vertical" size={4} style={{ marginTop: 8 }}>
-            <Text type="secondary">Service: <Text strong>{service.name}</Text></Text>
+            <Text type="secondary">
+              Service: <Text strong>{service.name}</Text>
+            </Text>
             <Text type="secondary">
               Current: <Text code>{service.imageTag}</Text>
             </Text>
@@ -77,7 +82,8 @@ export function UpdateImageModal({
               New: <Text code>{newImageTag}</Text>
             </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              (Replacing tag <Text code>{currentTag}</Text> with <Text code>{selectedTag}</Text>)
+              (Replacing tag <Text code>{currentTag}</Text> with{" "}
+              <Text code>{selectedTag}</Text>)
             </Text>
           </Space>
         </div>
@@ -93,7 +99,7 @@ export function UpdateImageModal({
           });
 
           message.success(
-            `Successfully updated ${service.name} to ${selectedTag}`
+            `Successfully updated ${service.name} to ${selectedTag}`,
           );
 
           onClose();
@@ -106,7 +112,7 @@ export function UpdateImageModal({
           message.error(
             error.response?.data?.message ||
               error.message ||
-              "Failed to update service image"
+              "Failed to update service image",
           );
         }
       },
@@ -115,6 +121,7 @@ export function UpdateImageModal({
 
   const handleCancel = () => {
     setSelectedTag(null);
+    setSearchText("");
     onClose();
   };
 
@@ -125,6 +132,18 @@ export function UpdateImageModal({
   };
 
   const currentTag = getCurrentTag();
+
+  // Filter image tags based on search text
+  const filteredImageTags = useMemo(() => {
+    if (!imageTags || !searchText.trim()) {
+      return imageTags || [];
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    return imageTags.filter((tag) =>
+      tag.name.toLowerCase().includes(searchLower),
+    );
+  }, [imageTags, searchText]);
 
   const columns = [
     {
@@ -152,9 +171,7 @@ export function UpdateImageModal({
                 Current
               </Tag>
             )}
-            {isSelectedTag && !isCurrentTag && (
-              <Tag color="blue">Selected</Tag>
-            )}
+            {isSelectedTag && !isCurrentTag && <Tag color="blue">Selected</Tag>}
           </Space>
         );
       },
@@ -268,9 +285,11 @@ export function UpdateImageModal({
             showIcon
             closable
           />
-          <Button 
-            size="small" 
-            onClick={() => { void refetch(); }}
+          <Button
+            size="small"
+            onClick={() => {
+              void refetch();
+            }}
             style={{ marginTop: 8 }}
           >
             Retry
@@ -288,12 +307,24 @@ export function UpdateImageModal({
         <>
           <div className="mb-4">
             <Text type="secondary">
-              Found {imageTags.length} tags. Select a tag to update the deployment.
+              Found {imageTags.length} tags. Select a tag to update the
+              deployment.
             </Text>
           </div>
 
+          <div style={{ marginBottom: 16 }}>
+            <Input
+              placeholder="Search by tag name..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: "100%" }}
+            />
+          </div>
+
           <Table
-            dataSource={imageTags}
+            dataSource={filteredImageTags}
             columns={columns as any}
             rowKey="name"
             pagination={{
@@ -305,8 +336,8 @@ export function UpdateImageModal({
               record.name === selectedTag
                 ? "bg-blue-50"
                 : record.name === currentTag
-                ? "bg-green-50"
-                : ""
+                  ? "bg-green-50"
+                  : ""
             }
           />
         </>

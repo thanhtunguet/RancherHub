@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   Table,
@@ -11,7 +11,8 @@ import {
   Select,
   message,
   Breadcrumb,
-} from 'antd';
+  Input,
+} from "antd";
 import {
   DatabaseOutlined,
   ReloadOutlined,
@@ -21,11 +22,12 @@ import {
   ArrowRightOutlined,
   HomeOutlined,
   HddOutlined,
-} from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { HarborSite, HarborProject } from '../../types';
-import { harborSitesApi } from '../../services/api';
-import type { ColumnsType } from 'antd/es/table';
+  SearchOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { HarborSite, HarborProject } from "../../types";
+import { harborSitesApi } from "../../services/api";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -37,14 +39,17 @@ interface HarborProjectsListProps {
 
 export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
   harborSiteId,
-  onSelectProject
+  onSelectProject,
 }) => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<HarborProject[]>([]);
   const [harborSites, setHarborSites] = useState<HarborSite[]>([]);
-  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(harborSiteId || null);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
+    harborSiteId || null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState<string>("");
 
   useEffect(() => {
     if (harborSiteId) {
@@ -71,7 +76,7 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
       // Only auto-select if harborSiteId is not provided via props
       if (!harborSiteId) {
         // Auto-select active site if available
-        const activeSite = sites.find(site => site.active);
+        const activeSite = sites.find((site) => site.active);
         if (activeSite) {
           setSelectedSiteId(activeSite.id);
         } else if (sites.length > 0) {
@@ -79,7 +84,10 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
         }
       }
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch Harbor sites';
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to fetch Harbor sites";
       setError(errorMessage);
     }
   };
@@ -88,11 +96,14 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await harborSitesApi.getProjects(siteId);
       setProjects(data);
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch projects';
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to fetch projects";
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -107,20 +118,34 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
   };
 
   const handleViewRepositories = (project: HarborProject) => {
-    const harborSite = harborSites.find(site => site.id === selectedSiteId);
+    const harborSite = harborSites.find((site) => site.id === selectedSiteId);
     if (harborSite && onSelectProject) {
       onSelectProject(project, harborSite);
     }
   };
 
+  // Filter projects based on search text
+  const filteredProjects = useMemo(() => {
+    if (!searchText.trim()) {
+      return projects;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    return projects.filter(
+      (project) =>
+        project.name.toLowerCase().includes(searchLower) ||
+        project.owner_name.toLowerCase().includes(searchLower),
+    );
+  }, [projects, searchText]);
+
   const columns: ColumnsType<HarborProject> = [
     {
-      title: 'Project Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Project Name",
+      dataIndex: "name",
+      key: "name",
       render: (name: string, record: HarborProject) => (
         <Space>
-          <FolderOutlined style={{ color: '#1890ff' }} />
+          <FolderOutlined style={{ color: "#1890ff" }} />
           <Text strong>{name}</Text>
           {record.public && <Tag color="green">Public</Tag>}
           {!record.public && <Tag color="orange">Private</Tag>}
@@ -128,9 +153,9 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
       ),
     },
     {
-      title: 'Owner',
-      dataIndex: 'owner_name',
-      key: 'owner_name',
+      title: "Owner",
+      dataIndex: "owner_name",
+      key: "owner_name",
       render: (owner: string) => (
         <Space>
           <TeamOutlined />
@@ -139,42 +164,36 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
       ),
     },
     {
-      title: 'Repositories',
-      dataIndex: 'repo_count',
-      key: 'repo_count',
-      align: 'center',
-      render: (count: number) => (
-        <Tag color="blue">{count} repos</Tag>
-      ),
+      title: "Repositories",
+      dataIndex: "repo_count",
+      key: "repo_count",
+      align: "center",
+      render: (count: number) => <Tag color="blue">{count} repos</Tag>,
     },
     {
-      title: 'Charts',
-      dataIndex: 'chart_count',
-      key: 'chart_count',
-      align: 'center',
-      render: (count?: number) => (
-        <Tag color="purple">{count || 0} charts</Tag>
-      ),
+      title: "Charts",
+      dataIndex: "chart_count",
+      key: "chart_count",
+      align: "center",
+      render: (count?: number) => <Tag color="purple">{count || 0} charts</Tag>,
     },
     {
-      title: 'Created',
-      dataIndex: 'creation_time',
-      key: 'creation_time',
+      title: "Created",
+      dataIndex: "creation_time",
+      key: "creation_time",
       render: (date: string) => (
         <Tooltip title={new Date(date).toLocaleString()}>
           <Space>
             <CalendarOutlined />
-            <Text type="secondary">
-              {new Date(date).toLocaleDateString()}
-            </Text>
+            <Text type="secondary">{new Date(date).toLocaleDateString()}</Text>
           </Space>
         </Tooltip>
       ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      align: 'center',
+      title: "Actions",
+      key: "actions",
+      align: "center",
       render: (_, record: HarborProject) => (
         <Button
           type="link"
@@ -187,19 +206,19 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
     },
   ];
 
-  const selectedSite = harborSites.find(site => site.id === selectedSiteId);
+  const selectedSite = harborSites.find((site) => site.id === selectedSiteId);
 
   const breadcrumbItems = [
     {
       title: (
-        <a onClick={() => navigate('/')}>
+        <a onClick={() => navigate("/")}>
           <HomeOutlined /> Home
         </a>
       ),
     },
     {
       title: (
-        <a onClick={() => navigate('/harbor-sites')}>
+        <a onClick={() => navigate("/harbor-sites")}>
           <HddOutlined /> Harbor Sites
         </a>
       ),
@@ -213,18 +232,28 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
   }
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Breadcrumb items={breadcrumbItems} style={{ marginBottom: '16px' }} />
+    <div style={{ padding: "24px" }}>
+      <Breadcrumb items={breadcrumbItems} style={{ marginBottom: "16px" }} />
       <Card>
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '16px' 
-          }}>
+        <div style={{ marginBottom: "24px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
             <div>
-              <Title level={3} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Title
+                level={3}
+                style={{
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
                 <DatabaseOutlined />
                 Harbor Projects
               </Title>
@@ -233,8 +262,8 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
               </Text>
             </div>
             <Space>
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 onClick={handleRefresh}
                 loading={loading}
                 disabled={!selectedSiteId}
@@ -245,8 +274,10 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
           </div>
 
           {!harborSiteId && (
-            <div style={{ marginBottom: '16px' }}>
-              <Text strong style={{ marginRight: '8px' }}>Harbor Site:</Text>
+            <div style={{ marginBottom: "16px" }}>
+              <Text strong style={{ marginRight: "8px" }}>
+                Harbor Site:
+              </Text>
               <Select
                 style={{ width: 300 }}
                 placeholder="Select a Harbor site"
@@ -254,7 +285,7 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
                 onChange={setSelectedSiteId}
                 loading={!harborSites.length}
               >
-                {harborSites.map(site => (
+                {harborSites.map((site) => (
                   <Option key={site.id} value={site.id}>
                     <Space>
                       <DatabaseOutlined />
@@ -267,13 +298,26 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
             </div>
           )}
 
+          {selectedSiteId && (
+            <div style={{ marginBottom: "16px" }}>
+              <Input
+                placeholder="Search by project name or owner..."
+                prefix={<SearchOutlined />}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+                style={{ width: 400 }}
+              />
+            </div>
+          )}
+
           {selectedSite && (
             <Alert
               message={`Connected to ${selectedSite.name}`}
               description={selectedSite.url}
               type="info"
               showIcon
-              style={{ marginBottom: '16px' }}
+              style={{ marginBottom: "16px" }}
             />
           )}
         </div>
@@ -285,7 +329,7 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
             type="error"
             showIcon
             closable
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
             action={
               <Button onClick={handleRefresh} size="small">
                 Retry
@@ -304,7 +348,7 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
         ) : (
           <Table
             columns={columns}
-            dataSource={projects}
+            dataSource={filteredProjects}
             rowKey="project_id"
             loading={loading}
             pagination={{

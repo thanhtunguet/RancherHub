@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   Table,
@@ -13,7 +13,8 @@ import {
   Statistic,
   Row,
   Col,
-} from 'antd';
+  Input,
+} from "antd";
 import {
   DatabaseOutlined,
   ReloadOutlined,
@@ -26,18 +27,23 @@ import {
   HomeOutlined,
   FolderOutlined,
   HddOutlined,
-} from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { HarborSite, HarborRepository, HarborProject } from '../../types';
-import { harborSitesApi } from '../../services/api';
-import type { ColumnsType } from 'antd/es/table';
+  SearchOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { HarborSite, HarborRepository, HarborProject } from "../../types";
+import { harborSitesApi } from "../../services/api";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
 
 interface HarborRepositoriesListProps {
   harborSite: HarborSite;
   project: HarborProject;
-  onSelectRepository?: (repository: HarborRepository, project: HarborProject, harborSite: HarborSite) => void;
+  onSelectRepository?: (
+    repository: HarborRepository,
+    project: HarborProject,
+    harborSite: HarborSite,
+  ) => void;
   onBack?: () => void;
 }
 
@@ -45,12 +51,13 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
   harborSite,
   project,
   onSelectRepository,
-  onBack
+  onBack,
 }) => {
   const navigate = useNavigate();
   const [repositories, setRepositories] = useState<HarborRepository[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState<string>("");
 
   useEffect(() => {
     fetchRepositories();
@@ -60,11 +67,17 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
-      const data = await harborSitesApi.getRepositories(harborSite.id, project.name);
+
+      const data = await harborSitesApi.getRepositories(
+        harborSite.id,
+        project.name,
+      );
       setRepositories(data);
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to fetch repositories';
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to fetch repositories";
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -82,20 +95,34 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
     }
   };
 
+  // Filter repositories based on search text
+  const filteredRepositories = useMemo(() => {
+    if (!searchText.trim()) {
+      return repositories;
+    }
+
+    const searchLower = searchText.toLowerCase().trim();
+    return repositories.filter(
+      (repo) =>
+        repo.name.toLowerCase().includes(searchLower) ||
+        (repo.description &&
+          repo.description.toLowerCase().includes(searchLower)),
+    );
+  }, [repositories, searchText]);
 
   const columns: ColumnsType<HarborRepository> = [
     {
-      title: 'Repository Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Repository Name",
+      dataIndex: "name",
+      key: "name",
       render: (name: string, record: HarborRepository) => (
         <Space direction="vertical" size="small">
           <Space>
-            <ContainerOutlined style={{ color: '#1890ff' }} />
+            <ContainerOutlined style={{ color: "#1890ff" }} />
             <Text strong>{name}</Text>
           </Space>
           {record.description && (
-            <Text type="secondary" style={{ fontSize: '12px' }}>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
               {record.description}
             </Text>
           )}
@@ -103,10 +130,10 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
       ),
     },
     {
-      title: 'Tags',
-      dataIndex: 'tags_count',
-      key: 'tags_count',
-      align: 'center',
+      title: "Tags",
+      dataIndex: "tags_count",
+      key: "tags_count",
+      align: "center",
       render: (count: number) => (
         <Space>
           <TagOutlined />
@@ -115,10 +142,10 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
       ),
     },
     {
-      title: 'Pull Count',
-      dataIndex: 'pull_count',
-      key: 'pull_count',
-      align: 'center',
+      title: "Pull Count",
+      dataIndex: "pull_count",
+      key: "pull_count",
+      align: "center",
       render: (count: number) => (
         <Space>
           <DownloadOutlined />
@@ -127,36 +154,34 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
       ),
     },
     {
-      title: 'Stars',
-      dataIndex: 'star_count',
-      key: 'star_count',
-      align: 'center',
+      title: "Stars",
+      dataIndex: "star_count",
+      key: "star_count",
+      align: "center",
       render: (count: number) => (
         <Space>
-          <StarOutlined style={{ color: '#faad14' }} />
+          <StarOutlined style={{ color: "#faad14" }} />
           <Tag color="gold">{count}</Tag>
         </Space>
       ),
     },
     {
-      title: 'Last Updated',
-      dataIndex: 'update_time',
-      key: 'update_time',
+      title: "Last Updated",
+      dataIndex: "update_time",
+      key: "update_time",
       render: (date: string) => (
         <Tooltip title={new Date(date).toLocaleString()}>
           <Space>
             <CalendarOutlined />
-            <Text type="secondary">
-              {new Date(date).toLocaleDateString()}
-            </Text>
+            <Text type="secondary">{new Date(date).toLocaleDateString()}</Text>
           </Space>
         </Tooltip>
       ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      align: 'center',
+      title: "Actions",
+      key: "actions",
+      align: "center",
       render: (_, record: HarborRepository) => (
         <Button
           type="link"
@@ -169,27 +194,36 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
     },
   ];
 
-  const totalPulls = repositories.reduce((sum, repo) => sum + repo.pull_count, 0);
-  const totalTags = repositories.reduce((sum, repo) => sum + repo.tags_count, 0);
-  const totalStars = repositories.reduce((sum, repo) => sum + repo.star_count, 0);
+  const totalPulls = filteredRepositories.reduce(
+    (sum, repo) => sum + repo.pull_count,
+    0,
+  );
+  const totalTags = filteredRepositories.reduce(
+    (sum, repo) => sum + repo.tags_count,
+    0,
+  );
+  const totalStars = filteredRepositories.reduce(
+    (sum, repo) => sum + repo.star_count,
+    0,
+  );
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: "24px" }}>
       <Card>
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: "24px" }}>
           <Breadcrumb
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
             items={[
               {
                 title: (
-                  <a onClick={() => navigate('/')}>
+                  <a onClick={() => navigate("/")}>
                     <HomeOutlined /> Home
                   </a>
                 ),
               },
               {
                 title: (
-                  <a onClick={() => navigate('/harbor-sites')}>
+                  <a onClick={() => navigate("/harbor-sites")}>
                     <HddOutlined /> Harbor Sites
                   </a>
                 ),
@@ -211,14 +245,24 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
             ]}
           />
 
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '16px' 
-          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
             <div>
-              <Title level={3} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Title
+                level={3}
+                style={{
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
                 <ContainerOutlined />
                 Repositories in {project.name}
               </Title>
@@ -227,8 +271,8 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
               </Text>
             </div>
             <Space>
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 onClick={handleRefresh}
                 loading={loading}
               >
@@ -238,20 +282,31 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
           </div>
 
           <Alert
-            message={`Project: ${project.name} (${project.public ? 'Public' : 'Private'})`}
+            message={`Project: ${project.name} (${project.public ? "Public" : "Private"})`}
             description={`Owner: ${project.owner_name} | Harbor Site: ${harborSite.url}`}
             type="info"
             showIcon
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
           />
 
+          <div style={{ marginBottom: "16px" }}>
+            <Input
+              placeholder="Search by repository name or description..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+              style={{ width: 400 }}
+            />
+          </div>
+
           {repositories.length > 0 && (
-            <Row gutter={16} style={{ marginBottom: '16px' }}>
+            <Row gutter={16} style={{ marginBottom: "16px" }}>
               <Col span={6}>
                 <Card size="small">
                   <Statistic
                     title="Total Repositories"
-                    value={repositories.length}
+                    value={filteredRepositories.length}
                     prefix={<ContainerOutlined />}
                   />
                 </Card>
@@ -294,7 +349,7 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
             type="error"
             showIcon
             closable
-            style={{ marginBottom: '16px' }}
+            style={{ marginBottom: "16px" }}
             action={
               <Button onClick={handleRefresh} size="small">
                 Retry
@@ -305,7 +360,7 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
 
         <Table
           columns={columns}
-          dataSource={repositories}
+          dataSource={filteredRepositories}
           rowKey="id"
           loading={loading}
           pagination={{
