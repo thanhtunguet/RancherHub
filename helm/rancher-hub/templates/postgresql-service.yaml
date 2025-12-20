@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rancher-hub.postgresql.fullname" . }}
+  labels:
+    {{- include "rancher-hub.postgresql.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.postgresql.service.type }}
+  ports:
+  - name: postgresql
+    port: {{ .Values.postgresql.service.port }}
+    targetPort: postgresql
+    protocol: TCP
+  selector:
+    {{- include "rancher-hub.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}

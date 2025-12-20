@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rancher-hub.frontend.fullname" . }}
+  labels:
+    {{- include "rancher-hub.frontend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.frontend.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "rancher-hub.frontend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rancher-hub.frontend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rancher-hub.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: frontend
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.frontend.image.registry }}/{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+        imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+        {{- if .Values.frontend.env.apiUrl }}
+        env:
+        - name: VITE_API_URL
+          value: {{ .Values.frontend.env.apiUrl | quote }}
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.frontend.service.targetPort }}
+          protocol: TCP
+        {{- if .Values.frontend.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.frontend.livenessProbe.httpGet.path }}
+            port: {{ .Values.frontend.livenessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.frontend.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.frontend.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.frontend.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.frontend.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.frontend.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.frontend.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.frontend.readinessProbe.httpGet.path }}
+            port: {{ .Values.frontend.readinessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.frontend.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.frontend.readinessProbe.failureThreshold }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.frontend.resources | nindent 10 }}
+      {{- with .Values.frontend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.frontend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

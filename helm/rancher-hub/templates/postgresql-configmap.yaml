@@ -1,0 +1,13 @@
+{{- if and .Values.postgresql.enabled .Values.postgresql.initdbScripts }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rancher-hub.postgresql.fullname" . }}-init
+  labels:
+    {{- include "rancher-hub.postgresql.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.postgresql.initdbScripts }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- end }}

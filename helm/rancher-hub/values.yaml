@@ -1,0 +1,266 @@
+# Default values for rancher-hub.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global settings
+global:
+  # Image pull secrets for private registries
+  imagePullSecrets: []
+
+# PostgreSQL configuration
+postgresql:
+  # Enable PostgreSQL deployment
+  enabled: true
+
+  # PostgreSQL image configuration
+  image:
+    registry: docker.io
+    repository: postgres
+    tag: "15-alpine"
+    pullPolicy: IfNotPresent
+
+  # PostgreSQL authentication
+  auth:
+    database: rancher_hub
+    username: rancher_hub
+    # Password can be set here or via existingSecret
+    password: "rancher_hub_password"
+    # Use existing secret for PostgreSQL password
+    # existingSecret: ""
+    # secretKeys:
+    #   adminPasswordKey: postgres-password
+    #   userPasswordKey: password
+
+  # PostgreSQL persistence
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+  # PostgreSQL service
+  service:
+    type: ClusterIP
+    port: 5432
+
+  # PostgreSQL resources
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # PostgreSQL init scripts
+  initdbScripts: {}
+    # init.sql: |
+    #   CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+# Backend configuration
+backend:
+  # Number of backend replicas
+  replicaCount: 1
+
+  # Backend image configuration
+  image:
+    registry: docker.io
+    repository: thanhtunguet/rancher-hub-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  # Backend service configuration
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+
+  # Backend environment variables
+  env:
+    nodeEnv: production
+    port: 3000
+
+    # Database configuration (uses PostgreSQL by default)
+    database:
+      type: postgres
+      # Use external database if postgresql.enabled is false
+      # host: external-postgres.example.com
+      # port: 5432
+      # name: rancher_hub
+      # username: rancher_hub
+      # Password should be set via secret
+      ssl: false
+      synchronize: true
+      logging: false
+
+    # Frontend URL for CORS
+    frontendUrl: "http://localhost:8080"
+
+  # Backend secrets
+  secrets:
+    # JWT secret for authentication
+    jwtSecret: ""
+    # Use existing secret for backend configuration
+    # existingSecret: ""
+    # secretKeys:
+    #   jwtSecretKey: jwt-secret
+    #   databasePasswordKey: database-password
+
+  # Backend resources
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  # Backend health checks
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 3
+
+  # Node selector
+  nodeSelector: {}
+
+  # Tolerations
+  tolerations: []
+
+  # Affinity
+  affinity: {}
+
+# Frontend configuration
+frontend:
+  # Number of frontend replicas
+  replicaCount: 1
+
+  # Frontend image configuration
+  image:
+    registry: docker.io
+    repository: thanhtunguet/rancher-hub-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  # Frontend service configuration
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+
+  # Frontend environment variables
+  env:
+    # API URL will be configured via ConfigMap
+    apiUrl: ""
+
+  # Frontend resources
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+  # Frontend health checks
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 3
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 2
+    successThreshold: 1
+    failureThreshold: 3
+
+  # Node selector
+  nodeSelector: {}
+
+  # Tolerations
+  tolerations: []
+
+  # Affinity
+  affinity: {}
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  hosts:
+    - host: rancher-hub.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend: frontend
+        - path: /api
+          pathType: Prefix
+          backend: backend
+  tls: []
+    # - secretName: rancher-hub-tls
+    #   hosts:
+    #     - rancher-hub.example.com
+
+# Service Account
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Security Context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+
+# Autoscaling (optional)
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80

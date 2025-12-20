@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rancher-hub.backend.fullname" . }}
+  labels:
+    {{- include "rancher-hub.backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.backend.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "rancher-hub.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/secret: {{ include (print $.Template.BasePath "/backend-secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "rancher-hub.backend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rancher-hub.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.postgresql.enabled }}
+      initContainers:
+      - name: wait-for-db
+        image: "{{ .Values.postgresql.image.registry }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h {{ include "rancher-hub.postgresql.fullname" . }} -p {{ .Values.postgresql.service.port }} -U {{ .Values.postgresql.auth.username }}; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
+      {{- end }}
+      containers:
+      - name: backend
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.backend.image.registry }}/{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        env:
+        - name: NODE_ENV
+          value: {{ .Values.backend.env.nodeEnv | quote }}
+        - name: PORT
+          value: {{ .Values.backend.env.port | quote }}
+        - name: DATABASE_TYPE
+          value: {{ .Values.backend.env.database.type | quote }}
+        - name: DATABASE_HOST
+          value: {{ include "rancher-hub.postgresql.host" . | quote }}
+        - name: DATABASE_PORT
+          value: {{ include "rancher-hub.postgresql.port" . | quote }}
+        - name: DATABASE_NAME
+          value: {{ include "rancher-hub.postgresql.database" . | quote }}
+        - name: DATABASE_USERNAME
+          value: {{ include "rancher-hub.postgresql.username" . | quote }}
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "rancher-hub.backend.secretName" . }}
+              key: {{ if .Values.backend.secrets.secretKeys }}{{ .Values.backend.secrets.secretKeys.databasePasswordKey }}{{ else }}database-password{{ end }}
+        - name: DATABASE_SSL
+          value: {{ .Values.backend.env.database.ssl | quote }}
+        - name: DATABASE_SYNCHRONIZE
+          value: {{ .Values.backend.env.database.synchronize | quote }}
+        - name: DATABASE_LOGGING
+          value: {{ .Values.backend.env.database.logging | quote }}
+        - name: FRONTEND_URL
+          value: {{ .Values.backend.env.frontendUrl | quote }}
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "rancher-hub.backend.secretName" . }}
+              key: {{ if .Values.backend.secrets.secretKeys }}{{ .Values.backend.secrets.secretKeys.jwtSecretKey }}{{ else }}jwt-secret{{ end }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.backend.service.targetPort }}
+          protocol: TCP
+        {{- if .Values.backend.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.backend.livenessProbe.httpGet.path }}
+            port: {{ .Values.backend.livenessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.backend.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.backend.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.backend.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.backend.readinessProbe.httpGet.path }}
+            port: {{ .Values.backend.readinessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.backend.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.backend.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.backend.readinessProbe.failureThreshold }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 10 }}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

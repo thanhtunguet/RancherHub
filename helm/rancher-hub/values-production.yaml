@@ -1,0 +1,139 @@
+# Production values for rancher-hub.
+# This file contains production-specific overrides for values.yaml
+
+# PostgreSQL configuration for production
+postgresql:
+  enabled: true
+
+  auth:
+    # IMPORTANT: Change these in production!
+    password: "CHANGE_ME_IN_PRODUCTION"
+    # Or use existing secret:
+    # existingSecret: "rancher-hub-postgres-secret"
+    # secretKeys:
+    #   userPasswordKey: password
+
+  persistence:
+    enabled: true
+    storageClass: "standard"  # Change to your storage class
+    size: 20Gi
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# Backend configuration for production
+backend:
+  replicaCount: 2
+
+  image:
+    tag: "1.0.0"  # Use specific version tag
+    pullPolicy: Always
+
+  env:
+    nodeEnv: production
+
+    database:
+      synchronize: false  # Never auto-sync schema in production
+      logging: false
+
+    # Set this to your actual domain
+    frontendUrl: "https://rancher-hub.yourdomain.com"
+
+  secrets:
+    # IMPORTANT: Generate a strong random JWT secret
+    jwtSecret: "CHANGE_ME_TO_RANDOM_64_CHAR_STRING"
+    # Or use existing secret:
+    # existingSecret: "rancher-hub-backend-secret"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  # Production-grade health checks
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Frontend configuration for production
+frontend:
+  replicaCount: 2
+
+  image:
+    tag: "1.0.0"  # Use specific version tag
+    pullPolicy: Always
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Ingress configuration for production
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: rancher-hub.yourdomain.com  # CHANGE THIS
+      paths:
+        - path: /
+          pathType: Prefix
+          backend: frontend
+        - path: /api
+          pathType: Prefix
+          backend: backend
+  tls:
+    - secretName: rancher-hub-tls
+      hosts:
+        - rancher-hub.yourdomain.com  # CHANGE THIS
+
+# Enable autoscaling in production
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# Security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000

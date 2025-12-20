@@ -1,0 +1,64 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{- if .Values.ingress.enabled }}
+
+1. Get the application URL by running these commands:
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- else }}
+
+1. Get the application URL by running these commands:
+
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "rancher-hub.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=frontend" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+2. Default credentials:
+  Username: admin
+  Password: admin123
+
+  IMPORTANT: Please change the default password after first login!
+
+3. Backend API documentation (Swagger) is available at:
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}/api/docs
+{{- end }}
+{{- else }}
+  Use port-forward to access: http://localhost:3000/api/docs
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "rancher-hub.backend.fullname" . }} 3000:3000
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+
+4. PostgreSQL is deployed as part of this release.
+
+  To connect to PostgreSQL:
+
+  export POSTGRES_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "rancher-hub.postgresql.fullname" . }} -o jsonpath="{.data.password}" | base64 -d)
+  kubectl run {{ include "rancher-hub.postgresql.fullname" . }}-client --rm --tty -i --restart='Never' --namespace {{ .Release.Namespace }} --image {{ .Values.postgresql.image.registry }}/{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }} --env="PGPASSWORD=$POSTGRES_PASSWORD" --command -- psql --host {{ include "rancher-hub.postgresql.fullname" . }} -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -p {{ .Values.postgresql.service.port }}
+{{- else }}
+
+4. Using external PostgreSQL database.
+  Ensure your database is accessible and credentials are correct.
+{{- end }}
+
+5. Monitoring the deployment:
+
+  kubectl --namespace {{ .Release.Namespace }} get pods -l "app.kubernetes.io/instance={{ .Release.Name }}"
+  kubectl --namespace {{ .Release.Namespace }} logs -l "app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=backend" -f
+
+For more information, visit: https://github.com/thanhtunguet/RancherHub
