@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
   RancherSite,
+  GenericClusterSite,
   HarborSite,
   Environment,
   AppInstance,
@@ -56,6 +57,7 @@ import { HarborApiService } from './services/harbor-api.service';
                 : false,
             entities: [
               RancherSite,
+              GenericClusterSite,
               HarborSite,
               Environment,
               AppInstance,
@@ -78,6 +80,7 @@ import { HarborApiService } from './services/harbor-api.service';
             database: process.env.DATABASE_PATH || 'rancher-hub.db',
             entities: [
               RancherSite,
+              GenericClusterSite,
               HarborSite,
               Environment,
               AppInstance,

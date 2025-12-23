@@ -1,4 +1,5 @@
 export { RancherSite } from './rancher-site.entity';
+export { GenericClusterSite } from './generic-cluster-site.entity';
 export { HarborSite } from './harbor-site.entity';
 export { Environment } from './environment.entity';
 export { AppInstance } from './app-instance.entity';

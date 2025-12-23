@@ -9,6 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { RancherSite } from './rancher-site.entity';
+import { GenericClusterSite } from './generic-cluster-site.entity';
 import { Environment } from './environment.entity';
 import { Service } from './service.entity';
 import { MonitoredInstance } from './monitored-instance.entity';
@@ -27,8 +28,19 @@ export class AppInstance {
   @Column({ length: 255 })
   namespace: string;
 
-  @Column({ name: 'rancher_site_id' })
-  rancherSiteId: string;
+  @Column({
+    name: 'cluster_type',
+    type: 'varchar',
+    length: 50,
+    default: 'rancher',
+  })
+  clusterType: 'rancher' | 'generic';
+
+  @Column({ name: 'rancher_site_id', nullable: true })
+  rancherSiteId: string | null;
+
+  @Column({ name: 'generic_cluster_site_id', nullable: true })
+  genericClusterSiteId: string | null;
 
   @Column({ name: 'environment_id' })
   environmentId: string;
@@ -39,9 +51,15 @@ export class AppInstance {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => RancherSite, (site) => site.appInstances)
+  @ManyToOne(() => RancherSite, (site) => site.appInstances, { nullable: true })
   @JoinColumn({ name: 'rancher_site_id' })
-  rancherSite: RancherSite;
+  rancherSite: RancherSite | null;
+
+  @ManyToOne(() => GenericClusterSite, (site) => site.appInstances, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'generic_cluster_site_id' })
+  genericClusterSite: GenericClusterSite | null;
 
   @ManyToOne(() => Environment, (env) => env.appInstances)
   @JoinColumn({ name: 'environment_id' })
