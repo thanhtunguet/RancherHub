@@ -279,7 +279,7 @@ export const LandingPage: React.FC = () => {
         footer={null}
         width={500}
         centered
-        destroyOnClose
+        destroyOnHidden
       >
         <LoginForm onSuccess={handleLoginSuccess} />
       </Modal>

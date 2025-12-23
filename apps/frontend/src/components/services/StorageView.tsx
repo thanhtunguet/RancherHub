@@ -79,7 +79,6 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       const data = await servicesApi.getServicesWithImageSizes(
         selectedAppInstance
       );
-      console.log("Received services with image sizes:", data);
       setServices(data);
     } catch (err: any) {
       const message =
@@ -116,8 +115,6 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
             sampleService.imageTag
           );
 
-          console.log("Harbor API test result:", testResult);
-
           if (testResult.result) {
             message.success(
               `Harbor API working! Sample image size: ${testResult.result.sizeFormatted}`
@@ -134,7 +131,6 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
         "Harbor API test failed: " +
           (err instanceof Error ? err.message : "Unknown error")
       );
-      console.error("Harbor API test error:", err);
     } finally {
       setDebugLoading(false);
     }

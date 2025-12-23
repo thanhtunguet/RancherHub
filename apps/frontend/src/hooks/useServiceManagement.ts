@@ -30,15 +30,6 @@ export function useServiceManagement() {
   // Use the selected environment from local state
   const effectiveEnvironmentId = selectedEnvironmentId === "all" ? undefined : selectedEnvironmentId;
 
-  // Debug logging
-  console.log("useServiceManagement Debug:", {
-    selectedEnvironmentId,
-    effectiveEnvironmentId,
-    selectedAppInstanceId,
-    searchTerm,
-    statusFilter,
-  });
-
   // No need for API filters since we'll do client-side filtering
   const apiFilters = {};
 
@@ -46,13 +37,6 @@ export function useServiceManagement() {
   const { data: appInstances } = useAppInstancesByEnvironment(
     effectiveEnvironmentId
   );
-
-  // Debug logging for app instances
-  console.log("App Instances Debug:", {
-    effectiveEnvironmentId,
-    appInstancesCount: appInstances?.length || 0,
-    appInstances: appInstances?.map((ai) => ({ id: ai.id, name: ai.name })),
-  });
 
   // Create a new hook for fetching services from all environments
   const useServicesFromAllEnvironments = () => {
@@ -65,8 +49,7 @@ export function useServiceManagement() {
         
         // Fetch services from all environments in parallel
         const allServicesPromises = environments.map(env => 
-          servicesApi.getByEnvironment(env.id, apiFilters).catch(error => {
-            console.warn(`Failed to fetch services for environment ${env.id}:`, error);
+          servicesApi.getByEnvironment(env.id, apiFilters).catch(() => {
             return [];
           })
         );
@@ -75,16 +58,6 @@ export function useServiceManagement() {
         
         // Flatten and combine all services
         const allServices = allServicesArrays.flat();
-        
-        console.log("Fetched services from all environments:", {
-          environmentsCount: environments.length,
-          totalServices: allServices.length,
-          servicesByEnv: allServicesArrays.map((services, index) => ({
-            envId: environments[index].id,
-            envName: environments[index].name,
-            count: services.length
-          }))
-        });
         
         return allServices;
       },
@@ -119,19 +92,6 @@ export function useServiceManagement() {
     error: errorAllEnvs,
     refetch: refetchAllEnvs,
   } = useServicesFromAllEnvironments();
-
-  // Debug logging for services
-  console.log("Services Debug:", {
-    selectedEnvironmentId,
-    effectiveEnvironmentId,
-    selectedAppInstanceId,
-    servicesByEnvironmentCount: servicesByEnvironment?.length || 0,
-    servicesByAppInstanceCount: servicesByAppInstance?.length || 0,
-    servicesFromAllEnvsCount: servicesFromAllEnvs?.length || 0,
-    isLoadingByEnvironment,
-    isLoadingByAppInstance,
-    isLoadingAllEnvs,
-  });
 
   // Determine which data and loading states to use
   let services;
@@ -177,12 +137,6 @@ export function useServiceManagement() {
 
   // Force refetch when app instance changes (not search term)
   React.useEffect(() => {
-    console.log("useEffect: App instance changed", {
-      selectedEnvironmentId,
-      effectiveEnvironmentId,
-      selectedAppInstanceId,
-    });
-
     // Only refetch when app instance selection changes, not on search
     if (selectedEnvironmentId === "all") {
       if (selectedAppInstanceId === "all") {
@@ -280,14 +234,12 @@ export function useServiceManagement() {
   };
 
   const handleEnvironmentChange = (environmentId: string) => {
-    console.log("Environment changed:", environmentId);
     setSelectedEnvironmentId(environmentId);
     setSelectedAppInstanceId("all"); // Reset app instance filter when environment changes
     setSelectedServices([]); // Clear selected services when changing environment
   };
 
   const handleAppInstanceChange = (appInstanceId: string) => {
-    console.log("App instance changed:", appInstanceId);
     setSelectedAppInstanceId(appInstanceId);
     setSelectedServices([]); // Clear selected services when changing app instance filter
   };

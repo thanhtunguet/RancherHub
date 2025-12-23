@@ -135,7 +135,7 @@ export function EnvironmentManagement() {
         onCancel={handleCloseModal}
         footer={null}
         width={500}
-        destroyOnClose
+        destroyOnHidden
       >
         <EnvironmentForm
           initialValues={

@@ -408,7 +408,7 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
           Sync Selected Keys ({selectedKeys.length})
         </Button>,
       ]}
-      destroyOnClose
+      destroyOnHidden
     >
       {isLoading && (
         <div style={{ textAlign: 'center', padding: '40px' }}>

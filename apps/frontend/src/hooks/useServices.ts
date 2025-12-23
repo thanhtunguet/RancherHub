@@ -9,12 +9,6 @@ export const useServices = (
   return useQuery({
     queryKey: ["services", environmentId, filters],
     queryFn: () => {
-      console.log(
-        "useServices: Fetching services for environment:",
-        environmentId,
-        "with filters:",
-        filters
-      );
       return servicesApi.getByEnvironment(environmentId!, filters);
     },
     enabled: !!environmentId,
@@ -31,12 +25,6 @@ export const useServicesByAppInstance = (
   return useQuery({
     queryKey: ["services", "app-instance", appInstanceId, filters],
     queryFn: () => {
-      console.log(
-        "useServicesByAppInstance: Fetching services for app instance:",
-        appInstanceId,
-        "with filters:",
-        filters
-      );
       return servicesApi.getByAppInstance(appInstanceId!, filters);
     },
     enabled: !!appInstanceId,
@@ -50,10 +38,6 @@ export const useWorkloadTypes = (environmentId?: string) => {
   return useQuery({
     queryKey: ["workload-types", environmentId],
     queryFn: () => {
-      console.log(
-        "useWorkloadTypes: Fetching workload types for environment:",
-        environmentId
-      );
       return servicesApi.getWorkloadTypes(environmentId!);
     },
     enabled: !!environmentId,
@@ -98,12 +82,6 @@ export const useCompareServices = (sourceEnvironmentId?: string, targetEnvironme
   return useQuery({
     queryKey: ["services-comparison", sourceEnvironmentId, targetEnvironmentId],
     queryFn: () => {
-      console.log(
-        "useCompareServices: Comparing services between environments:",
-        sourceEnvironmentId,
-        "->",
-        targetEnvironmentId
-      );
       return servicesApi.compareServices(sourceEnvironmentId!, targetEnvironmentId!);
     },
     enabled: !!(sourceEnvironmentId && targetEnvironmentId && sourceEnvironmentId !== targetEnvironmentId),
@@ -117,12 +95,6 @@ export const useCompareServicesByInstance = (sourceAppInstanceId?: string, targe
   return useQuery({
     queryKey: ["services-comparison-instance", sourceAppInstanceId, targetAppInstanceId],
     queryFn: () => {
-      console.log(
-        "useCompareServicesByInstance: Comparing services between app instances:",
-        sourceAppInstanceId,
-        "->",
-        targetAppInstanceId
-      );
       return servicesApi.compareServicesByInstance(sourceAppInstanceId!, targetAppInstanceId!);
     },
     enabled: !!(sourceAppInstanceId && targetAppInstanceId && sourceAppInstanceId !== targetAppInstanceId),
@@ -136,7 +108,6 @@ export const useImageTags = (serviceId?: string) => {
   return useQuery({
     queryKey: ["image-tags", serviceId],
     queryFn: () => {
-      console.log("useImageTags: Fetching image tags for service:", serviceId);
       return servicesApi.getImageTags(serviceId!);
     },
     enabled: !!serviceId,
@@ -159,11 +130,9 @@ export const useUpdateServiceImage = () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
       queryClient.invalidateQueries({ queryKey: ["image-tags", variables.serviceId] });
 
-      console.log("Service image updated successfully:", data);
       return data;
     },
     onError: (error) => {
-      console.error("Failed to update service image:", error);
       throw error;
     },
   });

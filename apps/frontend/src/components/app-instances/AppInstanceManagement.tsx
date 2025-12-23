@@ -198,7 +198,7 @@ export function AppInstanceManagement() {
         onCancel={handleCloseModal}
         footer={null}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         <AppInstanceForm
           initialValues={

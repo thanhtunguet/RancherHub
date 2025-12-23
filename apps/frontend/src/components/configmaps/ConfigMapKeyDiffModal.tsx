@@ -165,7 +165,7 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
           </Button>
         ),
       ].filter(Boolean)}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={!isFullscreen}
       zIndex={isFullscreen ? 1050 : 1000}
     >

@@ -87,7 +87,7 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
       onCancel={onClose}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

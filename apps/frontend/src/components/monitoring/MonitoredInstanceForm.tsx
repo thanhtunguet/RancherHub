@@ -89,7 +89,7 @@ export const MonitoredInstanceForm: React.FC<MonitoredInstanceFormProps> = ({
       onOk={handleSubmit}
       onCancel={handleCancel}
       confirmLoading={submitting}
-      destroyOnClose
+      destroyOnHidden
     >
       <Spin spinning={loading}>
         <Form
