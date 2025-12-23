@@ -27,16 +27,18 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 - **Activity Tracking** - User login history and statistics
 - **Protected Routes** - All application routes require authentication
 
-### 🌐 Multi-Site & Multi-Cluster Integration (MVP Complete, Extension In Progress)
+### 🌐 Multi-Site & Multi-Cluster Integration (Complete)
 - **Rancher Sites Management** - Connect to unlimited Rancher instances
+- **Generic Kubernetes Cluster Support** - Connect to EKS, GKE, AKS, or any Kubernetes cluster via kubeconfig upload
+- **Adapter Pattern Architecture** - Unified interface for Rancher and generic Kubernetes clusters
+- **Cross-Cluster Synchronization** - Sync services, ConfigMaps, and Secrets between Rancher and generic clusters
 - **Harbor Registry Integration** - Docker registry management and monitoring
 - **Harbor v2 API Alignment** - Handles double-encoded repository names to keep the Harbor Browser compatible with Harbor 2.x endpoints
 - **API Token Security** - Encrypted storage of sensitive credentials
 - **Connection Testing** - Validate site connectivity and API access
 - **Multi-Instance Support** - Manage services across multiple clusters
-- **Generic Cluster Support (Backend)** - Adapter-based support for non-Rancher clusters (EKS, GKE, AKS, vanilla K8s) via kubeconfig
-- **Generic Cluster Sites API (Backend)** - CRUD + connection testing + namespace discovery
-- **Generic Cluster Sites UI (Frontend - IN PROGRESS)** - Management page, create/edit form, and connection testing UI (Week 4)
+- **Generic Cluster Sites Management** - Full CRUD UI for managing generic cluster sites
+- **Kubeconfig Validation** - Automatic validation and connection testing on upload
 
 ### 🏗️ Environment & Instance Management (Complete)
 - **Environment Organization** - Dev/Staging/Production environment management
@@ -196,6 +198,16 @@ Relationships:
 - `POST /sites/:id/test` - Test site connection
 - `GET /sites/:id/clusters` - Get clusters from site
 - `GET /sites/:id/namespaces` - Get namespaces from cluster
+
+#### Generic Cluster Sites Endpoints
+- `GET /generic-cluster-sites` - List generic cluster sites
+- `POST /generic-cluster-sites` - Create generic cluster site (with kubeconfig)
+- `GET /generic-cluster-sites/:id` - Get generic cluster site by ID
+- `PUT /generic-cluster-sites/:id` - Update generic cluster site
+- `DELETE /generic-cluster-sites/:id` - Delete generic cluster site
+- `POST /generic-cluster-sites/:id/test` - Test connection to generic cluster
+- `POST /generic-cluster-sites/:id/set-active` - Set cluster site as active/inactive
+- `GET /generic-cluster-sites/:id/namespaces` - Get namespaces from generic cluster
 
 #### Harbor Registry Endpoints
 - `GET /harbor-sites` - List Harbor sites

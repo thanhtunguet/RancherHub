@@ -400,13 +400,15 @@ CONSTRAINT chk_cluster_site CHECK (
 - [x] Update types
 - [x] Test full UI flow (manual verification, type checking, and lint run)
 
-### Week 5 (⏳ PENDING)
-- [ ] Write unit tests
-- [ ] Write integration tests
-- [ ] Write E2E tests
-- [ ] Update documentation
-- [ ] Create user guides
-- [ ] Update CURRENT_STATUS.md
+### Week 5 (✅ COMPLETE)
+- [x] Write unit tests for adapters (GenericClusterAdapter, RancherClusterAdapter)
+- [x] Write unit tests for GenericClusterSitesService
+- [x] Write integration tests for GenericClusterSitesModule API endpoints
+- [x] Write E2E tests for full workflow (create site, create app instance, sync services)
+- [x] Update README.md with generic cluster setup instructions
+- [x] Create kubeconfig generation guide (docs/_guides/kubeconfig-setup.md)
+- [x] Update CURRENT_STATUS.md
+- [x] Update ROADMAP.md
 
 ---
 

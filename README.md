@@ -7,10 +7,11 @@ A comprehensive tool for managing and synchronizing services across different en
 ### Core Features
 
 - **Multi-Site Support**: Connect to multiple Rancher instances with API tokens
+- **Generic Kubernetes Cluster Support**: Connect to EKS, GKE, AKS, or any vanilla Kubernetes cluster via kubeconfig
 - **Environment Management**: Organize your applications by environments (Dev, Staging, Production)
-- **App Instance Management**: Link environments to specific Rancher clusters and namespaces
-- **Service Synchronization**: Sync services between environments with a single click
-- **Visual Dashboard**: Clean UI for managing all your Rancher resources
+- **App Instance Management**: Link environments to specific Rancher clusters or generic Kubernetes clusters and namespaces
+- **Service Synchronization**: Sync services between environments with a single click (works across Rancher and generic clusters)
+- **Visual Dashboard**: Clean UI for managing all your Rancher and Kubernetes resources
 - **Sync History**: Track and review synchronization operations
 
 ### Advanced Features
@@ -141,9 +142,11 @@ Powerful ConfigMap management across environments:
 ### 🏢 Multi-Site & Environment Organization
 
 - **Rancher Sites**: Connect to unlimited Rancher instances
+- **Generic Kubernetes Clusters**: Connect to EKS, GKE, AKS, or any Kubernetes cluster via kubeconfig upload
 - **Environments**: Organize by Dev, Staging, Production, or custom environments
-- **App Instances**: Map environments to specific cluster/namespace combinations
+- **App Instances**: Map environments to specific cluster/namespace combinations (Rancher or generic)
 - **Flexible Architecture**: Support for complex multi-cluster, multi-environment setups
+- **Cross-Cluster Sync**: Synchronize services, ConfigMaps, and Secrets between Rancher and generic Kubernetes clusters
 
 ## Quick Start
 
@@ -309,6 +312,36 @@ Create `.env` files in both `backend/` and `frontend/` directories based on the 
 3. Select services and choose target environment
 4. Click "Sync" to synchronize service configurations
 5. Review sync history for operation details
+
+### Using Generic Kubernetes Clusters
+
+1. **Setup Generic Cluster Sites**:
+   - Navigate to "Generic Clusters" in the sidebar
+   - Click "Add Cluster Site"
+   - Enter a name for your cluster (e.g., "Production EKS")
+   - Upload or paste your kubeconfig file
+   - The system will validate the kubeconfig and test the connection
+   - Once validated, the cluster site will be saved
+
+2. **Creating App Instances with Generic Clusters**:
+   - Navigate to "App Instances"
+   - Click "Add App Instance"
+   - Select cluster type: "Rancher" or "Generic"
+   - If "Generic" is selected:
+     - Choose a generic cluster site from the dropdown
+     - Select a namespace (loaded from the cluster)
+   - Complete the form and create the app instance
+
+3. **Cross-Cluster Synchronization**:
+   - Services, ConfigMaps, and Secrets can be synced between Rancher and generic clusters
+   - Select source and target app instances (can be different cluster types)
+   - Perform sync operations as usual - the adapter pattern handles the differences automatically
+
+4. **Kubeconfig Requirements**:
+   - Must be valid YAML format
+   - Must have a current-context set
+   - Must include cluster, context, and user information
+   - See `docs/_guides/kubeconfig-setup.md` for detailed kubeconfig generation guide
 
 ### Using Harbor Registry Integration
 
