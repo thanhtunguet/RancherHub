@@ -44,6 +44,7 @@ export class VisualStatusService {
       );
 
       let visual = `\n`;
+      visual += `Instances: ${totalInstances} total (healthy: ${healthyInstances}, warning: ${warningInstances}, critical/error: ${criticalInstances}, paused: ${pausedInstances})\n`;
 
       // Compact status bar - max 20 chars wide
       const barLength = 20;

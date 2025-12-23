@@ -15,8 +15,6 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { Setup2FADto } from './dto/setup-2fa.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { Disable2FADto } from './dto/disable-2fa.dto';
 import { TrustedDevicesService } from '../trusted-devices/trusted-devices.service';
 
 @Injectable()
@@ -35,7 +33,8 @@ export class AuthService {
     });
 
     if (user && (await user.validatePassword(password))) {
-      const { password: _, ...result } = user;
+      const result: any = { ...user };
+      delete result.password;
       return result;
     }
     return null;
@@ -150,7 +149,9 @@ export class AuthService {
     });
 
     const savedUser = await this.userRepository.save(user);
-    const { password, twoFactorSecret, ...result } = savedUser;
+    const result: any = { ...savedUser };
+    delete result.password;
+    delete result.twoFactorSecret;
     return result;
   }
 

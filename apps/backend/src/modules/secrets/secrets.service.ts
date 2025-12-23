@@ -26,7 +26,11 @@ export interface SecretComparison {
   source: SecretData | null;
   target: SecretData | null;
   status: 'identical' | 'different' | 'missing';
-  differenceType: 'missing-in-source' | 'missing-in-target' | 'data-different' | 'identical';
+  differenceType:
+    | 'missing-in-source'
+    | 'missing-in-target'
+    | 'data-different'
+    | 'identical';
   differences: {
     keys: {
       onlyInSource: string[];
@@ -128,7 +132,10 @@ export class SecretsService {
         appInstanceId,
       }));
     } catch (error) {
-      this.logger.error(`Error fetching secrets: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error fetching secrets: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -146,26 +153,41 @@ export class SecretsService {
       this.getSecretsByAppInstance(targetAppInstanceId),
     ]);
 
-    const sourceSecretsMap = new Map(sourceSecrets.map(secret => [secret.name, secret]));
-    const targetSecretsMap = new Map(targetSecrets.map(secret => [secret.name, secret]));
+    const sourceSecretsMap = new Map(
+      sourceSecrets.map((secret) => [secret.name, secret]),
+    );
+    const targetSecretsMap = new Map(
+      targetSecrets.map((secret) => [secret.name, secret]),
+    );
 
-    const allSecretNames = new Set([...sourceSecretsMap.keys(), ...targetSecretsMap.keys()]);
+    const allSecretNames = new Set([
+      ...sourceSecretsMap.keys(),
+      ...targetSecretsMap.keys(),
+    ]);
     const comparisons: SecretComparison[] = [];
 
     for (const secretName of allSecretNames) {
       const sourceSecret = sourceSecretsMap.get(secretName) || null;
       const targetSecret = targetSecretsMap.get(secretName) || null;
-      
-      const comparison = this.createSecretComparison(secretName, sourceSecret, targetSecret);
+
+      const comparison = this.createSecretComparison(
+        secretName,
+        sourceSecret,
+        targetSecret,
+      );
       comparisons.push(comparison);
     }
 
     const summary = {
       totalSecrets: comparisons.length,
-      identical: comparisons.filter(c => c.status === 'identical').length,
-      different: comparisons.filter(c => c.status === 'different').length,
-      missingInSource: comparisons.filter(c => c.differenceType === 'missing-in-source').length,
-      missingInTarget: comparisons.filter(c => c.differenceType === 'missing-in-target').length,
+      identical: comparisons.filter((c) => c.status === 'identical').length,
+      different: comparisons.filter((c) => c.status === 'different').length,
+      missingInSource: comparisons.filter(
+        (c) => c.differenceType === 'missing-in-source',
+      ).length,
+      missingInTarget: comparisons.filter(
+        (c) => c.differenceType === 'missing-in-target',
+      ).length,
     };
 
     return {
@@ -221,7 +243,10 @@ export class SecretsService {
     };
   }
 
-  private calculateDifferences(source: SecretData | null, target: SecretData | null) {
+  private calculateDifferences(
+    source: SecretData | null,
+    target: SecretData | null,
+  ) {
     if (!source || !target) {
       const existingSecret = source || target;
       return {
@@ -233,7 +258,9 @@ export class SecretsService {
         },
         metadata: {
           labels: source ? existingSecret.labels : target?.labels || {},
-          annotations: source ? existingSecret.annotations : target?.annotations || {},
+          annotations: source
+            ? existingSecret.annotations
+            : target?.annotations || {},
         },
       };
     }
@@ -241,14 +268,14 @@ export class SecretsService {
     const sourceKeys = new Set(source.dataKeys);
     const targetKeys = new Set(target.dataKeys);
 
-    const onlyInSource = source.dataKeys.filter(key => !targetKeys.has(key));
-    const onlyInTarget = target.dataKeys.filter(key => !sourceKeys.has(key));
-    const commonKeys = source.dataKeys.filter(key => targetKeys.has(key));
+    const onlyInSource = source.dataKeys.filter((key) => !targetKeys.has(key));
+    const onlyInTarget = target.dataKeys.filter((key) => !sourceKeys.has(key));
+    const commonKeys = source.dataKeys.filter((key) => targetKeys.has(key));
 
     // Note: For secrets, we don't compare actual values for security reasons
     // We only compare the presence/absence of keys
     const different: string[] = [];
-    const identical = commonKeys.filter(key => {
+    const identical = commonKeys.filter((key) => {
       const sourceValue = source.data?.[key] || '';
       const targetValue = target.data?.[key] || '';
       if (sourceValue !== targetValue) {
@@ -278,7 +305,9 @@ export class SecretsService {
     };
   }
 
-  private getComparisonStatus(differences: any): 'identical' | 'different' | 'missing' {
+  private getComparisonStatus(
+    differences: any,
+  ): 'identical' | 'different' | 'missing' {
     const { keys } = differences;
     if (
       keys.onlyInSource.length === 0 &&
@@ -290,13 +319,23 @@ export class SecretsService {
     return 'different';
   }
 
-  private getDifferenceType(differences: any): 'missing-in-source' | 'missing-in-target' | 'data-different' | 'identical' {
+  private getDifferenceType(
+    differences: any,
+  ):
+    | 'missing-in-source'
+    | 'missing-in-target'
+    | 'data-different'
+    | 'identical' {
     const { keys } = differences;
-    
-    if (keys.onlyInSource.length === 0 && keys.onlyInTarget.length === 0 && keys.different.length === 0) {
+
+    if (
+      keys.onlyInSource.length === 0 &&
+      keys.onlyInTarget.length === 0 &&
+      keys.different.length === 0
+    ) {
       return 'identical';
     }
-    
+
     return 'data-different';
   }
 
@@ -314,15 +353,25 @@ export class SecretsService {
       this.getSecretsByAppInstance(targetAppInstanceId),
     ]);
 
-    const sourceSecret = sourceSecrets.find(s => s.name === secretName) || null;
-    const targetSecret = targetSecrets.find(s => s.name === secretName) || null;
+    const sourceSecret =
+      sourceSecrets.find((s) => s.name === secretName) || null;
+    const targetSecret =
+      targetSecrets.find((s) => s.name === secretName) || null;
 
     if (!sourceSecret && !targetSecret) {
-      throw new NotFoundException(`Secret ${secretName} not found in either instance`);
+      throw new NotFoundException(
+        `Secret ${secretName} not found in either instance`,
+      );
     }
 
     // Generate detailed comparison with individual key analysis
-    return this.createDetailedSecretComparison(secretName, sourceSecret, targetSecret, sourceAppInstanceId, targetAppInstanceId);
+    return this.createDetailedSecretComparison(
+      secretName,
+      sourceSecret,
+      targetSecret,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+    );
   }
 
   private createDetailedSecretComparison(
@@ -338,17 +387,19 @@ export class SecretsService {
     const allKeys = [...new Set([...sourceKeys, ...targetKeys])];
 
     // Create key-by-key comparison
-    const keyComparisons = allKeys.map(key => {
+    const keyComparisons = allKeys.map((key) => {
       const sourceExists = sourceKeys.includes(key);
       const targetExists = targetKeys.includes(key);
       const sourceValue = sourceSecret?.data?.[key];
       const targetValue = targetSecret?.data?.[key];
-      
+
       // For security, we only compare if values are different, not the actual values
-      const isDifferent = sourceExists && targetExists && sourceValue !== targetValue;
+      const isDifferent =
+        sourceExists && targetExists && sourceValue !== targetValue;
       const missingInSource = !sourceExists && targetExists;
       const missingInTarget = sourceExists && !targetExists;
-      const identical = sourceExists && targetExists && sourceValue === targetValue;
+      const identical =
+        sourceExists && targetExists && sourceValue === targetValue;
 
       return {
         key,
@@ -364,10 +415,10 @@ export class SecretsService {
     // Calculate summary
     const summary = {
       totalKeys: keyComparisons.length,
-      identical: keyComparisons.filter(k => k.identical).length,
-      different: keyComparisons.filter(k => k.isDifferent).length,
-      missingInSource: keyComparisons.filter(k => k.missingInSource).length,
-      missingInTarget: keyComparisons.filter(k => k.missingInTarget).length,
+      identical: keyComparisons.filter((k) => k.identical).length,
+      different: keyComparisons.filter((k) => k.isDifferent).length,
+      missingInSource: keyComparisons.filter((k) => k.missingInSource).length,
+      missingInTarget: keyComparisons.filter((k) => k.missingInTarget).length,
     };
 
     return {
@@ -412,7 +463,8 @@ export class SecretsService {
       initiatedBy: initiatedBy || 'system',
     });
 
-    const savedOperation = await this.syncOperationRepository.save(syncOperation);
+    const savedOperation =
+      await this.syncOperationRepository.save(syncOperation);
 
     try {
       // Update the secret key
@@ -452,8 +504,11 @@ export class SecretsService {
 
       return { success: true, message: 'Secret key synced successfully' };
     } catch (error) {
-      this.logger.error(`Error syncing secret key: ${error.message}`, error.stack);
-      
+      this.logger.error(
+        `Error syncing secret key: ${error.message}`,
+        error.stack,
+      );
+
       // Update sync operation status
       savedOperation.status = 'failed';
       savedOperation.endTime = new Date();
@@ -493,7 +548,8 @@ export class SecretsService {
       initiatedBy: initiatedBy || 'system',
     });
 
-    const savedOperation = await this.syncOperationRepository.save(syncOperation);
+    const savedOperation =
+      await this.syncOperationRepository.save(syncOperation);
 
     try {
       // Update the secret keys
@@ -506,7 +562,7 @@ export class SecretsService {
       );
 
       // Record successful sync in history for each key
-      for (const [key, value] of Object.entries(syncData.keys)) {
+      for (const key of Object.keys(syncData.keys)) {
         await this.syncHistoryRepository.save({
           syncOperationId: savedOperation.id,
           serviceId: syncData.secretName,
@@ -534,8 +590,11 @@ export class SecretsService {
 
       return { success: true, message: 'Secret keys synced successfully' };
     } catch (error) {
-      this.logger.error(`Error syncing secret keys: ${error.message}`, error.stack);
-      
+      this.logger.error(
+        `Error syncing secret keys: ${error.message}`,
+        error.stack,
+      );
+
       // Update sync operation status
       savedOperation.status = 'failed';
       savedOperation.endTime = new Date();

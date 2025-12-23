@@ -59,6 +59,7 @@ export class GenericClusterAdapter implements IClusterAdapter {
 
   async getNamespaces(clusterId?: string): Promise<RancherNamespace[]> {
     // clusterId is ignored for generic clusters (single cluster per site)
+    void clusterId;
     try {
       const response = await this.k8sApi.listNamespace();
       return (response.items || []).map((ns) => ({

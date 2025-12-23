@@ -10,7 +10,7 @@
 export const getClusterDisplayName = (cluster?: string): string => {
   if (!cluster) return "Unknown";
   // Extract name from cluster ID (e.g., "c-local" -> "local", "c-dev" -> "dev")
-  const match = cluster.match(/^(c\-\w+)$/);
+  const match = cluster.match(/^(c-\w+)$/);
   return match ? match[1] : cluster;
 };
 

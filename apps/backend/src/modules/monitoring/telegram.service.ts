@@ -9,8 +9,6 @@ import {
   HealthCheckResult,
   TelegramTestConfig,
   CriticalAlert,
-  EnvironmentGroupedResults,
-  WorkloadDetails,
 } from './types/monitoring.types';
 
 @Injectable()
@@ -141,7 +139,7 @@ export class TelegramService {
         parse_mode: 'Markdown',
       });
 
-      const response = await axios.post(
+      await axios.post(
         `https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`,
         formData.toString(),
         axiosConfig,

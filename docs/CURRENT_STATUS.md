@@ -31,9 +31,11 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 - **Rancher Sites Management** - Connect to unlimited Rancher instances
 - **Generic Kubernetes Cluster Support** - Connect to EKS, GKE, AKS, or any Kubernetes cluster via kubeconfig upload
 - **Adapter Pattern Architecture** - Unified interface for Rancher and generic Kubernetes clusters
+- **Registry Adapter Layer** - Unified interface for container registries (Harbor + DockerHub) via `IRegistryAdapter` + `RegistryAdapterFactory`
 - **Cross-Cluster Synchronization** - Sync services, ConfigMaps, and Secrets between Rancher and generic clusters
 - **Harbor Registry Integration** - Docker registry management and monitoring
 - **Harbor v2 API Alignment** - Handles double-encoded repository names to keep the Harbor Browser compatible with Harbor 2.x endpoints
+- **Harbor Tag Detail API** - Retrieve tag/artifact detail (digest, size, timestamps, metadata) via dedicated endpoint
 - **API Token Security** - Encrypted storage of sensitive credentials
 - **Connection Testing** - Validate site connectivity and API access
 - **Multi-Instance Support** - Manage services across multiple clusters

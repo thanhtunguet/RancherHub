@@ -5,7 +5,6 @@ import {
   UseGuards,
   Request,
   Get,
-  Delete,
   HttpCode,
   HttpStatus,
   Ip,
@@ -132,7 +131,9 @@ export class AuthController {
       return null;
     }
 
-    const { password, twoFactorSecret, ...profile } = user;
+    const profile: any = { ...user };
+    delete profile.password;
+    delete profile.twoFactorSecret;
     return profile;
   }
 }

@@ -38,12 +38,8 @@ export class SecretsController {
     description: 'List of Secrets in the app instance',
   })
   @ApiResponse({ status: 404, description: 'App instance not found' })
-  async getSecretsByAppInstance(
-    @Param('appInstanceId') appInstanceId: string,
-  ) {
-    this.logger.debug(
-      `getSecretsByAppInstance called with: ${appInstanceId}`,
-    );
+  async getSecretsByAppInstance(@Param('appInstanceId') appInstanceId: string) {
+    this.logger.debug(`getSecretsByAppInstance called with: ${appInstanceId}`);
     return this.secretsService.getSecretsByAppInstance(appInstanceId);
   }
 

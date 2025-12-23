@@ -1,6 +1,7 @@
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Service } from 'src/entities';
 import { ServicesService } from './index';
+import { RegistryOperationNotSupportedError } from 'src/adapters/registry-adapter.interface';
 
 export interface ImageTag {
   name: string;
@@ -113,201 +114,58 @@ export async function getImageTags(
 
   servicesService.logger.debug(`Service image tag: ${service.imageTag}`);
 
-  // Parse the image tag to determine registry type
   const imageTag = service.imageTag;
 
-  // Check if it's a Harbor image
-  if (imageTag.includes('.') && imageTag.includes('/')) {
-    const firstPart = imageTag.split('/')[0];
-
-    // Check if it's a Harbor registry (has dots and looks like a domain)
-    if (firstPart.includes('.') && /\.[a-z]{2,}/.test(firstPart)) {
-      servicesService.logger.debug('Detected Harbor registry image');
-      return await getHarborImageTags(servicesService, imageTag);
-    }
-  }
-
-  // Default to DockerHub
-  servicesService.logger.debug('Detected DockerHub image');
-  return await getDockerHubImageTags(servicesService, imageTag);
-}
-
-async function getDockerHubImageTags(
-  servicesService: ServicesService,
-  imageTag: string,
-): Promise<ImageTag[]> {
-  servicesService.logger.debug(`Fetching DockerHub tags for: ${imageTag}`);
-
   try {
-    // Parse the image to get namespace and repository
-    const parsed = parseDockerHubImageTag(imageTag);
-
-    if (!parsed.namespace || !parsed.repository) {
-      throw new BadRequestException(
-        `Invalid DockerHub image format: ${imageTag}`,
+    const adapter =
+      await servicesService.registryAdapterFactory.createAdapterFromImageRef(
+        imageTag,
       );
-    }
 
-    servicesService.logger.debug(
-      `Parsed DockerHub image: namespace=${parsed.namespace}, repository=${parsed.repository}`,
-    );
+    if (adapter.type === 'harbor') {
+      servicesService.logger.debug('Resolved Harbor registry adapter');
+      const host = imageTag.includes('/') ? imageTag.split('/')[0] : '';
+      const parsed = parseHarborImageTag(imageTag, host);
 
-    // Fetch tags from DockerHub
-    const tagsResponse = await servicesService.dockerHubApiService.getTags(
-      parsed.namespace,
-      parsed.repository,
-      1, // page
-      100, // pageSize - get first 100 tags
-    );
-
-    if (!tagsResponse || !tagsResponse.results) {
-      return [];
-    }
-
-    // Map to our ImageTag interface and sort by pushed time descending
-    return tagsResponse.results
-      .map((tag) => ({
-        name: tag.name,
-        pushedAt: tag.tag_last_pushed || tag.last_updated,
-        size: tag.full_size,
-        sizeFormatted: formatBytes(tag.full_size),
-      }))
-      .sort((a, b) => {
-        const dateA = new Date(a.pushedAt).getTime();
-        const dateB = new Date(b.pushedAt).getTime();
-        return dateB - dateA; // Descending order (newest first)
+      const tags = await adapter.listTags({
+        projectOrNamespace: parsed.projectName,
+        repository: parsed.repositoryName,
       });
+
+      return tags.map((t) => ({
+        name: t.name,
+        pushedAt: t.pushedAt || '',
+        size: t.size,
+        sizeFormatted:
+          typeof t.size === 'number' ? formatBytes(t.size) : undefined,
+      }));
+    }
+
+    servicesService.logger.debug('Resolved DockerHub registry adapter');
+    const parsed = parseDockerHubImageTag(imageTag);
+    const tags = await adapter.listTags({
+      projectOrNamespace: parsed.namespace,
+      repository: parsed.repository,
+    });
+
+    return tags.map((t) => ({
+      name: t.name,
+      pushedAt: t.pushedAt || '',
+      size: t.size,
+      sizeFormatted:
+        typeof t.size === 'number' ? formatBytes(t.size) : undefined,
+    }));
   } catch (error) {
     servicesService.logger.error(
-      `Failed to fetch DockerHub tags: ${error.message}`,
-      error.stack,
+      `Failed to fetch image tags: ${error?.message || error}`,
+      error?.stack,
     );
+    if (error instanceof RegistryOperationNotSupportedError) {
+      throw new BadRequestException(error.message);
+    }
+    if (error instanceof BadRequestException) throw error;
     throw new BadRequestException(
-      `Failed to fetch image tags from DockerHub: ${error.message}`,
-    );
-  }
-}
-
-async function getHarborImageTags(
-  servicesService: ServicesService,
-  imageTag: string,
-): Promise<ImageTag[]> {
-  servicesService.logger.debug(`Fetching Harbor tags for: ${imageTag}`);
-
-  try {
-    // Get all Harbor sites
-    const harborSites = await servicesService.harborSitesService.findAll();
-
-    if (!harborSites || harborSites.length === 0) {
-      throw new BadRequestException(
-        'No Harbor sites configured. Please configure a Harbor site first.',
-      );
-    }
-
-    // Try each Harbor site until we find one that matches
-    let lastError: Error | null = null;
-
-    for (const harborSite of harborSites) {
-      const harborDomain = harborSite.url.replace(/^https?:\/\//, '');
-
-      servicesService.logger.debug(
-        `Checking if image ${imageTag} matches Harbor site: ${harborSite.name} (${harborDomain})`,
-      );
-
-      if (imageTag.startsWith(harborDomain)) {
-        servicesService.logger.debug(
-          `Found matching Harbor site: ${harborSite.name}`,
-        );
-
-        try {
-          // Parse the image to get project and repository
-          const parsed = parseHarborImageTag(imageTag, harborSite.url);
-
-          if (!parsed.projectName || !parsed.repositoryName) {
-            servicesService.logger.warn(
-              `Failed to parse Harbor image tag: ${imageTag}`,
-            );
-            continue;
-          }
-
-          servicesService.logger.debug(
-            `Parsed Harbor image: project=${parsed.projectName}, repository=${parsed.repositoryName}`,
-          );
-
-          // Fetch artifacts from Harbor
-          const artifacts = await servicesService.harborApiService.getArtifacts(
-            harborSite,
-            parsed.projectName,
-            parsed.repositoryName,
-          );
-
-          if (!artifacts || artifacts.length === 0) {
-            servicesService.logger.warn(
-              `No artifacts found for ${parsed.projectName}/${parsed.repositoryName}`,
-            );
-            return [];
-          }
-
-          // Extract all tags from artifacts and sort by push time descending
-          const allTags: ImageTag[] = [];
-
-          for (const artifact of artifacts) {
-            if (artifact.tags && artifact.tags.length > 0) {
-              for (const tag of artifact.tags) {
-                allTags.push({
-                  name: tag.name,
-                  pushedAt: tag.push_time,
-                  size: artifact.size,
-                  sizeFormatted: formatBytes(artifact.size),
-                });
-              }
-            }
-          }
-
-          servicesService.logger.debug(
-            `Successfully fetched ${allTags.length} tags from Harbor`,
-          );
-
-          return allTags.sort((a, b) => {
-            const dateA = new Date(a.pushedAt).getTime();
-            const dateB = new Date(b.pushedAt).getTime();
-            return dateB - dateA; // Descending order (newest first)
-          });
-        } catch (error) {
-          servicesService.logger.error(
-            `Error fetching from Harbor site ${harborSite.name}: ${error.message}`,
-            error.stack,
-          );
-          lastError = error;
-          // Continue to try other Harbor sites
-          continue;
-        }
-      }
-    }
-
-    // If we get here, no Harbor site matched or all failed
-    if (lastError) {
-      throw new BadRequestException(
-        `Failed to fetch image tags from Harbor: ${lastError.message}`,
-      );
-    }
-
-    throw new BadRequestException(
-      `No matching Harbor site found for image: ${imageTag}. Available Harbor sites: ${harborSites.map((s) => s.url.replace(/^https?:\/\//, '')).join(', ')}`,
-    );
-  } catch (error) {
-    servicesService.logger.error(
-      `Failed to fetch Harbor tags: ${error.message}`,
-      error.stack,
-    );
-
-    // Re-throw if already a BadRequestException
-    if (error instanceof BadRequestException) {
-      throw error;
-    }
-
-    throw new BadRequestException(
-      `Failed to fetch image tags from Harbor: ${error.message}`,
+      `Failed to fetch image tags: ${error?.message || error}`,
     );
   }
 }
@@ -362,14 +220,16 @@ function parseDockerHubImageTag(imageTag: string): {
  */
 function parseHarborImageTag(
   fullImageTag: string,
-  harborUrl: string,
+  harborDomainOrUrl: string,
 ): {
   projectName: string;
   repositoryName: string;
   tag: string;
 } {
-  // Remove protocol from Harbor URL for comparison
-  const harborDomain = harborUrl.replace(/^https?:\/\//, '');
+  // Accept either a full Harbor URL or a host; normalize to host-like form.
+  const harborDomain = harborDomainOrUrl
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '');
 
   // Split image tag by ':' to separate image path from tag
   // Format: harbor.domain/project-name/image-repository-name:tag

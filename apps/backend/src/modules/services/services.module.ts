@@ -14,6 +14,7 @@ import { RancherApiService } from '../../services/rancher-api.service';
 import { HarborApiService } from '../../services/harbor-api.service';
 import { DockerHubApiService } from '../../services/dockerhub-api.service';
 import { ClusterAdapterFactory } from '../../adapters/cluster-adapter.factory';
+import { RegistryAdapterFactory } from '../../adapters/registry-adapter.factory';
 import { HarborSitesModule } from '../harbor-sites/harbor-sites.module';
 import { AuthModule } from '../auth/auth.module';
 
@@ -37,6 +38,7 @@ import { AuthModule } from '../auth/auth.module';
     HarborApiService,
     DockerHubApiService,
     ClusterAdapterFactory,
+    RegistryAdapterFactory,
   ],
   exports: [ServicesService],
 })

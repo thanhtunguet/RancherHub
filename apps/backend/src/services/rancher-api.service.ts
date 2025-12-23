@@ -142,7 +142,7 @@ export class RancherApiService {
 
           // Test clusters endpoint
           try {
-            const clustersResponse = await testClient.get('/clusters');
+            await testClient.get('/clusters');
             availableEndpoints.push('clusters');
           } catch (e) {
             this.logger.debug(`Clusters endpoint not available: ${e.message}`);
@@ -150,7 +150,7 @@ export class RancherApiService {
 
           // Test workloads endpoint
           try {
-            const workloadsResponse = await testClient.get('/workloads');
+            await testClient.get('/workloads');
             availableEndpoints.push('workloads');
           } catch (e) {
             this.logger.debug(`Workloads endpoint not available: ${e.message}`);
@@ -158,7 +158,7 @@ export class RancherApiService {
 
           // Test projects endpoint
           try {
-            const projectsResponse = await testClient.get('/projects');
+            await testClient.get('/projects');
             availableEndpoints.push('projects');
           } catch (e) {
             this.logger.debug(`Projects endpoint not available: ${e.message}`);
@@ -911,7 +911,9 @@ export class RancherApiService {
     );
 
     const response = await client.put(putEndpoint, secret);
-    this.logger.debug(`Secret keys updated successfully: ${Object.keys(keys).join(', ')}`);
+    this.logger.debug(
+      `Secret keys updated successfully: ${Object.keys(keys).join(', ')}`,
+    );
 
     return response.data;
   }

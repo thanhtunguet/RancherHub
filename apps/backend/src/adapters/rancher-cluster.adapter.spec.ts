@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { RancherClusterAdapter } from './rancher-cluster.adapter';
 import { RancherApiService } from '../services/rancher-api.service';
 import { RancherSite } from '../entities/rancher-site.entity';
@@ -31,16 +30,6 @@ describe('RancherClusterAdapter', () => {
       updateSecretKey: jest.fn(),
       syncSecretKeys: jest.fn(),
     } as any;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RancherClusterAdapter,
-        {
-          provide: RancherApiService,
-          useValue: rancherApiService,
-        },
-      ],
-    }).compile();
 
     adapter = new RancherClusterAdapter(rancherApiService, mockRancherSite);
   });
@@ -191,4 +180,3 @@ describe('RancherClusterAdapter', () => {
     });
   });
 });
-

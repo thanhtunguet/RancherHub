@@ -26,6 +26,7 @@ import type {
   HarborProject,
   HarborRepository,
   HarborArtifact,
+  HarborTagDetail,
   CreateHarborSiteRequest,
   TestHarborConnectionRequest,
   ServiceWithImageSize,
@@ -332,6 +333,18 @@ export const harborSitesApi = {
     api
       .get(
         `/api/harbor-sites/${id}/artifacts/${encodeURIComponent(projectName)}/${encodeURIComponent(repositoryName)}`
+      )
+      .then((res) => res.data),
+
+  getTagDetail: (
+    id: string,
+    projectName: string,
+    repositoryName: string,
+    tag: string,
+  ): Promise<HarborTagDetail> =>
+    api
+      .get(
+        `/api/harbor-sites/${id}/tag-detail/${encodeURIComponent(projectName)}/${encodeURIComponent(repositoryName)}/${encodeURIComponent(tag)}`,
       )
       .then((res) => res.data),
 };

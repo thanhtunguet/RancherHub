@@ -26,6 +26,7 @@ import { TestHarborConnectionDto } from './dto/test-harbor-connection.dto';
 import { HarborApiService } from '../../services/harbor-api.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
+import { HarborRegistryAdapter } from '../../adapters/harbor-registry.adapter';
 
 @ApiTags('harbor-sites')
 @Controller('api/harbor-sites')
@@ -190,6 +191,34 @@ export class HarborSitesController {
       site,
       decodedProjectName,
       decodedRepositoryName,
+    );
+  }
+
+  @Get(':id/tag-detail/:projectName/:repositoryName/:tag')
+  @ApiOperation({ summary: 'Get tag (artifact) detail in Harbor repository' })
+  @ApiResponse({ status: 200, description: 'Harbor tag detail' })
+  @ApiParam({ name: 'id', description: 'Harbor site ID' })
+  @ApiParam({ name: 'projectName', description: 'Project name' })
+  @ApiParam({ name: 'repositoryName', description: 'Repository name' })
+  @ApiParam({ name: 'tag', description: 'Tag name' })
+  async getTagDetail(
+    @Param('id') id: string,
+    @Param('projectName') projectName: string,
+    @Param('repositoryName') repositoryName: string,
+    @Param('tag') tag: string,
+  ) {
+    const site = await this.harborSitesService.findOne(id);
+    const decodedProjectName = this.decodeParam(projectName);
+    const decodedRepositoryName = this.decodeParam(repositoryName);
+    const decodedTag = this.decodeParam(tag);
+
+    const adapter = new HarborRegistryAdapter(this.harborApiService, site);
+    return adapter.getTagDetail(
+      {
+        projectOrNamespace: decodedProjectName,
+        repository: decodedRepositoryName,
+      },
+      decodedTag,
     );
   }
 

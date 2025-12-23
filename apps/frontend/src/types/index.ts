@@ -430,7 +430,7 @@ export interface HarborArtifact {
       Cmd?: string[];
       Entrypoint?: string[];
       Env?: string[];
-      ExposedPorts?: { [key: string]: {} };
+      ExposedPorts?: { [key: string]: Record<string, never> };
       Labels?: { [key: string]: string };
       User?: string;
       WorkingDir?: string;
@@ -443,4 +443,18 @@ export interface HarborArtifact {
   tags?: HarborTag[];
   addition_links?: { [key: string]: { absolute: boolean; href: string } };
   labels?: any[];
+}
+
+export interface HarborTagDetail {
+  name: string;
+  digest?: string;
+  size?: number;
+  pushedAt?: string;
+  pulledAt?: string;
+  mediaType?: string;
+  manifestMediaType?: string;
+  annotations?: Record<string, string>;
+  labels?: any[];
+  readme?: string;
+  raw?: any;
 }

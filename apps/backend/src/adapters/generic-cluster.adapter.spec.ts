@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { GenericClusterAdapter } from './generic-cluster.adapter';
 import * as k8s from '@kubernetes/client-node';
 
@@ -24,10 +23,6 @@ users:
 `;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [GenericClusterAdapter],
-    }).compile();
-
     adapter = new GenericClusterAdapter(mockKubeconfig, 'test-cluster');
   });
 
@@ -62,9 +57,9 @@ users:
     });
 
     it('should handle connection failure', async () => {
-      const mockListNamespace = jest.fn().mockRejectedValue(
-        new Error('Connection refused'),
-      );
+      const mockListNamespace = jest
+        .fn()
+        .mockRejectedValue(new Error('Connection refused'));
 
       jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
         listNamespace: mockListNamespace,
@@ -150,7 +145,9 @@ users:
       jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
         listNamespacedDeployment: jest.fn().mockResolvedValue(mockDeployments),
         listNamespacedDaemonSet: jest.fn().mockResolvedValue(mockDaemonSets),
-        listNamespacedStatefulSet: jest.fn().mockResolvedValue(mockStatefulSets),
+        listNamespacedStatefulSet: jest
+          .fn()
+          .mockResolvedValue(mockStatefulSets),
       } as any);
 
       const workloads = await adapter.getDeployments('test-cluster', 'default');
@@ -268,4 +265,3 @@ users:
     });
   });
 });
-

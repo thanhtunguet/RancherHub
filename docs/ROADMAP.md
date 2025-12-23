@@ -15,6 +15,9 @@ All MVP features have been successfully implemented and are fully functional. Mu
 - **Secret Management** - Compare and sync secrets between environments and cluster types
 - **Harbor Registry Integration** - Docker registry management
 - **Harbor Browser API Alignment** - Repository paths now respect Harbor v2 double-encoding requirements
+- **Registry Adapter Layer (Backend)** - `IRegistryAdapter`, `HarborRegistryAdapter`, `DockerHubRegistryAdapter`, and `RegistryAdapterFactory`
+- **Service Image Tags via Registry Adapter** - Image tag listing resolved through registry adapter factory (Harbor or DockerHub)
+- **Harbor Tag Detail Endpoint** - Fetch tag/artifact detail (digest, size, timestamps, metadata)
 - **Storage View** - Image size and storage analytics
 - **Monitoring System** - Health checks with Telegram alerting
 - **Sync History** - Complete audit trail of all operations

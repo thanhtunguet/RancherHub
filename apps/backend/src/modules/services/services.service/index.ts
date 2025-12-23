@@ -12,6 +12,7 @@ import { RancherApiService } from 'src/services/rancher-api.service';
 import { HarborApiService } from 'src/services/harbor-api.service';
 import { DockerHubApiService } from 'src/services/dockerhub-api.service';
 import { ClusterAdapterFactory } from 'src/adapters/cluster-adapter.factory';
+import { RegistryAdapterFactory } from 'src/adapters/registry-adapter.factory';
 import { getServicesByEnvironmentDirect } from './get-services-by-environment-direct';
 import { getServicesByAppInstanceDirect } from './get-services-by-app-instance-direct';
 import { syncServices } from './sync-services';
@@ -49,6 +50,7 @@ export class ServicesService {
     public readonly dockerHubApiService: DockerHubApiService,
     public readonly harborSitesService: HarborSitesService,
     public readonly clusterAdapterFactory: ClusterAdapterFactory,
+    public readonly registryAdapterFactory: RegistryAdapterFactory,
   ) {}
 
   async getServicesByEnvironment(environmentId: string) {

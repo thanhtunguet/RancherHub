@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as speakeasy from 'speakeasy';
 import { User } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -91,7 +91,9 @@ export class UsersService {
     });
 
     const savedUser = await this.userRepository.save(user);
-    const { password, twoFactorSecret, ...result } = savedUser;
+    const result: any = { ...savedUser };
+    delete result.password;
+    delete result.twoFactorSecret;
     return result;
   }
 
@@ -129,7 +131,9 @@ export class UsersService {
 
     // Remove sensitive data
     const data = users.map((user) => {
-      const { password, twoFactorSecret, ...result } = user;
+      const result: any = { ...user };
+      delete result.password;
+      delete result.twoFactorSecret;
       return result;
     });
 
@@ -151,7 +155,9 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const { password, twoFactorSecret, ...result } = user;
+    const result: any = { ...user };
+    delete result.password;
+    delete result.twoFactorSecret;
     return result;
   }
 
@@ -193,7 +199,9 @@ export class UsersService {
     if (updateUserDto.active !== undefined) user.active = updateUserDto.active;
 
     const savedUser = await this.userRepository.save(user);
-    const { password, twoFactorSecret, ...result } = savedUser;
+    const result: any = { ...savedUser };
+    delete result.password;
+    delete result.twoFactorSecret;
     return result;
   }
 

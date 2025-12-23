@@ -1,6 +1,3 @@
-import { MonitoredInstance } from '../../../entities/monitored-instance.entity';
-import { MonitoringConfig } from '../../../entities/monitoring-config.entity';
-
 export type HealthStatus =
   | 'healthy'
   | 'warning'

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -61,7 +62,9 @@ users:
       ],
     }).compile();
 
-    service = module.get<GenericClusterSitesService>(GenericClusterSitesService);
+    service = module.get<GenericClusterSitesService>(
+      GenericClusterSitesService,
+    );
     repository = module.get(getRepositoryToken(GenericClusterSite));
   });
 
@@ -76,12 +79,14 @@ users:
       repository.save.mockResolvedValue(mockSite);
 
       // Mock KubeConfig to avoid actual connection
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockResolvedValue({ items: [] }),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest.fn().mockResolvedValue({ items: [] }),
+          }),
+        }));
 
       const result = await service.create(createDto);
 
@@ -180,12 +185,14 @@ users: []
       repository.findOne.mockResolvedValue(mockSite);
 
       // Mock KubeConfig
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockResolvedValue({ items: [] }),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest.fn().mockResolvedValue({ items: [] }),
+          }),
+        }));
 
       repository.save.mockResolvedValue({ ...mockSite, ...updateDto });
 
@@ -212,12 +219,14 @@ users: []
       repository.findOne.mockResolvedValue(mockSite);
 
       // Mock successful connection
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockResolvedValue({ items: [] }),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest.fn().mockResolvedValue({ items: [] }),
+          }),
+        }));
 
       const result = await service.testConnection('site-1');
 
@@ -229,12 +238,16 @@ users: []
       repository.findOne.mockResolvedValue(mockSite);
 
       // Mock connection failure
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockRejectedValue(new Error('Connection failed')),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest
+              .fn()
+              .mockRejectedValue(new Error('Connection failed')),
+          }),
+        }));
 
       const result = await service.testConnection('site-1');
 
@@ -285,12 +298,16 @@ users: []
         },
       ];
 
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockResolvedValue({ items: mockNamespaces }),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest
+              .fn()
+              .mockResolvedValue({ items: mockNamespaces }),
+          }),
+        }));
 
       const result = await service.getNamespaces('site-1');
 
@@ -301,12 +318,14 @@ users: []
     it('should throw BadRequestException on error', async () => {
       repository.findOne.mockResolvedValue(mockSite);
 
-      jest.spyOn(require('@kubernetes/client-node'), 'KubeConfig').mockImplementation(() => ({
-        loadFromString: jest.fn(),
-        makeApiClient: jest.fn().mockReturnValue({
-          listNamespace: jest.fn().mockRejectedValue(new Error('API Error')),
-        }),
-      }));
+      jest
+        .spyOn(require('@kubernetes/client-node'), 'KubeConfig')
+        .mockImplementation(() => ({
+          loadFromString: jest.fn(),
+          makeApiClient: jest.fn().mockReturnValue({
+            listNamespace: jest.fn().mockRejectedValue(new Error('API Error')),
+          }),
+        }));
 
       await expect(service.getNamespaces('site-1')).rejects.toThrow(
         BadRequestException,
@@ -314,4 +333,3 @@ users: []
     });
   });
 });
-

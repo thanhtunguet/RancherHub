@@ -42,9 +42,9 @@ users:
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    genericClusterSiteRepository = moduleFixture.get<Repository<GenericClusterSite>>(
-      getRepositoryToken(GenericClusterSite),
-    );
+    genericClusterSiteRepository = moduleFixture.get<
+      Repository<GenericClusterSite>
+    >(getRepositoryToken(GenericClusterSite));
     userRepository = moduleFixture.get<Repository<User>>(
       getRepositoryToken(User),
     );
@@ -277,4 +277,3 @@ users:
     });
   });
 });
-
