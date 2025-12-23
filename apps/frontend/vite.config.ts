@@ -26,5 +26,20 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate React and related libraries
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Separate Ant Design into its own chunk
+          'antd-vendor': ['antd', '@ant-design/icons'],
+          // Monaco Editor - large dependency
+          'monaco-vendor': ['@monaco-editor/react', 'monaco-editor'],
+          // Other utilities
+          'utils-vendor': ['axios', 'dayjs', '@tanstack/react-query', 'zustand'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   },
 });

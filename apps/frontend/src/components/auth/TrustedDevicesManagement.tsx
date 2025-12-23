@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-  List,
-  Button,
-  Card,
-  Typography,
-  Space,
-  Modal,
-  message,
-  Tag,
-  Spin,
-  Empty,
-} from 'antd';
+import List from 'antd/es/list';
+import Button from 'antd/es/button';
+import Card from 'antd/es/card';
+import Typography from 'antd/es/typography';
+import Space from 'antd/es/space';
+import Modal from 'antd/es/modal';
+import message from 'antd/es/message';
+import Tag from 'antd/es/tag';
+import Spin from 'antd/es/spin';
+import Empty from 'antd/es/empty';
 import {
   LaptopOutlined,
   DeleteOutlined,

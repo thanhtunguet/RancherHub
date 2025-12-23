@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Button, Switch, message } from 'antd';
+import Modal from 'antd/es/modal';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import Button from 'antd/es/button';
+import Switch from 'antd/es/switch';
+import message from 'antd/es/message';
 import { UserOutlined, MailOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { usersApi } from '../../services/api';
 import type { User, UpdateUserRequest } from '../../types';

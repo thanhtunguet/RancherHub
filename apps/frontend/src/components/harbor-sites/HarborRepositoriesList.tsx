@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Card,
-  Table,
-  Button,
-  Typography,
-  Alert,
-  Space,
-  Tag,
-  Tooltip,
-  Breadcrumb,
-  message,
-  Statistic,
-  Row,
-  Col,
-  Input,
-} from "antd";
+import Card from 'antd/es/card';
+import Table from 'antd/es/table';
+import Button from 'antd/es/button';
+import Typography from 'antd/es/typography';
+import Alert from 'antd/es/alert';
+import Space from 'antd/es/space';
+import Tag from 'antd/es/tag';
+import Tooltip from 'antd/es/tooltip';
+import Breadcrumb from 'antd/es/breadcrumb';
+import message from 'antd/es/message';
+import Statistic from 'antd/es/statistic';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+import Input from 'antd/es/input';
 import {
   DatabaseOutlined,
   ReloadOutlined,

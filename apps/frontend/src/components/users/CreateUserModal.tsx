@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, Form, Input, Button, message } from 'antd';
+import Modal from 'antd/es/modal';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import Button from 'antd/es/button';
+import message from 'antd/es/message';
 import { UserOutlined, MailOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
 import { usersApi } from '../../services/api';
 import type { CreateUserRequest } from '../../types';

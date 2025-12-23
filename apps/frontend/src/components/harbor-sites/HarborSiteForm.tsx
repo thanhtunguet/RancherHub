@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  Form,
-  Input,
-  Button,
-  Alert,
-  message,
-  Switch,
-  Divider,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import Button from 'antd/es/button';
+import Alert from 'antd/es/alert';
+import message from 'antd/es/message';
+import Switch from 'antd/es/switch';
+import Divider from 'antd/es/divider';
 import {
   SaveOutlined,
   ExperimentOutlined,

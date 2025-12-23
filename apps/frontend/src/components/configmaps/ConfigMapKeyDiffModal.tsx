@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
-import { Modal, Typography, Tag, Button, message, Tooltip } from 'antd';
+import React, { useState, lazy, Suspense } from 'react';
+import Modal from 'antd/es/modal';
+import Typography from 'antd/es/typography';
+import Tag from 'antd/es/tag';
+import Button from 'antd/es/button';
+import message from 'antd/es/message';
+import Tooltip from 'antd/es/tooltip';
+import Spin from 'antd/es/spin';
 import { RefreshCwIcon, MaximizeIcon, MinimizeIcon } from 'lucide-react';
-import MonacoDiffViewer from '../common/MonacoDiffViewer';
 import type { ConfigMapKeyComparison } from '../../types';
 
 const { Title, Text } = Typography;
+
+// Lazy load Monaco Editor to reduce initial bundle size
+const MonacoDiffViewer = lazy(() => import('../common/MonacoDiffViewer'));
 
 interface ConfigMapKeyDiffModalProps {
   open: boolean;
@@ -175,17 +183,23 @@ const ConfigMapKeyDiffModal: React.FC<ConfigMapKeyDiffModalProps> = ({
             <Text type="secondary">No values to compare</Text>
           </div>
         ) : (
-          <MonacoDiffViewer
-            original={keyComparison.sourceValue || ''}
-            modified={keyComparison.targetValue || ''}
-            title={`Comparing "${keyComparison.key}"`}
-            height={isFullscreen ? 'calc(100vh - 280px)' : 500}
-            onCopyOriginal={handleCopyOriginal}
-            onCopyModified={handleCopyModified}
-            showFullscreen={false} // Disable independent fullscreen since modal handles it
-            onToggleFullscreen={handleToggleFullscreen}
-            isFullscreen={false} // Let modal handle fullscreen
-          />
+          <Suspense fallback={
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <Spin size="large" tip="Loading diff viewer..." />
+            </div>
+          }>
+            <MonacoDiffViewer
+              original={keyComparison.sourceValue || ''}
+              modified={keyComparison.targetValue || ''}
+              title={`Comparing "${keyComparison.key}"`}
+              height={isFullscreen ? 'calc(100vh - 280px)' : 500}
+              onCopyOriginal={handleCopyOriginal}
+              onCopyModified={handleCopyModified}
+              showFullscreen={false} // Disable independent fullscreen since modal handles it
+              onToggleFullscreen={handleToggleFullscreen}
+              isFullscreen={false} // Let modal handle fullscreen
+            />
+          </Suspense>
         )}
         
         {keyComparison.missingInSource && (

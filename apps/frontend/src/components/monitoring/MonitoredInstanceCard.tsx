@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import {
-  Card,
-  Tag,
-  Button,
-  Space,
-  Tooltip,
-  Switch,
-  Popconfirm,
-  Badge,
-  Typography,
-  Row,
-  Col,
-} from 'antd';
+import Card from 'antd/es/card';
+import Tag from 'antd/es/tag';
+import Button from 'antd/es/button';
+import Space from 'antd/es/space';
+import Tooltip from 'antd/es/tooltip';
+import Switch from 'antd/es/switch';
+import Popconfirm from 'antd/es/popconfirm';
+import Badge from 'antd/es/badge';
+import Typography from 'antd/es/typography';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
 import {
   EditOutlined,
   DeleteOutlined,

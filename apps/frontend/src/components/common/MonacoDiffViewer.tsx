@@ -1,6 +1,10 @@
 import React, { useRef } from 'react';
 import { DiffEditor } from '@monaco-editor/react';
-import { Card, Typography, Space, Button, Tooltip } from 'antd';
+import Card from 'antd/es/card';
+import Typography from 'antd/es/typography';
+import Space from 'antd/es/space';
+import Button from 'antd/es/button';
+import Tooltip from 'antd/es/tooltip';
 import { CopyIcon, MaximizeIcon, MinimizeIcon } from 'lucide-react';
 import type { editor } from 'monaco-editor';
 

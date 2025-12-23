@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, Typography, Alert } from 'antd';
+import Modal from 'antd/es/modal';
+import Typography from 'antd/es/typography';
+import Alert from 'antd/es/alert';
 import { SafetyOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { TwoFactorSetup } from './TwoFactorSetup';

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  Form,
-  Select,
-  Switch,
-  InputNumber,
-  message,
-  Spin,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Form from 'antd/es/form';
+import Select from 'antd/es/select';
+import Switch from 'antd/es/switch';
+import InputNumber from 'antd/es/input-number';
+import message from 'antd/es/message';
+import Spin from 'antd/es/spin';
 import { appInstancesApi } from '../../services/api';
 import type { AppInstance } from '../../types';
 

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Tree, Spin, Alert, Card, Typography } from 'antd';
+import Tree from 'antd/es/tree';
+import Spin from 'antd/es/spin';
+import Alert from 'antd/es/alert';
+import Card from 'antd/es/card';
+import Typography from 'antd/es/typography';
 import type { DataNode } from 'antd/es/tree';
 import { AppInstanceTreeNode } from '../../types';
 

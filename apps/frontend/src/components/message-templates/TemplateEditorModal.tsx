@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Modal,
-  Form,
-  Input,
-  Button,
-  Space,
-  message,
-  Typography,
-  Tag,
-  Row,
-  Col,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import Button from 'antd/es/button';
+import Space from 'antd/es/space';
+import message from 'antd/es/message';
+import Typography from 'antd/es/typography';
+import Tag from 'antd/es/tag';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
 import { SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import { messageTemplatesApi } from '../../services/api';
 import { MessageTemplate, UpdateMessageTemplateDto } from '../../types';

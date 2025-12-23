@@ -1,5 +1,9 @@
 import React from 'react';
-import { Button, Select, Table, Tag, Space } from 'antd';
+import Button from 'antd/es/button';
+import Select from 'antd/es/select';
+import Table from 'antd/es/table';
+import Tag from 'antd/es/tag';
+import Space from 'antd/es/space';
 import { ServerIcon, CheckCircleIcon, DatabaseIcon, RefreshCwIcon, PlusIcon, EditIcon, TrashIcon } from 'lucide-react';
 
 export const RancherClustersMockup: React.FC = () => {

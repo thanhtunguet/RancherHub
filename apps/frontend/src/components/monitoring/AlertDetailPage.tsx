@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Table,
-  Tag,
-  Typography,
-  Space,
-  Button,
-  Badge,
-  Descriptions,
-  Alert,
-  Empty,
-  Drawer,
-  Timeline,
-  Divider,
-} from 'antd';
+import Card from 'antd/es/card';
+import Table from 'antd/es/table';
+import Tag from 'antd/es/tag';
+import Typography from 'antd/es/typography';
+import Space from 'antd/es/space';
+import Button from 'antd/es/button';
+import Badge from 'antd/es/badge';
+import Descriptions from 'antd/es/descriptions';
+import Alert from 'antd/es/alert';
+import Empty from 'antd/es/empty';
+import Drawer from 'antd/es/drawer';
+import Timeline from 'antd/es/timeline';
+import Divider from 'antd/es/divider';
 import {
   ArrowLeftOutlined,
   CheckCircleOutlined,

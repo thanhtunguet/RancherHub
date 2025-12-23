@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Button, Card, Modal } from 'antd';
+import Button from 'antd/es/button';
+import Card from 'antd/es/card';
+import Modal from 'antd/es/modal';
 import { ServerIcon, GitCompareIcon, PackageIcon, FileTextIcon, ArrowRightIcon, CheckCircle2Icon } from 'lucide-react';
 import { LoginForm } from '../components/auth/LoginForm';
 import { BrowserFrame } from '../components/landing/BrowserFrame';

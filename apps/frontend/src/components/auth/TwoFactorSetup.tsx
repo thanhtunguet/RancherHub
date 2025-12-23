@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Alert, Card, Typography, Space, Image, Steps, Divider } from 'antd';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import Button from 'antd/es/button';
+import Alert from 'antd/es/alert';
+import Card from 'antd/es/card';
+import Typography from 'antd/es/typography';
+import Space from 'antd/es/space';
+import Image from 'antd/es/image';
+import Steps from 'antd/es/steps';
+import Divider from 'antd/es/divider';
 import { SafetyOutlined, QrcodeOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 

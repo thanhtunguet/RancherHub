@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Form,
-  Input,
-  InputNumber,
-  Switch,
-  Select,
-  Button,
-  Row,
-  Col,
-  message,
-  Space,
-  Typography,
-  Divider,
-  Tag,
-} from 'antd';
+import Card from 'antd/es/card';
+import Form from 'antd/es/form';
+import Input from 'antd/es/input';
+import InputNumber from 'antd/es/input-number';
+import Switch from 'antd/es/switch';
+import Select from 'antd/es/select';
+import Button from 'antd/es/button';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+import message from 'antd/es/message';
+import Space from 'antd/es/space';
+import Typography from 'antd/es/typography';
+import Divider from 'antd/es/divider';
+import Tag from 'antd/es/tag';
 import { MessageOutlined, BellOutlined, SaveOutlined, PlusOutlined } from '@ant-design/icons';
 import { monitoringApi } from '../../services/api';
 

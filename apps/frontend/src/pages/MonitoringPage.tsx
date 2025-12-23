@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Tabs,
-  Button,
-  Row,
-  Col,
-  message,
-  Card,
-} from 'antd';
+import Tabs from 'antd/es/tabs';
+import Button from 'antd/es/button';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+import message from 'antd/es/message';
+import Card from 'antd/es/card';
 import {
   DashboardOutlined,
   SettingOutlined,

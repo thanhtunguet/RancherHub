@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Table,
-  Button,
-  Input,
-  Space,
-  Tag,
-  Modal,
-  message,
-  Tooltip,
-  Switch,
-  Statistic,
-  Row,
-  Col,
-  Form,
-} from 'antd';
+import Card from 'antd/es/card';
+import Table from 'antd/es/table';
+import Button from 'antd/es/button';
+import Input from 'antd/es/input';
+import Space from 'antd/es/space';
+import Tag from 'antd/es/tag';
+import Modal from 'antd/es/modal';
+import message from 'antd/es/message';
+import Tooltip from 'antd/es/tooltip';
+import Switch from 'antd/es/switch';
+import Statistic from 'antd/es/statistic';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+import Form from 'antd/es/form';
 import {
   PlusOutlined,
   SearchOutlined,

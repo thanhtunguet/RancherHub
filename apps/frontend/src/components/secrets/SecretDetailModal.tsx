@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import {
-  Modal,
-  Table,
-  Button,
-  Space,
-  Typography,
-  Alert,
-  Tag,
-  Checkbox,
-  App,
-  Card,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Table from 'antd/es/table';
+import Button from 'antd/es/button';
+import Space from 'antd/es/space';
+import Typography from 'antd/es/typography';
+import Alert from 'antd/es/alert';
+import Tag from 'antd/es/tag';
+import Checkbox from 'antd/es/checkbox';
+import App from 'antd/es/app';
+import Card from 'antd/es/card';
 import { 
   ShieldIcon, 
   RefreshCwIcon as SyncIcon, 

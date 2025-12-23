@@ -1,15 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Card, 
-  Table, 
-  TreeSelect, 
-  Button, 
-  Typography, 
-  Alert, 
-  Divider, 
-  Tag, 
-  Space
-} from 'antd';
+import Card from 'antd/es/card';
+import Table from 'antd/es/table';
+import TreeSelect from 'antd/es/tree-select';
+import Button from 'antd/es/button';
+import Typography from 'antd/es/typography';
+import Alert from 'antd/es/alert';
+import Divider from 'antd/es/divider';
+import Tag from 'antd/es/tag';
+import Space from 'antd/es/space';
 import { ShieldIcon, EyeIcon, PlusIcon, MinusIcon } from 'lucide-react';
 import SecretDetailModal from './SecretDetailModal';
 import { useEnvironments } from '../../hooks/useEnvironments';

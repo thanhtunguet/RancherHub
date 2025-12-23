@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Button,
-  message,
-  Typography,
-  Tag,
-  Space,
-  Empty,
-  Spin,
-} from 'antd';
+import Card from 'antd/es/card';
+import Row from 'antd/es/row';
+import Col from 'antd/es/col';
+import Button from 'antd/es/button';
+import message from 'antd/es/message';
+import Typography from 'antd/es/typography';
+import Tag from 'antd/es/tag';
+import Space from 'antd/es/space';
+import Empty from 'antd/es/empty';
+import Spin from 'antd/es/spin';
 import {
   FileTextOutlined,
   EditOutlined,

@@ -1,20 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Modal,
-  Table,
-  Typography,
-  Tag,
-  Button,
-  Space,
-  Checkbox,
-  message,
-  Tooltip,
-
-  Card,
-  Divider,
-  Alert,
-  Spin,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Table from 'antd/es/table';
+import Typography from 'antd/es/typography';
+import Tag from 'antd/es/tag';
+import Button from 'antd/es/button';
+import Space from 'antd/es/space';
+import Checkbox from 'antd/es/checkbox';
+import message from 'antd/es/message';
+import Tooltip from 'antd/es/tooltip';
+import Card from 'antd/es/card';
+import Divider from 'antd/es/divider';
+import Alert from 'antd/es/alert';
+import Spin from 'antd/es/spin';
 import {
   CopyIcon,
   RefreshCwIcon,

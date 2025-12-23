@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Tag, Button, Space, Popconfirm, Tooltip } from 'antd';
+import Card from 'antd/es/card';
+import Tag from 'antd/es/tag';
+import Button from 'antd/es/button';
+import Space from 'antd/es/space';
+import Popconfirm from 'antd/es/popconfirm';
+import Tooltip from 'antd/es/tooltip';
 import { useNavigate } from 'react-router-dom';
 import {
   EditOutlined,

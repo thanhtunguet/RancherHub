@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Card,
-  Spin,
-  Alert,
-  Typography,
-  Select,
-  Space,
-  Tag,
-  Progress,
-  Tooltip,
-  Button,
-  message,
-} from "antd";
+import Table from 'antd/es/table';
+import Card from 'antd/es/card';
+import Spin from 'antd/es/spin';
+import Alert from 'antd/es/alert';
+import Typography from 'antd/es/typography';
+import Select from 'antd/es/select';
+import Space from 'antd/es/space';
+import Tag from 'antd/es/tag';
+import Progress from 'antd/es/progress';
+import Tooltip from 'antd/es/tooltip';
+import Button from 'antd/es/button';
+import message from 'antd/es/message';
 import {
   CloudServerOutlined,
   ReloadOutlined,

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  Button,
-  Typography,
-  Spin,
-  message,
-  Card,
-  Divider,
-} from 'antd';
+import Modal from 'antd/es/modal';
+import Button from 'antd/es/button';
+import Typography from 'antd/es/typography';
+import Spin from 'antd/es/spin';
+import message from 'antd/es/message';
+import Card from 'antd/es/card';
+import Divider from 'antd/es/divider';
 import { SendOutlined, EyeOutlined } from '@ant-design/icons';
 import { messageTemplatesApi, monitoringApi } from '../../services/api';
 import { MessageTemplate, PreviewTemplateResponse } from '../../types';
