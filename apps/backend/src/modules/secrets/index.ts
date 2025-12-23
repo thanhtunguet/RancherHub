@@ -5,4 +5,6 @@ export type {
   SecretData,
   SecretComparison,
   SecretComparisonResult,
+  SecretKeyComparison,
+  SecretDetailedComparison,
 } from './secrets.service';

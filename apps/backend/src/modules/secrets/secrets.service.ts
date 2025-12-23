@@ -54,6 +54,32 @@ export interface SecretComparisonResult {
   comparisons: SecretComparison[];
 }
 
+export interface SecretKeyComparison {
+  key: string;
+  sourceExists: boolean;
+  targetExists: boolean;
+  isDifferent: boolean;
+  missingInSource: boolean;
+  missingInTarget: boolean;
+  identical: boolean;
+}
+
+export interface SecretDetailedComparison {
+  secretName: string;
+  sourceAppInstanceId: string;
+  targetAppInstanceId: string;
+  source: SecretData | null;
+  target: SecretData | null;
+  keyComparisons: SecretKeyComparison[];
+  summary: {
+    totalKeys: number;
+    identical: number;
+    different: number;
+    missingInSource: number;
+    missingInTarget: number;
+  };
+}
+
 @Injectable()
 export class SecretsService {
   private readonly logger = new Logger(SecretsService.name);
@@ -295,7 +321,64 @@ export class SecretsService {
       throw new NotFoundException(`Secret ${secretName} not found in either instance`);
     }
 
-    return this.createSecretComparison(secretName, sourceSecret, targetSecret);
+    // Generate detailed comparison with individual key analysis
+    return this.createDetailedSecretComparison(secretName, sourceSecret, targetSecret, sourceAppInstanceId, targetAppInstanceId);
+  }
+
+  private createDetailedSecretComparison(
+    secretName: string,
+    sourceSecret: SecretData | null,
+    targetSecret: SecretData | null,
+    sourceAppInstanceId: string,
+    targetAppInstanceId: string,
+  ) {
+    // Get all unique keys from both secrets
+    const sourceKeys = sourceSecret?.dataKeys || [];
+    const targetKeys = targetSecret?.dataKeys || [];
+    const allKeys = [...new Set([...sourceKeys, ...targetKeys])];
+
+    // Create key-by-key comparison
+    const keyComparisons = allKeys.map(key => {
+      const sourceExists = sourceKeys.includes(key);
+      const targetExists = targetKeys.includes(key);
+      const sourceValue = sourceSecret?.data?.[key];
+      const targetValue = targetSecret?.data?.[key];
+      
+      // For security, we only compare if values are different, not the actual values
+      const isDifferent = sourceExists && targetExists && sourceValue !== targetValue;
+      const missingInSource = !sourceExists && targetExists;
+      const missingInTarget = sourceExists && !targetExists;
+      const identical = sourceExists && targetExists && sourceValue === targetValue;
+
+      return {
+        key,
+        sourceExists,
+        targetExists,
+        isDifferent,
+        missingInSource,
+        missingInTarget,
+        identical,
+      };
+    });
+
+    // Calculate summary
+    const summary = {
+      totalKeys: keyComparisons.length,
+      identical: keyComparisons.filter(k => k.identical).length,
+      different: keyComparisons.filter(k => k.isDifferent).length,
+      missingInSource: keyComparisons.filter(k => k.missingInSource).length,
+      missingInTarget: keyComparisons.filter(k => k.missingInTarget).length,
+    };
+
+    return {
+      secretName,
+      sourceAppInstanceId,
+      targetAppInstanceId,
+      source: sourceSecret,
+      target: targetSecret,
+      keyComparisons,
+      summary,
+    };
   }
 
   async syncSecretKey(
