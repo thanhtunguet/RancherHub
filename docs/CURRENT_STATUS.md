@@ -199,15 +199,15 @@ Relationships:
 - `GET /sites/:id/clusters` - Get clusters from site
 - `GET /sites/:id/namespaces` - Get namespaces from cluster
 
-#### Generic Cluster Sites Endpoints
-- `GET /generic-cluster-sites` - List generic cluster sites
-- `POST /generic-cluster-sites` - Create generic cluster site (with kubeconfig)
-- `GET /generic-cluster-sites/:id` - Get generic cluster site by ID
-- `PUT /generic-cluster-sites/:id` - Update generic cluster site
-- `DELETE /generic-cluster-sites/:id` - Delete generic cluster site
-- `POST /generic-cluster-sites/:id/test` - Test connection to generic cluster
-- `POST /generic-cluster-sites/:id/set-active` - Set cluster site as active/inactive
-- `GET /generic-cluster-sites/:id/namespaces` - Get namespaces from generic cluster
+#### Generic Kubernetes Clusters Endpoints
+- `GET /api/generic-clusters` - List generic Kubernetes clusters
+- `POST /api/generic-clusters` - Create generic Kubernetes cluster (with kubeconfig)
+- `GET /api/generic-clusters/:id` - Get generic Kubernetes cluster by ID
+- `PUT /api/generic-clusters/:id` - Update generic Kubernetes cluster
+- `DELETE /api/generic-clusters/:id` - Delete generic Kubernetes cluster
+- `POST /api/generic-clusters/:id/test` - Test connection to generic cluster
+- `POST /api/generic-clusters/:id/set-active` - Set cluster as active/inactive
+- `GET /api/generic-clusters/:id/namespaces` - Get namespaces from generic cluster
 
 #### Harbor Registry Endpoints
 - `GET /harbor-sites` - List Harbor sites

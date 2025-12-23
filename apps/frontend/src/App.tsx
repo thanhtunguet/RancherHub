@@ -154,7 +154,7 @@ function DashboardLayout() {
                 label: "Rancher Sites",
               },
               {
-                key: "/generic-cluster-sites",
+                key: "/generic-clusters",
                 icon: <CloudIcon size={16} />,
                 label: "Generic Clusters",
               },
@@ -217,7 +217,7 @@ function DashboardLayout() {
             <Route path="/dashboard" element={<HomePage />} />
             <Route path="/sites" element={<SiteManagement />} />
             <Route
-              path="/generic-cluster-sites"
+              path="/generic-clusters"
               element={<GenericClusterSiteManagement />}
             />
             <Route path="/environments" element={<EnvironmentManagement />} />

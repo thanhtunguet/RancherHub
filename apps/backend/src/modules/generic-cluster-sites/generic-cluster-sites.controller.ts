@@ -20,20 +20,20 @@ import { CreateGenericClusterSiteDto } from './dto/create-generic-cluster-site.d
 import { UpdateGenericClusterSiteDto } from './dto/update-generic-cluster-site.dto';
 import { TestConnectionResponseDto } from './dto/test-connection.dto';
 
-@ApiTags('Generic Cluster Sites')
+@ApiTags('Generic Clusters')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('generic-cluster-sites')
+@Controller('api/generic-clusters')
 export class GenericClusterSitesController {
   constructor(
     private readonly genericClusterSitesService: GenericClusterSitesService,
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new generic cluster site' })
+  @ApiOperation({ summary: 'Create a new generic Kubernetes cluster' })
   @ApiResponse({
     status: 201,
-    description: 'The cluster site has been successfully created.',
+    description: 'The cluster has been successfully created.',
   })
   @ApiResponse({
     status: 400,
@@ -44,27 +44,27 @@ export class GenericClusterSitesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all generic cluster sites' })
-  @ApiResponse({ status: 200, description: 'Return all cluster sites.' })
+  @ApiOperation({ summary: 'Get all generic Kubernetes clusters' })
+  @ApiResponse({ status: 200, description: 'Return all clusters.' })
   findAll() {
     return this.genericClusterSitesService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a generic cluster site by ID' })
-  @ApiResponse({ status: 200, description: 'Return the cluster site.' })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiOperation({ summary: 'Get a generic Kubernetes cluster by ID' })
+  @ApiResponse({ status: 200, description: 'Return the cluster.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   findOne(@Param('id') id: string) {
     return this.genericClusterSitesService.findOne(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a generic cluster site' })
+  @ApiOperation({ summary: 'Update a generic Kubernetes cluster' })
   @ApiResponse({
     status: 200,
-    description: 'The cluster site has been successfully updated.',
+    description: 'The cluster has been successfully updated.',
   })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   @ApiResponse({
     status: 400,
     description: 'Invalid kubeconfig or validation error.',
@@ -80,42 +80,42 @@ export class GenericClusterSitesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a generic cluster site' })
+  @ApiOperation({ summary: 'Delete a generic Kubernetes cluster' })
   @ApiResponse({
     status: 200,
-    description: 'The cluster site has been successfully deleted.',
+    description: 'The cluster has been successfully deleted.',
   })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   remove(@Param('id') id: string) {
     return this.genericClusterSitesService.remove(id);
   }
 
   @Post(':id/test')
-  @ApiOperation({ summary: 'Test connection to a generic cluster site' })
+  @ApiOperation({ summary: 'Test connection to a generic Kubernetes cluster' })
   @ApiResponse({ status: 200, description: 'Connection test result.' })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   testConnection(@Param('id') id: string): Promise<TestConnectionResponseDto> {
     return this.genericClusterSitesService.testConnection(id);
   }
 
   @Post(':id/set-active')
-  @ApiOperation({ summary: 'Set a cluster site as active/inactive' })
+  @ApiOperation({ summary: 'Set a cluster as active/inactive' })
   @ApiResponse({
     status: 200,
-    description: 'The cluster site active status has been updated.',
+    description: 'The cluster active status has been updated.',
   })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   setActive(@Param('id') id: string, @Body('active') active: boolean) {
     return this.genericClusterSitesService.setActive(id, active);
   }
 
   @Get(':id/namespaces')
-  @ApiOperation({ summary: 'Get namespaces from a generic cluster site' })
+  @ApiOperation({ summary: 'Get namespaces from a generic Kubernetes cluster' })
   @ApiResponse({
     status: 200,
     description: 'Return namespaces from the cluster.',
   })
-  @ApiResponse({ status: 404, description: 'Cluster site not found.' })
+  @ApiResponse({ status: 404, description: 'Cluster not found.' })
   @ApiResponse({ status: 400, description: 'Failed to fetch namespaces.' })
   getNamespaces(@Param('id') id: string) {
     return this.genericClusterSitesService.getNamespaces(id);

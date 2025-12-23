@@ -8,7 +8,7 @@ import type {
 
 export const useGenericClusterSites = () => {
   return useQuery({
-    queryKey: ["generic-cluster-sites"],
+    queryKey: ["generic-clusters"],
     queryFn: genericClusterSitesApi.getAll,
   });
 };
@@ -19,7 +19,7 @@ export const useCreateGenericClusterSite = () => {
   return useMutation({
     mutationFn: genericClusterSitesApi.create,
     onSuccess: (newSite: GenericClusterSite) => {
-      queryClient.invalidateQueries({ queryKey: ["generic-cluster-sites"] });
+      queryClient.invalidateQueries({ queryKey: ["generic-clusters"] });
       message.success(`Cluster "${newSite.name}" created successfully`);
     },
     onError: (error: any) => {
@@ -43,7 +43,7 @@ export const useUpdateGenericClusterSite = () => {
       data: Partial<CreateGenericClusterSiteRequest>;
     }) => genericClusterSitesApi.update(id, data),
     onSuccess: (updatedSite: GenericClusterSite) => {
-      queryClient.invalidateQueries({ queryKey: ["generic-cluster-sites"] });
+      queryClient.invalidateQueries({ queryKey: ["generic-clusters"] });
       message.success(`Cluster "${updatedSite.name}" updated successfully`);
     },
     onError: (error: any) => {
@@ -61,7 +61,7 @@ export const useDeleteGenericClusterSite = () => {
   return useMutation({
     mutationFn: genericClusterSitesApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["generic-cluster-sites"] });
+      queryClient.invalidateQueries({ queryKey: ["generic-clusters"] });
       message.success("Cluster deleted successfully");
     },
     onError: (error: any) => {
@@ -104,7 +104,7 @@ export const useSetGenericClusterActive = () => {
       active: boolean;
     }) => genericClusterSitesApi.setActive(id, active),
     onSuccess: (site: GenericClusterSite) => {
-      queryClient.invalidateQueries({ queryKey: ["generic-cluster-sites"] });
+      queryClient.invalidateQueries({ queryKey: ["generic-clusters"] });
       message.success(
         site.active
           ? `"${site.name}" is now the active cluster`

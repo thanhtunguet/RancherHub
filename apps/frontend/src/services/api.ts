@@ -112,36 +112,36 @@ export const sitesApi = {
 
 export const genericClusterSitesApi = {
   getAll: (): Promise<GenericClusterSite[]> =>
-    api.get("/api/generic-cluster-sites").then((res) => res.data),
+    api.get("/api/generic-clusters").then((res) => res.data),
 
   getOne: (id: string): Promise<GenericClusterSite> =>
-    api.get(`/api/generic-cluster-sites/${id}`).then((res) => res.data),
+    api.get(`/api/generic-clusters/${id}`).then((res) => res.data),
 
   create: (
     data: CreateGenericClusterSiteRequest
   ): Promise<GenericClusterSite> =>
-    api.post("/api/generic-cluster-sites", data).then((res) => res.data),
+    api.post("/api/generic-clusters", data).then((res) => res.data),
 
   update: (
     id: string,
     data: Partial<CreateGenericClusterSiteRequest>
   ): Promise<GenericClusterSite> =>
-    api.put(`/api/generic-cluster-sites/${id}`, data).then((res) => res.data),
+    api.put(`/api/generic-clusters/${id}`, data).then((res) => res.data),
 
   delete: (id: string): Promise<void> =>
-    api.delete(`/api/generic-cluster-sites/${id}`).then(() => undefined),
+    api.delete(`/api/generic-clusters/${id}`).then(() => undefined),
 
   testConnection: (id: string): Promise<TestConnectionResponse> =>
-    api.post(`/api/generic-cluster-sites/${id}/test`).then((res) => res.data),
+    api.post(`/api/generic-clusters/${id}/test`).then((res) => res.data),
 
   setActive: (id: string, active: boolean): Promise<GenericClusterSite> =>
     api
-      .post(`/api/generic-cluster-sites/${id}/set-active`, { active })
+      .post(`/api/generic-clusters/${id}/set-active`, { active })
       .then((res) => res.data),
 
   getNamespaces: (id: string): Promise<GenericClusterNamespace[]> =>
     api
-      .get(`/api/generic-cluster-sites/${id}/namespaces`)
+      .get(`/api/generic-clusters/${id}/namespaces`)
       .then((res) => res.data),
 };
 

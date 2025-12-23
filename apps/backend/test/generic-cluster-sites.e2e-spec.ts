@@ -78,10 +78,10 @@ users:
     await app.close();
   });
 
-  describe('/generic-cluster-sites (POST)', () => {
-    it('should create a generic cluster site', () => {
+  describe('/api/generic-clusters (POST)', () => {
+    it('should create a generic cluster', () => {
       return request(app.getHttpServer())
-        .post('/generic-cluster-sites')
+        .post('/api/generic-clusters')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Test EKS Cluster',
@@ -98,7 +98,7 @@ users:
 
     it('should reject invalid kubeconfig', () => {
       return request(app.getHttpServer())
-        .post('/generic-cluster-sites')
+        .post('/api/generic-clusters')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Invalid Cluster',
@@ -109,7 +109,7 @@ users:
 
     it('should require authentication', () => {
       return request(app.getHttpServer())
-        .post('/generic-cluster-sites')
+        .post('/api/generic-clusters')
         .send({
           name: 'Test Cluster',
           kubeconfig: validKubeconfig,
@@ -118,8 +118,8 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites (GET)', () => {
-    it('should return all generic cluster sites', async () => {
+  describe('/api/generic-clusters (GET)', () => {
+    it('should return all generic clusters', async () => {
       // Create a test site first
       const site = genericClusterSiteRepository.create({
         name: 'List Test Cluster',
@@ -131,7 +131,7 @@ users:
       await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .get('/generic-cluster-sites')
+        .get('/api/generic-clusters')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
@@ -141,8 +141,8 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites/:id (GET)', () => {
-    it('should return a specific generic cluster site', async () => {
+  describe('/api/generic-clusters/:id (GET)', () => {
+    it('should return a specific generic cluster', async () => {
       const site = genericClusterSiteRepository.create({
         name: 'Get Test Cluster',
         kubeconfig: validKubeconfig,
@@ -153,7 +153,7 @@ users:
       const savedSite = await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .get(`/generic-cluster-sites/${savedSite.id}`)
+        .get(`/api/generic-clusters/${savedSite.id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
@@ -162,16 +162,16 @@ users:
         });
     });
 
-    it('should return 404 for non-existent site', () => {
+    it('should return 404 for non-existent cluster', () => {
       return request(app.getHttpServer())
-        .get('/generic-cluster-sites/non-existent-id')
+        .get('/api/generic-clusters/non-existent-id')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
     });
   });
 
-  describe('/generic-cluster-sites/:id (PUT)', () => {
-    it('should update a generic cluster site', async () => {
+  describe('/api/generic-clusters/:id (PUT)', () => {
+    it('should update a generic cluster', async () => {
       const site = genericClusterSiteRepository.create({
         name: 'Update Test Cluster',
         kubeconfig: validKubeconfig,
@@ -182,7 +182,7 @@ users:
       const savedSite = await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .put(`/generic-cluster-sites/${savedSite.id}`)
+        .put(`/api/generic-clusters/${savedSite.id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Updated Cluster Name',
@@ -194,8 +194,8 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites/:id/test (POST)', () => {
-    it('should test connection to a generic cluster site', async () => {
+  describe('/api/generic-clusters/:id/test (POST)', () => {
+    it('should test connection to a generic cluster', async () => {
       const site = genericClusterSiteRepository.create({
         name: 'Test Connection Cluster',
         kubeconfig: validKubeconfig,
@@ -206,7 +206,7 @@ users:
       const savedSite = await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .post(`/generic-cluster-sites/${savedSite.id}/test`)
+        .post(`/api/generic-clusters/${savedSite.id}/test`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
@@ -216,10 +216,10 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites/:id/set-active (POST)', () => {
-    it('should set a site as active', async () => {
+  describe('/api/generic-clusters/:id/set-active (POST)', () => {
+    it('should set a cluster as active', async () => {
       const site1 = genericClusterSiteRepository.create({
-        name: 'Active Site 1',
+        name: 'Active Cluster 1',
         kubeconfig: validKubeconfig,
         clusterName: 'test-cluster',
         serverUrl: 'https://test-cluster.example.com',
@@ -228,7 +228,7 @@ users:
       const savedSite1 = await genericClusterSiteRepository.save(site1);
 
       return request(app.getHttpServer())
-        .post(`/generic-cluster-sites/${savedSite1.id}/set-active`)
+        .post(`/api/generic-clusters/${savedSite1.id}/set-active`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ active: true })
         .expect(200)
@@ -238,8 +238,8 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites/:id/namespaces (GET)', () => {
-    it('should get namespaces from a generic cluster site', async () => {
+  describe('/api/generic-clusters/:id/namespaces (GET)', () => {
+    it('should get namespaces from a generic cluster', async () => {
       const site = genericClusterSiteRepository.create({
         name: 'Namespaces Test Cluster',
         kubeconfig: validKubeconfig,
@@ -250,7 +250,7 @@ users:
       const savedSite = await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .get(`/generic-cluster-sites/${savedSite.id}/namespaces`)
+        .get(`/api/generic-clusters/${savedSite.id}/namespaces`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .expect((res) => {
@@ -259,8 +259,8 @@ users:
     });
   });
 
-  describe('/generic-cluster-sites/:id (DELETE)', () => {
-    it('should delete a generic cluster site', async () => {
+  describe('/api/generic-clusters/:id (DELETE)', () => {
+    it('should delete a generic cluster', async () => {
       const site = genericClusterSiteRepository.create({
         name: 'Delete Test Cluster',
         kubeconfig: validKubeconfig,
@@ -271,7 +271,7 @@ users:
       const savedSite = await genericClusterSiteRepository.save(site);
 
       return request(app.getHttpServer())
-        .delete(`/generic-cluster-sites/${savedSite.id}`)
+        .delete(`/api/generic-clusters/${savedSite.id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
     });

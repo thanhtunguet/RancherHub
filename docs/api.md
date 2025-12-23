@@ -55,6 +55,17 @@ All API endpoints (except login) require authentication via JWT tokens.
 - `GET /sites/:id/clusters` - Get clusters from site
 - `GET /sites/:id/namespaces` - Get namespaces from cluster
 
+### Generic Kubernetes Clusters Endpoints
+
+- `GET /api/generic-clusters` - List generic Kubernetes clusters
+- `POST /api/generic-clusters` - Create generic Kubernetes cluster (with kubeconfig)
+- `GET /api/generic-clusters/:id` - Get generic Kubernetes cluster by ID
+- `PUT /api/generic-clusters/:id` - Update generic Kubernetes cluster
+- `DELETE /api/generic-clusters/:id` - Delete generic Kubernetes cluster
+- `POST /api/generic-clusters/:id/test` - Test connection to generic cluster
+- `POST /api/generic-clusters/:id/set-active` - Set cluster as active/inactive
+- `GET /api/generic-clusters/:id/namespaces` - Get namespaces from generic cluster
+
 ### Harbor Registry Endpoints
 
 - `GET /harbor-sites` - List Harbor sites
