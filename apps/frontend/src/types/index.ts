@@ -253,6 +253,80 @@ export interface ConfigMapDetailedComparison {
   };
 }
 
+export interface SecretData {
+  id: string;
+  name: string;
+  namespace: string;
+  type: string;
+  data?: Record<string, string>;
+  dataKeys: string[];
+  dataSize: number;
+  labels?: Record<string, string>;
+  annotations?: Record<string, string>;
+  creationTimestamp: string;
+  resourceVersion: string;
+  appInstanceId: string;
+}
+
+export interface SecretComparison {
+  secretName: string;
+  source: SecretData | null;
+  target: SecretData | null;
+  status: 'identical' | 'different' | 'missing';
+  differenceType: 'missing-in-source' | 'missing-in-target' | 'data-different' | 'identical';
+  differences: {
+    keys: {
+      onlyInSource: string[];
+      onlyInTarget: string[];
+      different: string[];
+      identical: string[];
+    };
+    metadata: {
+      labels: any;
+      annotations: any;
+    };
+  };
+}
+
+export interface SecretComparisonResult {
+  sourceAppInstanceId: string;
+  targetAppInstanceId: string;
+  summary: {
+    totalSecrets: number;
+    identical: number;
+    different: number;
+    missingInSource: number;
+    missingInTarget: number;
+  };
+  comparisons: SecretComparison[];
+}
+
+export interface SecretKeyComparison {
+  key: string;
+  sourceExists: boolean;
+  targetExists: boolean;
+  isDifferent: boolean;
+  missingInSource: boolean;
+  missingInTarget: boolean;
+  identical: boolean;
+}
+
+export interface SecretDetailedComparison {
+  secretName: string;
+  sourceAppInstanceId: string;
+  targetAppInstanceId: string;
+  source: SecretData | null;
+  target: SecretData | null;
+  keyComparisons: SecretKeyComparison[];
+  summary: {
+    totalKeys: number;
+    identical: number;
+    different: number;
+    missingInSource: number;
+    missingInTarget: number;
+  };
+}
+
 export interface ImageTag {
   name: string;
   pushedAt: string;

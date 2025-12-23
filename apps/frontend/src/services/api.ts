@@ -334,6 +334,42 @@ export const configMapsApi = {
     api.post("/api/configmaps/sync-keys", syncData).then((res) => res.data),
 };
 
+export const secretsApi = {
+  getByAppInstance: (appInstanceId: string): Promise<any[]> =>
+    api.get(`/api/secrets/by-app-instance/${appInstanceId}`).then((res) => res.data),
+
+  compareSecretsByInstance: (sourceAppInstanceId: string, targetAppInstanceId: string): Promise<any> =>
+    api
+      .get("/api/secrets/compare/by-instance", {
+        params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
+
+  getSecretDetails: (secretName: string, sourceAppInstanceId: string, targetAppInstanceId: string): Promise<any> =>
+    api
+      .get(`/api/secrets/${secretName}/details`, {
+        params: { source: sourceAppInstanceId, target: targetAppInstanceId },
+      })
+      .then((res) => res.data),
+
+  syncSecretKey: (syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    secretName: string;
+    key: string;
+    value: string;
+  }): Promise<any> =>
+    api.post("/api/secrets/sync-key", syncData).then((res) => res.data),
+
+  syncSecretKeys: (syncData: {
+    sourceAppInstanceId: string;
+    targetAppInstanceId: string;
+    secretName: string;
+    keys: Record<string, string>;
+  }): Promise<any> =>
+    api.post("/api/secrets/sync-keys", syncData).then((res) => res.data),
+};
+
 export const monitoringApi = {
   // Configuration
   getConfig: (): Promise<any> =>

@@ -15,6 +15,7 @@ import {
   ActivityIcon,
   GitCompareIcon,
   UsersIcon,
+  ShieldIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { LandingPage } from "./pages/LandingPage";
@@ -23,6 +24,7 @@ import { EnvironmentManagement } from "./components/environments/EnvironmentMana
 import { AppInstanceManagement } from "./components/app-instances/AppInstanceManagement";
 import { ServiceManagement } from "./components/services/ServiceManagement";
 import { ConfigMapDiffPage } from "./pages/ConfigMapDiffPage";
+import { SecretDiffPage } from "./pages/SecretDiffPage";
 import { StorageViewPage } from "./pages/StorageViewPage";
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
@@ -175,6 +177,11 @@ function DashboardLayout() {
                 label: "ConfigMaps",
               },
               {
+                key: "/secret-diffs",
+                icon: <ShieldIcon size={16} />,
+                label: "Secrets",
+              },
+              {
                 key: "/storage",
                 icon: <DatabaseIcon size={16} />,
                 label: "Storage View",
@@ -209,6 +216,7 @@ function DashboardLayout() {
             />
             <Route path="/services" element={<ServiceManagement />} />
             <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
+            <Route path="/secret-diffs" element={<SecretDiffPage />} />
             <Route path="/storage" element={<StorageViewPage />} />
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
             <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />

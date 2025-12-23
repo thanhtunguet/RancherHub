@@ -720,6 +720,71 @@ export class RancherApiService {
     }));
   }
 
+  async getSecretsFromK8sApi(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+  ): Promise<any[]> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    const endpoint = `/v1/secrets?exclude=metadata.managedFields&namespace=${namespace}`;
+    this.logger.debug(
+      `Fetching Secrets from: ${site.url}/k8s/clusters/${clusterId}${endpoint}`,
+    );
+
+    const response = await client.get(endpoint);
+    this.logger.debug(
+      `Raw Secrets response: ${JSON.stringify(response.data).slice(0, 1000)}`,
+    );
+
+    let items: any[] = [];
+    if (Array.isArray(response.data.items)) {
+      items = response.data.items;
+    } else if (Array.isArray(response.data.data)) {
+      items = response.data.data;
+    } else if (Array.isArray(response.data)) {
+      items = response.data;
+    }
+
+    // Filter by namespace and exclude system secrets
+    items = items.filter((secret: any) => {
+      const name = secret.metadata?.name || '';
+      const type = secret.type || '';
+      return (
+        secret.metadata?.namespace === namespace &&
+        !name.startsWith('default-token-') &&
+        type !== 'kubernetes.io/service-account-token' &&
+        !name.includes('.dockercfg') &&
+        !name.includes('.dockerconfigjson')
+      );
+    });
+
+    this.logger.debug(
+      `Found ${items.length} Secrets in response for namespace: ${namespace}`,
+    );
+
+    return items.map((secret: any) => ({
+      id: secret.metadata?.uid || secret.metadata?.name,
+      name: secret.metadata?.name,
+      namespace: secret.metadata?.namespace || namespace,
+      type: secret.type || 'Opaque',
+      data: secret.data || {},
+      labels: secret.metadata?.labels || {},
+      annotations: secret.metadata?.annotations || {},
+      creationTimestamp: secret.metadata?.creationTimestamp,
+      resourceVersion: secret.metadata?.resourceVersion,
+      dataKeys: Object.keys(secret.data || {}),
+      dataSize: Object.keys(secret.data || {}).length,
+    }));
+  }
+
   async updateConfigMapKey(
     site: RancherSite,
     clusterId: string,
@@ -760,6 +825,93 @@ export class RancherApiService {
 
     const response = await client.put(putEndpoint, configMap);
     this.logger.debug(`ConfigMap key updated successfully: ${key}`);
+
+    return response.data;
+  }
+
+  async updateSecretKey(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+    secretName: string,
+    key: string,
+    value: string,
+  ): Promise<any> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    // First, get the current Secret
+    const getEndpoint = `/v1/secrets/${namespace}/${secretName}`;
+    this.logger.debug(
+      `Getting Secret for update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
+    );
+
+    const getResponse = await client.get(getEndpoint);
+    const secret = getResponse.data;
+
+    // Update the specific key
+    if (!secret.data) {
+      secret.data = {};
+    }
+    secret.data[key] = value;
+
+    // Update the Secret
+    const putEndpoint = `/v1/secrets/${namespace}/${secretName}`;
+    this.logger.debug(
+      `Updating Secret: ${site.url}/k8s/clusters/${clusterId}${putEndpoint}`,
+    );
+
+    const response = await client.put(putEndpoint, secret);
+    this.logger.debug(`Secret key updated successfully: ${key}`);
+
+    return response.data;
+  }
+
+  async syncSecretKeys(
+    site: RancherSite,
+    clusterId: string,
+    namespace: string,
+    secretName: string,
+    keys: Record<string, string>,
+  ): Promise<any> {
+    const client = axios.create({
+      baseURL: `${site.url}/k8s/clusters/${clusterId}`,
+      headers: {
+        Authorization: `Bearer ${site.token}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+
+    // First, get the current Secret
+    const getEndpoint = `/v1/secrets/${namespace}/${secretName}`;
+    this.logger.debug(
+      `Getting Secret for bulk update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
+    );
+
+    const getResponse = await client.get(getEndpoint);
+    const secret = getResponse.data;
+
+    // Update multiple keys
+    if (!secret.data) {
+      secret.data = {};
+    }
+    Object.assign(secret.data, keys);
+
+    // Update the Secret
+    const putEndpoint = `/v1/secrets/${namespace}/${secretName}`;
+    this.logger.debug(
+      `Updating Secret with ${Object.keys(keys).length} keys: ${site.url}/k8s/clusters/${clusterId}${putEndpoint}`,
+    );
+
+    const response = await client.put(putEndpoint, secret);
+    this.logger.debug(`Secret keys updated successfully: ${Object.keys(keys).join(', ')}`);
 
     return response.data;
   }

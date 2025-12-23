@@ -27,6 +27,7 @@ import { AppInstancesModule } from './modules/app-instances/app-instances.module
 import { ServicesModule } from './modules/services/services.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { ConfigMapsModule } from './modules/configmaps/configmaps.module';
+import { SecretsModule } from './modules/secrets/secrets.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { MessageTemplatesModule } from './modules/message-templates/message-templates.module';
@@ -104,6 +105,7 @@ import { HarborApiService } from './services/harbor-api.service';
     ServicesModule,
     MonitoringModule,
     ConfigMapsModule,
+    SecretsModule,
     AuthModule,
     UsersModule,
     MessageTemplatesModule,
