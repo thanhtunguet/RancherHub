@@ -20,7 +20,11 @@ export async function updateServiceImage(
     // Try to find by UUID first
     service = await servicesService.serviceRepository.findOne({
       where: { id: serviceId },
-      relations: ['appInstance', 'appInstance.rancherSite'],
+      relations: [
+        'appInstance',
+        'appInstance.rancherSite',
+        'appInstance.genericClusterSite',
+      ],
     });
   } else {
     // Handle composite ID format: ${appInstanceId}-${serviceName}
@@ -49,29 +53,35 @@ export async function updateServiceImage(
         // Try to find service in database by name and appInstanceId
         service = await servicesService.serviceRepository.findOne({
           where: { name: serviceName, appInstanceId: appInstanceId },
-          relations: ['appInstance', 'appInstance.rancherSite'],
+          relations: [
+            'appInstance',
+            'appInstance.rancherSite',
+            'appInstance.genericClusterSite',
+          ],
         });
 
-        // If not found in database, try to fetch directly from Rancher
+        // If not found in database, try to fetch directly from cluster
         if (!service) {
           servicesService.logger.debug(
-            `Service not found in database, fetching directly from Rancher`,
+            `Service not found in database, fetching directly from cluster`,
           );
           // Get app instance to fetch service directly
           const appInstance =
             await servicesService.appInstanceRepository.findOne({
               where: { id: appInstanceId },
-              relations: ['rancherSite'],
+              relations: ['rancherSite', 'genericClusterSite'],
             });
 
           if (appInstance) {
-            // Fetch deployments from Rancher and find the matching service
-            const deployments =
-              await servicesService.rancherApiService.getDeploymentsFromK8sApi(
-                appInstance.rancherSite,
-                appInstance.cluster,
-                appInstance.namespace,
+            // Use adapter to fetch deployments
+            const adapter =
+              await servicesService.clusterAdapterFactory.createAdapter(
+                appInstance,
               );
+            const deployments = await adapter.getDeployments(
+              appInstance.cluster,
+              appInstance.namespace,
+            );
 
             const deployment = deployments.find(
               (dep) => dep.name === serviceName,
@@ -105,9 +115,13 @@ export async function updateServiceImage(
     );
   }
 
-  if (!service.appInstance.rancherSite) {
+  // Validate that the app instance has a cluster site (either Rancher or generic)
+  if (
+    !service.appInstance.rancherSite &&
+    !service.appInstance.genericClusterSite
+  ) {
     throw new BadRequestException(
-      `App instance ${service.appInstance.name} does not have an associated Rancher site`,
+      `App instance ${service.appInstance.name} does not have an associated cluster site`,
     );
   }
 
@@ -135,9 +149,11 @@ export async function updateServiceImage(
   );
 
   try {
-    // Use Rancher API to update the workload
-    const result = await servicesService.rancherApiService.updateWorkloadImage(
-      service.appInstance.rancherSite,
+    // Use adapter to update the workload
+    const adapter = await servicesService.clusterAdapterFactory.createAdapter(
+      service.appInstance,
+    );
+    const result = await adapter.updateWorkloadImage(
       service.appInstance.cluster,
       service.appInstance.namespace,
       service.name,

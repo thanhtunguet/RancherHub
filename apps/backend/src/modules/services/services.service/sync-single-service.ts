@@ -14,6 +14,7 @@ export async function syncSingleService(
     relations: [
       'appInstance',
       'appInstance.rancherSite',
+      'appInstance.genericClusterSite',
       'appInstance.environment',
     ],
   });
@@ -25,7 +26,7 @@ export async function syncSingleService(
   // Get target app instance
   const targetAppInstance = await service.appInstanceRepository.findOne({
     where: { id: targetAppInstanceId },
-    relations: ['rancherSite', 'environment'],
+    relations: ['rancherSite', 'genericClusterSite', 'environment'],
   });
 
   if (!targetAppInstance) {
@@ -51,8 +52,10 @@ export async function syncSingleService(
     sourceService.workloadType?.toLowerCase().replace(/s$/, '') || 'deployment';
 
   try {
-    await service.rancherApiService.updateWorkloadImage(
-      targetAppInstance.rancherSite,
+    // Use adapter to update the workload
+    const adapter =
+      await service.clusterAdapterFactory.createAdapter(targetAppInstance);
+    await adapter.updateWorkloadImage(
       targetAppInstance.cluster,
       targetAppInstance.namespace,
       sourceService.name,
@@ -60,13 +63,13 @@ export async function syncSingleService(
       sourceService.imageTag,
     );
     service.logger.log(
-      `Successfully updated workload ${sourceService.name} in Rancher`,
+      `Successfully updated workload ${sourceService.name} in ${targetAppInstance.clusterType} cluster`,
     );
-  } catch (rancherError) {
+  } catch (clusterError) {
     service.logger.error(
-      `Failed to update workload in Rancher: ${rancherError.message}`,
+      `Failed to update workload in cluster: ${clusterError.message}`,
     );
-    throw new Error(`Rancher API update failed: ${rancherError.message}`);
+    throw new Error(`Cluster API update failed: ${clusterError.message}`);
   }
 
   // Update or create target service in database

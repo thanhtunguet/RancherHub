@@ -7,7 +7,7 @@ export async function getServicesByAppInstanceDirect(
   appInstanceId: string,
 ): Promise<Service[]> {
   service.logger.debug(
-    `Fetching services directly from Rancher for app instance: ${appInstanceId}`,
+    `Fetching services directly from cluster for app instance: ${appInstanceId}`,
   );
 
   // Validate that appInstanceId is a valid UUID
@@ -19,10 +19,10 @@ export async function getServicesByAppInstanceDirect(
     );
   }
 
-  // Get the app instance
+  // Get the app instance with both site relations
   const appInstance = await service.appInstanceRepository.findOne({
     where: { id: appInstanceId },
-    relations: ['rancherSite', 'environment'],
+    relations: ['rancherSite', 'genericClusterSite', 'environment'],
   });
 
   if (!appInstance) {
@@ -32,20 +32,22 @@ export async function getServicesByAppInstanceDirect(
   }
 
   service.logger.debug(
-    `Found app instance: ${appInstance.name} (${appInstance.cluster}/${appInstance.namespace})`,
+    `Found app instance: ${appInstance.name} (${appInstance.cluster}/${appInstance.namespace}) - Type: ${appInstance.clusterType}`,
   );
 
   try {
-    // Fetch deployments directly from Rancher Kubernetes API
-    const deployments =
-      await service.rancherApiService.getDeploymentsFromK8sApi(
-        appInstance.rancherSite,
-        appInstance.cluster,
-        appInstance.namespace,
-      );
+    // Use adapter factory to get the appropriate adapter
+    const adapter =
+      await service.clusterAdapterFactory.createAdapter(appInstance);
+
+    // Fetch deployments using the adapter
+    const deployments = await adapter.getDeployments(
+      appInstance.cluster,
+      appInstance.namespace,
+    );
 
     service.logger.debug(
-      `Received ${deployments.length} deployments from Rancher K8s API for ${appInstance.name}`,
+      `Received ${deployments.length} deployments from ${appInstance.clusterType} cluster for ${appInstance.name}`,
     );
 
     // Convert deployments to Service objects without database operations
@@ -72,7 +74,7 @@ export async function getServicesByAppInstanceDirect(
     return services;
   } catch (error) {
     service.logger.error(
-      `Failed to fetch services from Rancher for app instance ${appInstance.name}: ${error.message}`,
+      `Failed to fetch services from ${appInstance.clusterType} cluster for app instance ${appInstance.name}: ${error.message}`,
     );
     throw error; // Don't fall back to database, fail fast to indicate real issue
   }

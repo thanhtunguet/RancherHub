@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   Service,
   AppInstance,
@@ -11,8 +11,7 @@ import {
 import { RancherApiService } from 'src/services/rancher-api.service';
 import { HarborApiService } from 'src/services/harbor-api.service';
 import { DockerHubApiService } from 'src/services/dockerhub-api.service';
-import { getServicesByEnvironment } from './get-services-by-environment';
-import { getServicesByAppInstance } from './get-services-by-app-instance';
+import { ClusterAdapterFactory } from 'src/adapters/cluster-adapter.factory';
 import { getServicesByEnvironmentDirect } from './get-services-by-environment-direct';
 import { getServicesByAppInstanceDirect } from './get-services-by-app-instance-direct';
 import { syncServices } from './sync-services';
@@ -49,6 +48,7 @@ export class ServicesService {
     public readonly harborApiService: HarborApiService,
     public readonly dockerHubApiService: DockerHubApiService,
     public readonly harborSitesService: HarborSitesService,
+    public readonly clusterAdapterFactory: ClusterAdapterFactory,
   ) {}
 
   async getServicesByEnvironment(environmentId: string) {
