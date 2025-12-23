@@ -8,7 +8,7 @@ import {
   Alert,
   Tag,
   Checkbox,
-  message,
+  App,
   Card,
 } from 'antd';
 import { 
@@ -43,6 +43,7 @@ const SecretDetailModal: React.FC<SecretDetailModalProps> = ({
   targetAppInstanceId,
   onSync,
 }) => {
+  const { message } = App.useApp();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [visibleValues, setVisibleValues] = useState<Set<string>>(new Set());
 

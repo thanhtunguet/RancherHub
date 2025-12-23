@@ -216,7 +216,7 @@ const SecretComparison: React.FC = () => {
               showSearch
               treeDefaultExpandAll
               loading={isLoadingEnvironments || isLoadingAppInstances}
-              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+              styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
             />
           </div>
           <div>
@@ -230,7 +230,7 @@ const SecretComparison: React.FC = () => {
               showSearch
               treeDefaultExpandAll
               loading={isLoadingEnvironments || isLoadingAppInstances}
-              dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+              styles={{ popup: { root: { maxHeight: 400, overflow: 'auto' } } }}
             />
           </div>
         </div>
