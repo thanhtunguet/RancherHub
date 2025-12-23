@@ -12,7 +12,7 @@ import {
   DatabaseOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { ServerIcon, LayersIcon } from "lucide-react";
+import { ServerIcon, LayersIcon, CloudIcon } from "lucide-react";
 import type { MenuProps } from "antd";
 import type { AppInstance } from "../../types";
 
@@ -90,7 +90,12 @@ export function AppInstanceCard({
               <Title level={5} className="mb-1 truncate">
                 {appInstance.name}
               </Title>
-              <Text className="text-sm text-gray-500">App Instance</Text>
+              <div className="flex items-center gap-2">
+                <Text className="text-sm text-gray-500">App Instance</Text>
+                <Tag color={appInstance.clusterType === "generic" ? "purple" : "blue"}>
+                  {appInstance.clusterType === "generic" ? "Generic" : "Rancher"}
+                </Tag>
+              </div>
             </div>
             <DatabaseOutlined className="text-blue-500 text-lg" />
           </div>
@@ -148,6 +153,31 @@ export function AppInstanceCard({
                   color={appInstance.rancherSite.active ? "green" : "default"}
                 >
                   {appInstance.rancherSite.active ? "Active" : "Inactive"}
+                </Tag>
+              </div>
+            </div>
+          )}
+
+          {appInstance.genericClusterSite && (
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Text className="text-xs text-gray-600 block">
+                    GENERIC CLUSTER
+                  </Text>
+                  <div className="flex items-center gap-2">
+                    <CloudIcon size={14} className="text-gray-400" />
+                    <Text className="text-sm">
+                      {appInstance.genericClusterSite.name}
+                    </Text>
+                  </div>
+                </div>
+                <Tag
+                  color={
+                    appInstance.genericClusterSite.active ? "green" : "default"
+                  }
+                >
+                  {appInstance.genericClusterSite.active ? "Active" : "Inactive"}
                 </Tag>
               </div>
             </div>

@@ -22,16 +22,29 @@ export interface Environment {
   appInstances?: AppInstance[];
 }
 
+export interface GenericClusterSite {
+  id: string;
+  name: string;
+  clusterName: string | null;
+  serverUrl: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppInstance {
   id: string;
   name: string;
   cluster: string;
   namespace: string;
-  rancherSiteId: string;
+  clusterType: 'rancher' | 'generic';
+  rancherSiteId: string | null;
+  genericClusterSiteId: string | null;
   environmentId: string;
   createdAt: string;
   updatedAt: string;
-  rancherSite?: RancherSite;
+  rancherSite?: RancherSite | null;
+  genericClusterSite?: GenericClusterSite | null;
   environment?: Environment;
   services?: Service[];
 }
@@ -111,8 +124,22 @@ export interface CreateAppInstanceRequest {
   name: string;
   cluster: string;
   namespace: string;
-  rancherSiteId: string;
   environmentId: string;
+  clusterType: 'rancher' | 'generic';
+  rancherSiteId?: string;
+  genericClusterSiteId?: string;
+}
+
+export interface CreateGenericClusterSiteRequest {
+  name: string;
+  kubeconfig: string;
+}
+
+export interface GenericClusterNamespace {
+  id: string;
+  name: string;
+  state: string;
+  created: string;
 }
 
 export interface SyncServicesRequest {

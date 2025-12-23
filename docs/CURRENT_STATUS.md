@@ -2,10 +2,10 @@
 
 ## 📋 Executive Summary
 
-**Project Status**: Phase 1 MVP Complete ✅  
-**Implementation Date**: January 2025  
-**Current Version**: 1.0.0 MVP  
-**Deployment Status**: Production Ready  
+**Project Status**: Phase 1 MVP Complete ✅ + Multi-Cluster Extension In Progress 🚧  
+**Implementation Date**: January 2025 (MVP), December 2024–ongoing (Multi-Cluster)  
+**Current Version**: 1.0.0 MVP + Multi-Cluster (adapter-based) backend + partial frontend  
+**Deployment Status**: Production Ready (MVP), Multi-Cluster in staged rollout  
 
 Rancher Hub has successfully completed its MVP phase with all core features implemented, tested, and fully functional. The application provides comprehensive service management and synchronization capabilities across multiple Rancher environments with enterprise-grade security and monitoring.
 
@@ -27,13 +27,16 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 - **Activity Tracking** - User login history and statistics
 - **Protected Routes** - All application routes require authentication
 
-### 🌐 Multi-Site Integration (Complete)
+### 🌐 Multi-Site & Multi-Cluster Integration (MVP Complete, Extension In Progress)
 - **Rancher Sites Management** - Connect to unlimited Rancher instances
 - **Harbor Registry Integration** - Docker registry management and monitoring
 - **Harbor v2 API Alignment** - Handles double-encoded repository names to keep the Harbor Browser compatible with Harbor 2.x endpoints
 - **API Token Security** - Encrypted storage of sensitive credentials
 - **Connection Testing** - Validate site connectivity and API access
 - **Multi-Instance Support** - Manage services across multiple clusters
+- **Generic Cluster Support (Backend)** - Adapter-based support for non-Rancher clusters (EKS, GKE, AKS, vanilla K8s) via kubeconfig
+- **Generic Cluster Sites API (Backend)** - CRUD + connection testing + namespace discovery
+- **Generic Cluster Sites UI (Frontend - IN PROGRESS)** - Management page, create/edit form, and connection testing UI (Week 4)
 
 ### 🏗️ Environment & Instance Management (Complete)
 - **Environment Organization** - Dev/Staging/Production environment management

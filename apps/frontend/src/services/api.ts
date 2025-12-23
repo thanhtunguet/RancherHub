@@ -19,6 +19,9 @@ import type {
   QueryUserParams,
   UserListResponse,
   UserStats,
+  GenericClusterSite,
+  CreateGenericClusterSiteRequest,
+  GenericClusterNamespace,
   HarborSite,
   HarborProject,
   HarborRepository,
@@ -104,6 +107,41 @@ export const sitesApi = {
       .get(`/api/sites/${id}/namespaces`, {
         params: clusterId ? { clusterId } : {},
       })
+      .then((res) => res.data),
+};
+
+export const genericClusterSitesApi = {
+  getAll: (): Promise<GenericClusterSite[]> =>
+    api.get("/api/generic-cluster-sites").then((res) => res.data),
+
+  getOne: (id: string): Promise<GenericClusterSite> =>
+    api.get(`/api/generic-cluster-sites/${id}`).then((res) => res.data),
+
+  create: (
+    data: CreateGenericClusterSiteRequest
+  ): Promise<GenericClusterSite> =>
+    api.post("/api/generic-cluster-sites", data).then((res) => res.data),
+
+  update: (
+    id: string,
+    data: Partial<CreateGenericClusterSiteRequest>
+  ): Promise<GenericClusterSite> =>
+    api.put(`/api/generic-cluster-sites/${id}`, data).then((res) => res.data),
+
+  delete: (id: string): Promise<void> =>
+    api.delete(`/api/generic-cluster-sites/${id}`).then(() => undefined),
+
+  testConnection: (id: string): Promise<TestConnectionResponse> =>
+    api.post(`/api/generic-cluster-sites/${id}/test`).then((res) => res.data),
+
+  setActive: (id: string, active: boolean): Promise<GenericClusterSite> =>
+    api
+      .post(`/api/generic-cluster-sites/${id}/set-active`, { active })
+      .then((res) => res.data),
+
+  getNamespaces: (id: string): Promise<GenericClusterNamespace[]> =>
+    api
+      .get(`/api/generic-cluster-sites/${id}/namespaces`)
       .then((res) => res.data),
 };
 

@@ -1,8 +1,8 @@
 # Rancher Hub - Development Roadmap
 
-## Current Status: Phase 1 Complete ✅
+## Current Status: Phase 1 Complete ✅ + Multi-Cluster Extension In Progress 🚧
 
-All MVP features have been successfully implemented and are fully functional:
+All MVP features have been successfully implemented and are fully functional. A multi-cluster extension (generic Kubernetes clusters via adapter pattern) is currently being implemented:
 
 ### ✅ Completed Features (Phase 1)
 - **User Management & Authentication** - JWT auth, 2FA, user CRUD
@@ -16,6 +16,13 @@ All MVP features have been successfully implemented and are fully functional:
 - **Storage View** - Image size and storage analytics
 - **Monitoring System** - Health checks with Telegram alerting
 - **Sync History** - Complete audit trail of all operations
+
+### 🔄 In Progress: Multi-Cluster (Generic Kubernetes) Support
+- **Adapter Layer (Backend)** - IClusterAdapter, RancherClusterAdapter, GenericClusterAdapter, and ClusterAdapterFactory implemented
+- **Database Schema (Backend)** - `generic_cluster_sites` table and `cluster_type`/`generic_cluster_site_id` on `app_instances`
+- **Generic Cluster Sites Module (Backend)** - CRUD, kubeconfig validation, connection testing, namespaces listing
+- **Service Layer Refactor (Backend)** - ServicesService now uses adapter factory (ConfigMaps/Secrets optional follow-ups)
+- **Generic Cluster Sites UI (Frontend)** - Management page, form, and card components created; API client + React Query hooks implemented
 
 ---
 

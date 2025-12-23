@@ -16,6 +16,7 @@ import {
   GitCompareIcon,
   UsersIcon,
   ShieldIcon,
+  CloudIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { LandingPage } from "./pages/LandingPage";
@@ -31,6 +32,7 @@ import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
 import UserManagement from "./pages/users/UserManagement";
+import { GenericClusterSiteManagement } from "./components/generic-cluster-sites/GenericClusterSiteManagement";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { TwoFactorSetup } from "./components/auth/TwoFactorSetup";
 import { ChangePassword } from "./components/auth/ChangePassword";
@@ -152,6 +154,11 @@ function DashboardLayout() {
                 label: "Rancher Sites",
               },
               {
+                key: "/generic-cluster-sites",
+                icon: <CloudIcon size={16} />,
+                label: "Generic Clusters",
+              },
+              {
                 key: "/harbor-sites",
                 icon: <HardDriveIcon size={16} />,
                 label: "Harbor Sites",
@@ -209,6 +216,10 @@ function DashboardLayout() {
           <Routes>
             <Route path="/dashboard" element={<HomePage />} />
             <Route path="/sites" element={<SiteManagement />} />
+            <Route
+              path="/generic-cluster-sites"
+              element={<GenericClusterSiteManagement />}
+            />
             <Route path="/environments" element={<EnvironmentManagement />} />
             <Route
               path="/app-instances"

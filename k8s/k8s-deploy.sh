@@ -77,3 +77,5 @@ echo "🌍 Update ingress.yaml with your domain before accessing the application
 
 
 
+
+

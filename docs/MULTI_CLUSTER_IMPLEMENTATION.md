@@ -392,13 +392,13 @@ CONSTRAINT chk_cluster_site CHECK (
 - [ ] Refactor SecretsService (optional - can be done when needed)
 
 
-### Week 4 (⏳ PENDING)
-- [ ] Create GenericClusterSiteManagement UI
-- [ ] Create GenericClusterSiteForm
-- [ ] Update AppInstanceForm
-- [ ] Add API client
-- [ ] Update types
-- [ ] Test full UI flow
+### Week 4 (✅ COMPLETE)
+- [x] Create GenericClusterSiteManagement UI
+- [x] Create GenericClusterSiteForm
+- [x] Update AppInstanceForm
+- [x] Add API client
+- [x] Update types
+- [x] Test full UI flow (manual verification, type checking, and lint run)
 
 ### Week 5 (⏳ PENDING)
 - [ ] Write unit tests

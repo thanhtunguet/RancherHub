@@ -19,6 +19,7 @@ import {
 } from "../../hooks/useAppInstances";
 import { useEnvironments } from "../../hooks/useEnvironments";
 import { useSites } from "../../hooks/useSites";
+import { useGenericClusterSites } from "../../hooks/useGenericClusterSites";
 import type { AppInstance, CreateAppInstanceRequest } from "../../types";
 
 const { Title, Text } = Typography;
@@ -31,6 +32,10 @@ export function AppInstanceManagement() {
   const { data: environments, isLoading: environmentsLoading } =
     useEnvironments();
   const { data: sites, isLoading: sitesLoading } = useSites();
+  const {
+    data: genericClusterSites,
+    isLoading: genericSitesLoading,
+  } = useGenericClusterSites();
 
   const {
     data: appInstances,
@@ -77,7 +82,7 @@ export function AppInstanceManagement() {
     deleteAppInstanceMutation.mutate(appInstanceId);
   };
 
-  if (environmentsLoading || sitesLoading) {
+  if (environmentsLoading || sitesLoading || genericSitesLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Spin size="large" />
@@ -132,8 +137,8 @@ export function AppInstanceManagement() {
             App Instances
           </Title>
           <Text className="text-gray-600">
-            Configure app instances to link environments with Rancher clusters
-            and namespaces
+            Configure app instances to link environments with Rancher or generic
+            Kubernetes clusters and namespaces
           </Text>
         </div>
         <Button
@@ -207,7 +212,10 @@ export function AppInstanceManagement() {
                   name: editingAppInstance.name,
                   cluster: editingAppInstance.cluster,
                   namespace: editingAppInstance.namespace,
-                  rancherSiteId: editingAppInstance.rancherSiteId,
+                  clusterType: editingAppInstance.clusterType,
+                  rancherSiteId: editingAppInstance.rancherSiteId || undefined,
+                  genericClusterSiteId:
+                    editingAppInstance.genericClusterSiteId || undefined,
                   environmentId: editingAppInstance.environmentId,
                 }
               : undefined
@@ -220,6 +228,7 @@ export function AppInstanceManagement() {
           }
           environments={environments || []}
           sites={sites || []}
+          genericClusterSites={genericClusterSites || []}
         />
       </Modal>
     </div>
