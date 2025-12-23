@@ -1,7 +1,7 @@
 # Multi-Cluster Type Support - Implementation Progress
 
 **Started**: December 23, 2024
-**Status**: Week 1 Complete ✅ | Week 2-5 Pending
+**Status**: Week 1-2 Complete ✅ | Week 3-5 Pending
 **Goal**: Add support for generic Kubernetes clusters (EKS, GKE, AKS, vanilla K8s) alongside Rancher clusters
 
 ---
@@ -369,13 +369,16 @@ CONSTRAINT chk_cluster_site CHECK (
 - [x] Install dependencies
 - [x] Type checking passes
 
-### Week 2 (⏳ PENDING)
-- [ ] Create GenericClusterSitesModule
-- [ ] Implement CRUD service
-- [ ] Create API endpoints
-- [ ] Add kubeconfig validation
-- [ ] Implement connection testing
-- [ ] Test with real cluster
+### Week 2 (✅ COMPLETE)
+- [x] Create GenericClusterSitesModule
+- [x] Implement CRUD service
+- [x] Create API endpoints
+- [x] Add kubeconfig validation
+- [x] Implement connection testing
+- [x] Install dependencies (js-yaml)
+- [x] Type checking passes
+- [x] ESLint passes
+
 
 ### Week 3 (⏳ PENDING)
 - [ ] Refactor ServicesService

@@ -2087,7 +2087,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/js-yaml@^4.0.1":
+"@types/js-yaml@^4.0.1", "@types/js-yaml@^4.0.9":
   version "4.0.9"
   resolved "https://registry.npmjs.org/@types/js-yaml/-/js-yaml-4.0.9.tgz"
   integrity sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==
@@ -5917,6 +5917,13 @@ js-yaml@^4.1.0:
   dependencies:
     argparse "^2.0.1"
 
+js-yaml@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.1.tgz"
+  integrity sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==
+  dependencies:
+    argparse "^2.0.1"
+
 js-yaml@4.1.1:
   version "4.1.1"
   resolved "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.1.tgz"
@@ -7558,6 +7565,7 @@ queue-microtask@^1.2.2:
     class-validator "^0.14.0"
     form-data "^4.0.4"
     jimp "^1.6.0"
+    js-yaml "^4.1.1"
     passport "^0.7.0"
     passport-jwt "^4.0.1"
     passport-local "^1.0.0"

@@ -22,6 +22,7 @@ import {
   TrustedDevice,
 } from './entities';
 import { SitesModule } from './modules/sites/sites.module';
+import { GenericClusterSitesModule } from './modules/generic-cluster-sites/generic-cluster-sites.module';
 import { HarborSitesModule } from './modules/harbor-sites/harbor-sites.module';
 import { EnvironmentsModule } from './modules/environments/environments.module';
 import { AppInstancesModule } from './modules/app-instances/app-instances.module';
@@ -45,63 +46,64 @@ import { HarborApiService } from './services/harbor-api.service';
     TypeOrmModule.forRoot(
       process.env.DATABASE_TYPE === 'postgres'
         ? {
-            type: 'postgres',
-            host: process.env.DATABASE_HOST || 'localhost',
-            port: parseInt(process.env.DATABASE_PORT || '5432'),
-            username: process.env.DATABASE_USERNAME || 'rancher_hub',
-            password: process.env.DATABASE_PASSWORD || 'rancher_hub_password',
-            database: process.env.DATABASE_NAME || 'rancher_hub',
-            ssl:
-              process.env.DATABASE_SSL === 'true'
-                ? { rejectUnauthorized: false }
-                : false,
-            entities: [
-              RancherSite,
-              GenericClusterSite,
-              HarborSite,
-              Environment,
-              AppInstance,
-              Service,
-              SyncOperation,
-              SyncHistory,
-              MonitoringConfig,
-              MonitoredInstance,
-              MonitoringHistory,
-              AlertHistory,
-              User,
-              MessageTemplate,
-              TrustedDevice,
-            ],
-            synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
-            logging: process.env.NODE_ENV === 'development',
-          }
+          type: 'postgres',
+          host: process.env.DATABASE_HOST || 'localhost',
+          port: parseInt(process.env.DATABASE_PORT || '5432'),
+          username: process.env.DATABASE_USERNAME || 'rancher_hub',
+          password: process.env.DATABASE_PASSWORD || 'rancher_hub_password',
+          database: process.env.DATABASE_NAME || 'rancher_hub',
+          ssl:
+            process.env.DATABASE_SSL === 'true'
+              ? { rejectUnauthorized: false }
+              : false,
+          entities: [
+            RancherSite,
+            GenericClusterSite,
+            HarborSite,
+            Environment,
+            AppInstance,
+            Service,
+            SyncOperation,
+            SyncHistory,
+            MonitoringConfig,
+            MonitoredInstance,
+            MonitoringHistory,
+            AlertHistory,
+            User,
+            MessageTemplate,
+            TrustedDevice,
+          ],
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
+          logging: process.env.NODE_ENV === 'development',
+        }
         : {
-            type: 'sqlite',
-            database: process.env.DATABASE_PATH || 'rancher-hub.db',
-            entities: [
-              RancherSite,
-              GenericClusterSite,
-              HarborSite,
-              Environment,
-              AppInstance,
-              Service,
-              SyncOperation,
-              SyncHistory,
-              MonitoringConfig,
-              MonitoredInstance,
-              MonitoringHistory,
-              AlertHistory,
-              User,
-              MessageTemplate,
-              TrustedDevice,
-            ],
-            synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
-            logging:
-              process.env.NODE_ENV === 'development' &&
-              process.env.DATABASE_LOGGING === 'true',
-          },
+          type: 'sqlite',
+          database: process.env.DATABASE_PATH || 'rancher-hub.db',
+          entities: [
+            RancherSite,
+            GenericClusterSite,
+            HarborSite,
+            Environment,
+            AppInstance,
+            Service,
+            SyncOperation,
+            SyncHistory,
+            MonitoringConfig,
+            MonitoredInstance,
+            MonitoringHistory,
+            AlertHistory,
+            User,
+            MessageTemplate,
+            TrustedDevice,
+          ],
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
+          logging:
+            process.env.NODE_ENV === 'development' &&
+            process.env.DATABASE_LOGGING === 'true',
+        },
     ),
     SitesModule,
+    GenericClusterSitesModule,
     HarborSitesModule,
     EnvironmentsModule,
     AppInstancesModule,
@@ -117,4 +119,4 @@ import { HarborApiService } from './services/harbor-api.service';
   controllers: [AppController],
   providers: [AppService, RancherApiService, HarborApiService],
 })
-export class AppModule {}
+export class AppModule { }
