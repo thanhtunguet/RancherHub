@@ -105,13 +105,12 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
   };
 
   const getImageCommand = (
-    projectName: string,
     repositoryName: string,
     tag: string,
   ): string => {
     const harborDomain = harborSite.url.replace(/^https?:\/\//, "");
-    return `docker pull ${harborDomain}/${projectName}/${repositoryName}:${tag}`;
-  };
+    return `docker pull ${harborDomain}/${repositoryName}:${tag}`;
+  };;;
 
   // Filter artifacts based on search text
   const filteredArtifacts = useMemo(() => {
@@ -230,7 +229,6 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
   const expandedRowRender = (artifact: HarborArtifact) => {
     const primaryTag = artifact.tags?.[0]?.name || "latest";
     const dockerCommand = getImageCommand(
-      project.name,
       repository.name,
       primaryTag,
     );
@@ -437,7 +435,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
           </div>
 
           <Alert
-            message={`Repository: ${project.name}/${repository.name}`}
+            message={`Repository: ${repository.name}`}
             description={`${repository.description || "No description available"} | Harbor Site: ${harborSite.url}`}
             type="info"
             showIcon
