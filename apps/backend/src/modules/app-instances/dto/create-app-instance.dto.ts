@@ -1,5 +1,12 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNotEmpty,
+  IsUUID,
+  IsOptional,
+  IsIn,
+  ValidateIf,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateAppInstanceDto {
   @ApiProperty({
@@ -12,7 +19,8 @@ export class CreateAppInstanceDto {
 
   @ApiProperty({
     example: 'c-12345:p-67890',
-    description: 'Rancher cluster ID',
+    description:
+      'Cluster ID (Rancher cluster ID for Rancher, cluster name for generic)',
   })
   @IsString()
   @IsNotEmpty()
@@ -27,12 +35,36 @@ export class CreateAppInstanceDto {
   namespace: string;
 
   @ApiProperty({
-    example: '550e8400-e29b-41d4-a716-446655440000',
-    description: 'ID of the associated Rancher site',
+    example: 'rancher',
+    description: 'Type of cluster: rancher or generic',
+    enum: ['rancher', 'generic'],
   })
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['rancher', 'generic'])
+  clusterType: 'rancher' | 'generic';
+
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description:
+      'ID of the associated Rancher site (required for rancher cluster type)',
+  })
+  @ValidateIf((o) => o.clusterType === 'rancher')
   @IsUUID()
   @IsNotEmpty()
-  rancherSiteId: string;
+  @IsOptional()
+  rancherSiteId?: string;
+
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440002',
+    description:
+      'ID of the associated generic cluster site (required for generic cluster type)',
+  })
+  @ValidateIf((o) => o.clusterType === 'generic')
+  @IsUUID()
+  @IsNotEmpty()
+  @IsOptional()
+  genericClusterSiteId?: string;
 
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440001',
