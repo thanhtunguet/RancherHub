@@ -31,6 +31,22 @@ export function ServiceComparison({
     error: comparisonError,
   } = useCompareServicesByInstance(sourceAppInstanceId, targetAppInstanceId);
 
+  // Helper function to extract repository name and tag from full image path
+  // e.g., "registry.example.com/project/repository:tag" -> "repository:tag"
+  const formatImageTag = (fullImageTag: string): string => {
+    if (!fullImageTag) return fullImageTag;
+    
+    // Find the last slash to get repository:tag part
+    const lastSlashIndex = fullImageTag.lastIndexOf('/');
+    if (lastSlashIndex === -1) {
+      // No slash found, return as is
+      return fullImageTag;
+    }
+    
+    // Return everything after the last slash (repository:tag)
+    return fullImageTag.substring(lastSlashIndex + 1);
+  };
+
   const getDifferentStatus = (record: any) => {
     // Use the differenceType from backend if available, otherwise fall back to logic
     if (record.differenceType) {
@@ -121,7 +137,7 @@ export function ServiceComparison({
         return (
           <Space direction="vertical" size="small">
             <Text style={{ fontFamily: "monospace", fontSize: "12px" }}>
-              {record.source.imageTag}
+              {formatImageTag(record.source.imageTag)}
             </Text>
             <Text type="secondary" style={{ fontSize: "11px" }}>
               Status: {record.source.status}
@@ -145,7 +161,7 @@ export function ServiceComparison({
         return (
           <Space direction="vertical" size="small">
             <Text style={{ fontFamily: "monospace", fontSize: "12px" }}>
-              {record.target.imageTag}
+              {formatImageTag(record.target.imageTag)}
             </Text>
             <Text type="secondary" style={{ fontSize: "11px" }}>
               Status: {record.target.status}
