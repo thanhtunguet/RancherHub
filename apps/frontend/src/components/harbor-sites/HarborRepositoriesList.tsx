@@ -21,7 +21,7 @@ import {
   DownloadOutlined,
   TagOutlined,
   CalendarOutlined,
-  ArrowRightOutlined,
+
   HomeOutlined,
   FolderOutlined,
   HddOutlined,
@@ -176,20 +176,7 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
         </Tooltip>
       ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      align: "center",
-      render: (_, record: HarborRepository) => (
-        <Button
-          type="link"
-          icon={<ArrowRightOutlined />}
-          onClick={() => handleViewArtifacts(record)}
-        >
-          View Tags
-        </Button>
-      ),
-    },
+
   ];
 
   const totalPulls = filteredRepositories.reduce(
@@ -361,6 +348,10 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
           dataSource={filteredRepositories}
           rowKey="id"
           loading={loading}
+          onRow={(record) => ({
+            onClick: () => handleViewArtifacts(record),
+            style: { cursor: 'pointer' },
+          })}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

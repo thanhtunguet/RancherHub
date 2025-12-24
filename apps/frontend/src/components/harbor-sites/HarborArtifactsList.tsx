@@ -516,6 +516,9 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
           dataSource={filteredArtifacts}
           rowKey="id"
           loading={loading}
+          onRow={(record) => ({
+            style: { cursor: 'pointer' },
+          })}
           expandable={{
             expandedRowRender,
             rowExpandable: () => true,

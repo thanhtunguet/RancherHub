@@ -17,7 +17,7 @@ import {
   FolderOutlined,
   TeamOutlined,
   CalendarOutlined,
-  ArrowRightOutlined,
+
   HomeOutlined,
   HddOutlined,
   SearchOutlined,
@@ -188,20 +188,6 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
         </Tooltip>
       ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      align: "center",
-      render: (_, record: HarborProject) => (
-        <Button
-          type="link"
-          icon={<ArrowRightOutlined />}
-          onClick={() => handleViewRepositories(record)}
-        >
-          View Repositories
-        </Button>
-      ),
-    },
   ];
 
   const selectedSite = harborSites.find((site) => site.id === selectedSiteId);
@@ -349,6 +335,10 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
             dataSource={filteredProjects}
             rowKey="project_id"
             loading={loading}
+            onRow={(record) => ({
+              onClick: () => handleViewRepositories(record),
+              style: { cursor: 'pointer' },
+            })}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
