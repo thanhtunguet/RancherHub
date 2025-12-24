@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import Layout from "antd/es/layout";
 import Menu from "antd/es/menu";
 import Button from "antd/es/button";
@@ -7,7 +7,6 @@ import Dropdown from "antd/es/dropdown";
 import Avatar from "antd/es/avatar";
 import Space from "antd/es/space";
 import Modal from "antd/es/modal";
-import Spin from "antd/es/spin";
 import { UserOutlined, LogoutOutlined, SafetyOutlined, KeyOutlined, LaptopOutlined } from "@ant-design/icons";
 import {
   ServerIcon,
@@ -36,28 +35,17 @@ import { ChangePassword } from "./components/auth/ChangePassword";
 import { Disable2FAConfirm } from "./components/auth/Disable2FAConfirm";
 import { Require2FA } from "./components/auth/Require2FA";
 import { TrustedDevicesManagement } from "./components/auth/TrustedDevicesManagement";
+import { SiteManagement } from "./components/sites/SiteManagement";
+import { GenericClusterSiteManagement } from "./components/generic-cluster-sites/GenericClusterSiteManagement";
+import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
+import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
+import { StorageViewPage } from "./pages/StorageViewPage";
+import { MonitoringPage } from "./pages/MonitoringPage";
+import { SyncHistoryPage } from "./pages/SyncHistoryPage";
+import UserManagement from "./pages/users/UserManagement";
 import "./App.css";
 
-// Lazy load rarely-used pages for better performance
-const SiteManagement = lazy(() => import("./components/sites/SiteManagement").then(m => ({ default: m.SiteManagement })));
-const GenericClusterSiteManagement = lazy(() => import("./components/generic-cluster-sites/GenericClusterSiteManagement").then(m => ({ default: m.GenericClusterSiteManagement })));
-const HarborSiteManagement = lazy(() => import("./components/harbor-sites/HarborSiteManagement").then(m => ({ default: m.HarborSiteManagement })));
-const HarborBrowser = lazy(() => import("./components/harbor-sites/HarborBrowser").then(m => ({ default: m.HarborBrowser })));
-const StorageViewPage = lazy(() => import("./pages/StorageViewPage").then(m => ({ default: m.StorageViewPage })));
-const MonitoringPage = lazy(() => import("./pages/MonitoringPage").then(m => ({ default: m.MonitoringPage })));
-const SyncHistoryPage = lazy(() => import("./pages/SyncHistoryPage").then(m => ({ default: m.SyncHistoryPage })));
-const UserManagement = lazy(() => import("./pages/users/UserManagement"));
-
 const { Header, Content, Sider } = Layout;
-
-// Loading fallback component for lazy-loaded routes
-function PageLoader() {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <Spin size="large" tip="Loading..." />
-    </div>
-  );
-}
 
 function DashboardLayout() {
   const location = useLocation();
@@ -229,30 +217,28 @@ function DashboardLayout() {
         </Sider>
 
         <Content className="bg-gray-50">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/dashboard" element={<HomePage />} />
-              <Route path="/sites" element={<SiteManagement />} />
-              <Route
-                path="/generic-clusters"
-                element={<GenericClusterSiteManagement />}
-              />
-              <Route path="/environments" element={<EnvironmentManagement />} />
-              <Route
-                path="/app-instances"
-                element={<AppInstanceManagement />}
-              />
-              <Route path="/services" element={<ServiceManagement />} />
-              <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
-              <Route path="/secret-diffs" element={<SecretDiffPage />} />
-              <Route path="/storage" element={<StorageViewPage />} />
-              <Route path="/harbor-sites" element={<HarborSiteManagement />} />
-              <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />
-              <Route path="/monitoring" element={<MonitoringPage />} />
-              <Route path="/sync-history" element={<SyncHistoryPage />} />
-              <Route path="/users" element={<UserManagement />} />
-            </Routes>
-          </Suspense>
+          <Routes>
+            <Route path="/dashboard" element={<HomePage />} />
+            <Route path="/sites" element={<SiteManagement />} />
+            <Route
+              path="/generic-clusters"
+              element={<GenericClusterSiteManagement />}
+            />
+            <Route path="/environments" element={<EnvironmentManagement />} />
+            <Route
+              path="/app-instances"
+              element={<AppInstanceManagement />}
+            />
+            <Route path="/services" element={<ServiceManagement />} />
+            <Route path="/configmap-diffs" element={<ConfigMapDiffPage />} />
+            <Route path="/secret-diffs" element={<SecretDiffPage />} />
+            <Route path="/storage" element={<StorageViewPage />} />
+            <Route path="/harbor-sites" element={<HarborSiteManagement />} />
+            <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/sync-history" element={<SyncHistoryPage />} />
+            <Route path="/users" element={<UserManagement />} />
+          </Routes>
         </Content>
       </Layout>
       
