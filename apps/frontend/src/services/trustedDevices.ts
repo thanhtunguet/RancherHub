@@ -4,7 +4,7 @@ import type { TrustedDevice } from '../types/auth';
 const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 const trustedDevicesApi = axios.create({
-  baseURL: `${API_BASE_URL}/trusted-devices`,
+  baseURL: `${API_BASE_URL}/api/trusted-devices`,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -26,7 +26,7 @@ import { Require2FAGuard } from './guards/require-2fa.guard';
 import { AllowWithout2FA } from './decorators/allow-without-2fa.decorator';
 
 @ApiTags('Authentication')
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 

@@ -16,7 +16,7 @@ import {
   DatabaseIcon,
   HistoryIcon,
   HardDriveIcon,
-  ActivityIcon,
+
   GitCompareIcon,
   UsersIcon,
   ShieldIcon,
@@ -42,7 +42,6 @@ import { GenericClusterSiteManagement } from "./components/generic-cluster-sites
 import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManagement";
 import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { StorageViewPage } from "./pages/StorageViewPage";
-import { MonitoringPage } from "./pages/MonitoringPage";
 import { MonitoredInstancesPage } from "./pages/MonitoredInstancesPage";
 import { MonitoringConfigPage } from "./pages/MonitoringConfigPage";
 import { MessageTemplatesPage } from "./pages/MessageTemplatesPage";

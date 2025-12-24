@@ -16,7 +16,7 @@ import { TrustedDevicesService } from './trusted-devices.service';
 import { TrustedDeviceResponseDto } from './dto/trusted-device-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('trusted-devices')
+@Controller('api/trusted-devices')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @ApiTags('Trusted Devices')

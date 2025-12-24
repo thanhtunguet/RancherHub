@@ -110,7 +110,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
   ): string => {
     const harborDomain = harborSite.url.replace(/^https?:\/\//, "");
     return `docker pull ${harborDomain}/${repositoryName}:${tag}`;
-  };;;
+  };
 
   // Filter artifacts based on search text
   const filteredArtifacts = useMemo(() => {
@@ -516,7 +516,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
           dataSource={filteredArtifacts}
           rowKey="id"
           loading={loading}
-          onRow={(record) => ({
+          onRow={(_record) => ({
             style: { cursor: 'pointer' },
           })}
           expandable={{
