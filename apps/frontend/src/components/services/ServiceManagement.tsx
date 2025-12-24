@@ -2,13 +2,13 @@ import { useMemo, useState } from "react";
 import Alert from "antd/es/alert";
 import Button from "antd/es/button";
 import Input from "antd/es/input";
-import Select from "antd/es/select";
 import Spin from "antd/es/spin";
 import TreeSelect from "antd/es/tree-select";
 import Typography from "antd/es/typography";
 import { RefreshCwIcon, GitBranchIcon } from "lucide-react";
+import { HistoryOutlined, SyncOutlined } from "@ant-design/icons";
+import Space from "antd/es/space";
 import { SyncModal } from "./SyncModal";
-import { ServiceHeader } from "./ServiceHeader";
 import { ServiceStats } from "./ServiceStats";
 import { ServiceTable } from "./ServiceTable";
 import { ServiceEmptyState } from "./ServiceEmptyState";
@@ -17,7 +17,6 @@ import { ServiceComparison } from "./ServiceComparison";
 import { useServiceManagement } from "../../hooks/useServiceManagement";
 import { formatAppInstanceDisplay } from "../../utils/displayUtils";
 
-const { Option } = Select;
 const { Text } = Typography;
 
 export function ServiceManagement() {
@@ -26,7 +25,6 @@ export function ServiceManagement() {
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter,
     selectedAppInstanceId,
     selectedServices,
     showSyncModal,
@@ -43,7 +41,6 @@ export function ServiceManagement() {
     allAppInstances,
     selectedEnv,
     selectedAppInstance,
-    availableStatuses,
 
     // Loading states
     isInitialLoading,
@@ -52,7 +49,6 @@ export function ServiceManagement() {
 
     // Handlers
     handleServiceSelectionChange,
-    handleSelectAll,
     handleSync,
     handleRefresh,
     handleAppInstanceChange,
@@ -140,19 +136,22 @@ export function ServiceManagement() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <GitBranchIcon size={24} className="text-blue-500" />
-            <Typography.Title level={3} className="mb-0">
+        <div className="flex items-center space-x-3 mb-4">
+          <GitBranchIcon size={24} className="text-blue-500" />
+          <div>
+            <Typography.Title level={3} className="mb-1">
               Services
             </Typography.Title>
+            <Text className="text-gray-600">
+              View and manage services across your environments
+            </Text>
           </div>
         </div>
 
-        {/* App Instance Selectors */}
+        {/* App Instance Selectors and Controls */}
         <div className="flex items-end gap-3 mb-4 flex-wrap">
           {/* First App Instance Selector */}
-          <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
+          <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
             <Text strong>First App Instance</Text>
             <TreeSelect
               className="w-full"
@@ -180,7 +179,7 @@ export function ServiceManagement() {
           </div>
 
           {/* Second App Instance Selector */}
-          <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
+          <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
             <Text strong>Second App Instance (Optional - for comparison)</Text>
             <TreeSelect
               className="w-full"
@@ -201,64 +200,51 @@ export function ServiceManagement() {
               disabled={!selectedAppInstanceId || selectedAppInstanceId === "all"}
             />
           </div>
+
+          {/* Search Filter */}
+          <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
+            <Text strong>Search</Text>
+            <Input
+              placeholder="Search services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              allowClear
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-1">
+            <Text strong>&nbsp;</Text>
+            <Space>
+              <Button
+                icon={<HistoryOutlined />}
+                onClick={() => setShowHistory(true)}
+                disabled={!effectiveEnvironmentId}
+              >
+                Sync History
+              </Button>
+              <Button
+                icon={<RefreshCwIcon size={16} />}
+                onClick={handleRefresh}
+                disabled={!effectiveEnvironmentId}
+              >
+                Refresh
+              </Button>
+              <Button
+                type="primary"
+                icon={<SyncOutlined />}
+                disabled={selectedServices.length === 0}
+                onClick={handleSync}
+              >
+                Sync Selected ({selectedServices.length})
+              </Button>
+            </Space>
+          </div>
         </div>
 
         {/* Show Services View or Comparison View */}
         {!isComparisonMode ? (
           <>
-            {/* Services View */}
-            <div className="mb-4">
-              <ServiceHeader
-                selectedServicesCount={selectedServices.length}
-                effectiveEnvironmentId={effectiveEnvironmentId}
-                onShowHistory={() => setShowHistory(true)}
-                onRefresh={handleRefresh}
-                onSync={handleSync}
-              />
-            </div>
-
-            {/* Filters and Controls Row */}
-            <div className="flex items-end gap-3 mb-4 flex-wrap">
-              {/* Search Filter */}
-              <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-                <Text strong>Search</Text>
-                <Input
-                  placeholder="Search services..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  allowClear
-                />
-              </div>
-
-              {/* Status Filter */}
-              <div className="flex flex-col gap-1 w-40">
-                <Text strong>Status</Text>
-                <Select
-                  placeholder="Filter by status"
-                  value={statusFilter}
-                  onChange={setStatusFilter}
-                  className="w-full"
-                >
-                  <Option value="all">All Statuses</Option>
-                  {availableStatuses.map((status) => (
-                    <Option key={status} value={status}>
-                      {status}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-
-              {/* Select All Button */}
-              <div className="flex flex-col gap-1">
-                <Text strong>&nbsp;</Text>
-                <Button onClick={handleSelectAll} disabled={filteredServices.length === 0}>
-                  {selectedServices.length === filteredServices.length
-                    ? "Deselect All"
-                    : "Select All"}
-                </Button>
-              </div>
-            </div>
-
             {/* Stats */}
             {services && services.length > 0 && (
               <ServiceStats
