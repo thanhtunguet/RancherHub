@@ -1,7 +1,4 @@
-import { useState, useMemo } from "react";
 import Card from "antd/es/card";
-import TreeSelect from "antd/es/tree-select";
-import Button from "antd/es/button";
 import Table from "antd/es/table";
 import Tag from "antd/es/tag";
 import Alert from "antd/es/alert";
@@ -9,7 +6,6 @@ import Space from "antd/es/space";
 import Typography from "antd/es/typography";
 import Divider from "antd/es/divider";
 import { GitCompareIcon } from "lucide-react";
-import { useEnvironments } from "../../hooks/useEnvironments";
 import { useAppInstances } from "../../hooks/useAppInstances";
 import { useCompareServicesByInstance } from "../../hooks/useServices";
 import { formatAppInstanceDisplay } from "../../utils/displayUtils";
@@ -25,44 +21,15 @@ export function ServiceComparison({
   initialSourceInstance,
   initialTargetInstance,
 }: ServiceComparisonProps) {
-  const [sourceAppInstanceId, setSourceAppInstanceId] = useState<
-    string | undefined
-  >(initialSourceInstance);
-  const [targetAppInstanceId, setTargetAppInstanceId] = useState<
-    string | undefined
-  >(initialTargetInstance);
+  const sourceAppInstanceId = initialSourceInstance;
+  const targetAppInstanceId = initialTargetInstance;
 
-  const { data: environments, isLoading: isLoadingEnvironments } =
-    useEnvironments();
-  const { data: allAppInstances, isLoading: isLoadingAppInstances } =
-    useAppInstances();
+  const { data: allAppInstances } = useAppInstances();
   const {
     data: comparison,
     isLoading: isLoadingComparison,
     error: comparisonError,
-    refetch: refetchComparison,
   } = useCompareServicesByInstance(sourceAppInstanceId, targetAppInstanceId);
-
-  // Create tree data for app instance selection
-  const treeData = useMemo(() => {
-    if (!environments || !allAppInstances) return [];
-    
-    return environments.map(env => ({
-      title: env.name, // Use string for better filtering support
-      value: `env-${env.id}`,
-      disabled: true, // Environment nodes are not selectable
-      children: allAppInstances
-        .filter(instance => instance.environmentId === env.id)
-        .map(instance => ({
-          title: formatAppInstanceDisplay(instance.name, instance.cluster, instance.namespace),
-          value: instance.id,
-        }))
-    })).filter(env => env.children && env.children.length > 0);
-  }, [environments, allAppInstances]);
-
-  const handleCompare = () => {
-    refetchComparison();
-  };
 
   const getDifferentStatus = (record: any) => {
     // Use the differenceType from backend if available, otherwise fall back to logic
@@ -199,162 +166,94 @@ export function ServiceComparison({
     ? formatAppInstanceDisplay(targetInstance.name, targetInstance.cluster, targetInstance.namespace)
     : "Unknown";
 
+  if (comparisonError) {
+    return (
+      <Alert
+        type="error"
+        message="Comparison Failed"
+        description={
+          (comparisonError as any)?.message ||
+          "An error occurred during comparison"
+        }
+        className="mb-4"
+      />
+    );
+  }
+
+  if (!comparison && isLoadingComparison) {
+    return (
+      <div className="text-center py-12">
+        <Text type="secondary">Loading comparison...</Text>
+      </div>
+    );
+  }
+
+  if (!comparison) {
+    return (
+      <div className="text-center py-12">
+        <GitCompareIcon
+          size={48}
+          className="text-gray-300 mx-auto mb-4"
+        />
+        <Text type="secondary">
+          Select both app instances to compare services
+        </Text>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <GitCompareIcon size={24} className="text-blue-500" />
-            <Title level={3} className="mb-0">
-              Service Diffs
-            </Title>
+      <div className="grid grid-cols-5 gap-4 mb-6">
+        <Card size="small" className="text-center">
+          <Text type="secondary">Total Services</Text>
+          <div className="text-2xl font-bold text-blue-600">
+            {comparison.summary.totalServices}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <Text strong>Source Instance</Text>
-            <TreeSelect
-              className="w-full mt-1"
-              placeholder="Select source app instance"
-              value={sourceAppInstanceId}
-              onChange={setSourceAppInstanceId}
-              treeData={treeData}
-              loading={isLoadingEnvironments || isLoadingAppInstances}
-              showSearch
-              filterTreeNode={(search, node) => {
-                if (typeof node.title === 'string') {
-                  return node.title.toLowerCase().includes(search.toLowerCase());
-                }
-                return false;
-              }}
-              treeDefaultExpandAll
-            />
+        </Card>
+        <Card size="small" className="text-center">
+          <Text type="secondary">Identical</Text>
+          <div className="text-2xl font-bold text-green-600">
+            {comparison.summary.identical}
           </div>
-
-          <div>
-            <Text strong>Target Instance</Text>
-            <TreeSelect
-              className="w-full mt-1"
-              placeholder="Select target app instance"
-              value={targetAppInstanceId}
-              onChange={setTargetAppInstanceId}
-              treeData={treeData.map(env => ({
-                ...env,
-                children: env.children?.filter(instance => instance.value !== sourceAppInstanceId)
-              }))}
-              loading={isLoadingEnvironments || isLoadingAppInstances}
-              showSearch
-              filterTreeNode={(search, node) => {
-                if (typeof node.title === 'string') {
-                  return node.title.toLowerCase().includes(search.toLowerCase());
-                }
-                return false;
-              }}
-              treeDefaultExpandAll
-            />
+        </Card>
+        <Card size="small" className="text-center">
+          <Text type="secondary">Different</Text>
+          <div className="text-2xl font-bold text-blue-600">
+            {comparison.summary.different}
           </div>
-
-          <div className="flex items-end">
-            <Button
-              type="primary"
-              icon={<GitCompareIcon size={16} />}
-              onClick={handleCompare}
-              loading={isLoadingComparison}
-              disabled={
-                !sourceAppInstanceId ||
-                !targetAppInstanceId ||
-                sourceAppInstanceId === targetAppInstanceId
-              }
-              className="w-full"
-            >
-              Compare
-            </Button>
+        </Card>
+        <Card size="small" className="text-center">
+          <Text type="secondary">Missing in Source</Text>
+          <div className="text-2xl font-bold text-red-600">
+            {comparison.summary.missingInSource || 0}
           </div>
-        </div>
+        </Card>
+        <Card size="small" className="text-center">
+          <Text type="secondary">Missing in Target</Text>
+          <div className="text-2xl font-bold text-orange-600">
+            {comparison.summary.missingInTarget || 0}
+          </div>
+        </Card>
+      </div>
 
-        {comparisonError && (
-          <Alert
-            type="error"
-            message="Comparison Failed"
-            description={
-              (comparisonError as any)?.message ||
-              "An error occurred during comparison"
-            }
-            className="mb-4"
-          />
-        )}
+      <Divider />
 
-        {comparison && (
-          <>
-            <div className="grid grid-cols-5 gap-4 mb-6">
-              <Card size="small" className="text-center">
-                <Text type="secondary">Total Services</Text>
-                <div className="text-2xl font-bold text-blue-600">
-                  {comparison.summary.totalServices}
-                </div>
-              </Card>
-              <Card size="small" className="text-center">
-                <Text type="secondary">Identical</Text>
-                <div className="text-2xl font-bold text-green-600">
-                  {comparison.summary.identical}
-                </div>
-              </Card>
-              <Card size="small" className="text-center">
-                <Text type="secondary">Different</Text>
-                <div className="text-2xl font-bold text-blue-600">
-                  {comparison.summary.different}
-                </div>
-              </Card>
-              <Card size="small" className="text-center">
-                <Text type="secondary">Missing in Source</Text>
-                <div className="text-2xl font-bold text-red-600">
-                  {comparison.summary.missingInSource || 0}
-                </div>
-              </Card>
-              <Card size="small" className="text-center">
-                <Text type="secondary">Missing in Target</Text>
-                <div className="text-2xl font-bold text-orange-600">
-                  {comparison.summary.missingInTarget || 0}
-                </div>
-              </Card>
-            </div>
+      <div className="mb-4">
+        <Title level={4}>
+          {sourceInstanceDisplay} vs {targetInstanceDisplay}
+        </Title>
+      </div>
 
-            <Divider />
-
-            <div className="mb-4">
-              <Title level={4}>
-                {sourceInstanceDisplay} vs {targetInstanceDisplay}
-              </Title>
-            </div>
-
-            <Table
-              columns={columns}
-              dataSource={comparison.comparisons}
-              rowKey="serviceName"
-              pagination={false}
-              scroll={{ x: 1000 }}
-              loading={isLoadingComparison}
-              size="small"
-            />
-          </>
-        )}
-
-        {!comparison &&
-          !isLoadingComparison &&
-          sourceAppInstanceId &&
-          targetAppInstanceId && (
-            <div className="text-center py-12">
-              <GitCompareIcon
-                size={48}
-                className="text-gray-300 mx-auto mb-4"
-              />
-              <Text type="secondary">
-                Click "Compare" to see the differences between app instances
-              </Text>
-            </div>
-          )}
-      </Card>
+      <Table
+        columns={columns}
+        dataSource={comparison.comparisons}
+        rowKey="serviceName"
+        pagination={false}
+        scroll={{ x: 1000 }}
+        loading={isLoadingComparison}
+        size="small"
+      />
     </div>
   );
 }

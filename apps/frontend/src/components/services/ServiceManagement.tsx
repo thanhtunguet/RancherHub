@@ -1,13 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Alert from "antd/es/alert";
 import Button from "antd/es/button";
 import Input from "antd/es/input";
 import Select from "antd/es/select";
 import Spin from "antd/es/spin";
-import Tabs from "antd/es/tabs";
 import TreeSelect from "antd/es/tree-select";
 import Typography from "antd/es/typography";
-import { RefreshCwIcon, GitBranchIcon, GitCompareIcon } from "lucide-react";
+import { RefreshCwIcon, GitBranchIcon } from "lucide-react";
 import { SyncModal } from "./SyncModal";
 import { ServiceHeader } from "./ServiceHeader";
 import { ServiceStats } from "./ServiceStats";
@@ -59,6 +58,11 @@ export function ServiceManagement() {
     handleAppInstanceChange,
   } = useServiceManagement();
 
+  // State for second app instance (for comparison)
+  const [secondAppInstanceId, setSecondAppInstanceId] = useState<string | undefined>();
+
+  // Determine which view to show
+  const isComparisonMode = !!selectedAppInstanceId && selectedAppInstanceId !== "all" && !!secondAppInstanceId;
 
   // Create tree data for app instance selection
   const treeData = useMemo(() => {
@@ -76,6 +80,16 @@ export function ServiceManagement() {
         }))
     })).filter(env => env.children && env.children.length > 0);
   }, [environments, allAppInstances]);
+
+  // Create tree data for second selector (exclude first selected instance)
+  const secondTreeData = useMemo(() => {
+    if (!selectedAppInstanceId || selectedAppInstanceId === "all") return treeData;
+    
+    return treeData.map(env => ({
+      ...env,
+      children: env.children?.filter(instance => instance.value !== selectedAppInstanceId)
+    })).filter(env => env.children && env.children.length > 0);
+  }, [treeData, selectedAppInstanceId]);
 
   if (!environments || environments.length === 0) {
     return (
@@ -122,53 +136,89 @@ export function ServiceManagement() {
     );
   }
 
-  const tabItems = [
-    {
-      key: "1",
-      label: (
-        <span className="flex items-center space-x-2">
-          <GitBranchIcon size={16} />
-          <span>Service Management</span>
-        </span>
-      ),
-      children: (
-        <>
-          {/* Header */}
-          <div className="mb-6">
-            <ServiceHeader
-              selectedServicesCount={selectedServices.length}
-              effectiveEnvironmentId={effectiveEnvironmentId}
-              onShowHistory={() => setShowHistory(true)}
-              onRefresh={handleRefresh}
-              onSync={handleSync}
+  return (
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <GitBranchIcon size={24} className="text-blue-500" />
+            <Typography.Title level={3} className="mb-0">
+              Services
+            </Typography.Title>
+          </div>
+        </div>
+
+        {/* App Instance Selectors */}
+        <div className="flex items-end gap-3 mb-4 flex-wrap">
+          {/* First App Instance Selector */}
+          <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
+            <Text strong>First App Instance</Text>
+            <TreeSelect
+              className="w-full"
+              placeholder="Select first app instance"
+              value={selectedAppInstanceId === "all" ? undefined : selectedAppInstanceId}
+              onChange={(value) => {
+                handleAppInstanceChange(value || "all");
+                // Reset second selector if needed
+                if (value === secondAppInstanceId) {
+                  setSecondAppInstanceId(undefined);
+                }
+              }}
+              treeData={treeData}
+              loading={!environments || !allAppInstances}
+              showSearch
+              filterTreeNode={(search, node) => {
+                if (typeof node.title === 'string') {
+                  return node.title.toLowerCase().includes(search.toLowerCase());
+                }
+                return false;
+              }}
+              treeDefaultExpandAll
+              allowClear
             />
+          </div>
+
+          {/* Second App Instance Selector */}
+          <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
+            <Text strong>Second App Instance (Optional - for comparison)</Text>
+            <TreeSelect
+              className="w-full"
+              placeholder="Select second app instance to compare"
+              value={secondAppInstanceId}
+              onChange={setSecondAppInstanceId}
+              treeData={secondTreeData}
+              loading={!environments || !allAppInstances}
+              showSearch
+              filterTreeNode={(search, node) => {
+                if (typeof node.title === 'string') {
+                  return node.title.toLowerCase().includes(search.toLowerCase());
+                }
+                return false;
+              }}
+              treeDefaultExpandAll
+              allowClear
+              disabled={!selectedAppInstanceId || selectedAppInstanceId === "all"}
+            />
+          </div>
+        </div>
+
+        {/* Show Services View or Comparison View */}
+        {!isComparisonMode ? (
+          <>
+            {/* Services View */}
+            <div className="mb-4">
+              <ServiceHeader
+                selectedServicesCount={selectedServices.length}
+                effectiveEnvironmentId={effectiveEnvironmentId}
+                onShowHistory={() => setShowHistory(true)}
+                onRefresh={handleRefresh}
+                onSync={handleSync}
+              />
+            </div>
 
             {/* Filters and Controls Row */}
             <div className="flex items-end gap-3 mb-4 flex-wrap">
-              {/* App Instance Tree Selector */}
-              <div className="flex flex-col gap-1 flex-1 min-w-[250px]">
-                <Text strong>App Instance</Text>
-                <TreeSelect
-                  className="w-full"
-                  placeholder="Select an app instance"
-                  value={selectedAppInstanceId === "all" ? undefined : selectedAppInstanceId}
-                  onChange={(value) => {
-                    handleAppInstanceChange(value || "all");
-                  }}
-                  treeData={treeData}
-                  loading={!environments || !allAppInstances}
-                  showSearch
-                  filterTreeNode={(search, node) => {
-                    if (typeof node.title === 'string') {
-                      return node.title.toLowerCase().includes(search.toLowerCase());
-                    }
-                    return false;
-                  }}
-                  treeDefaultExpandAll
-                  allowClear
-                />
-              </div>
-
               {/* Search Filter */}
               <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
                 <Text strong>Search</Text>
@@ -218,45 +268,37 @@ export function ServiceManagement() {
                 appInstances={appInstances || []}
               />
             )}
-          </div>
 
-          {/* Services Table */}
-          {isLoadingServices ? (
-            <div className="flex justify-center items-center h-64">
-              <Spin size="large" />
-            </div>
-          ) : filteredServices.length > 0 ? (
-            <ServiceTable
-              filteredServices={filteredServices}
-              selectedServices={selectedServices}
-              onServiceSelectionChange={handleServiceSelectionChange}
+            {/* Services Table */}
+            {isLoadingServices ? (
+              <div className="flex justify-center items-center h-64">
+                <Spin size="large" />
+              </div>
+            ) : filteredServices.length > 0 ? (
+              <ServiceTable
+                filteredServices={filteredServices}
+                selectedServices={selectedServices}
+                onServiceSelectionChange={handleServiceSelectionChange}
+              />
+            ) : (
+              <ServiceEmptyState
+                searchTerm={searchTerm}
+                statusFilter={statusFilter}
+                selectedAppInstanceId={selectedAppInstanceId}
+                selectedAppInstanceName={selectedAppInstance?.name}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            {/* Service Comparison View */}
+            <ServiceComparison
+              initialSourceInstance={selectedAppInstanceId}
+              initialTargetInstance={secondAppInstanceId}
             />
-          ) : (
-            <ServiceEmptyState
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-              selectedAppInstanceId={selectedAppInstanceId}
-              selectedAppInstanceName={selectedAppInstance?.name}
-            />
-          )}
-        </>
-      ),
-    },
-    {
-      key: "2",
-      label: (
-        <span className="flex items-center space-x-2">
-          <GitCompareIcon size={16} />
-          <span>Service Diffs</span>
-        </span>
-      ),
-      children: <ServiceComparison />,
-    },
-  ];
-
-  return (
-    <div className="p-6">
-      <Tabs defaultActiveKey="1" items={tabItems} />
+          </>
+        )}
+      </div>
 
       {/* Sync Modal */}
       {showSyncModal && selectedEnv && (
