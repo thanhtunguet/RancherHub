@@ -93,7 +93,7 @@ export function GenericClusterSiteManagement() {
       <div className="p-6">
         <Alert
           message="Error Loading Generic Clusters"
-          description="There was an error loading the generic cluster sites. Please try again."
+          description="There was an error loading the generic clusters. Please try again."
           type="error"
           showIcon
         />
@@ -106,7 +106,7 @@ export function GenericClusterSiteManagement() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <Title level={2} className="mb-1">
-            Generic Cluster Sites
+            Generic Clusters
           </Title>
           <Text className="text-gray-600">
             Manage connections to EKS, GKE, AKS, and other Kubernetes clusters using kubeconfig
@@ -117,7 +117,7 @@ export function GenericClusterSiteManagement() {
           icon={<PlusOutlined />}
           onClick={handleOpenModal}
         >
-          Add Cluster Site
+          Add Cluster
         </Button>
       </div>
 
@@ -125,7 +125,7 @@ export function GenericClusterSiteManagement() {
         <div>
           <div className="mb-4">
             <Text className="text-gray-600">
-              {sites.length} cluster site{sites.length !== 1 ? "s" : ""}
+              {sites.length} cluster{sites.length !== 1 ? "s" : ""}
             </Text>
           </div>
           <Row gutter={[16, 16]}>
@@ -166,7 +166,7 @@ export function GenericClusterSiteManagement() {
       )}
 
       <Modal
-        title={editingSite ? "Edit Cluster Site" : "Add New Cluster Site"}
+        title={editingSite ? "Edit Cluster" : "Add New Cluster"}
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={null}

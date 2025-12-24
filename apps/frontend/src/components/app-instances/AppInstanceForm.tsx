@@ -379,17 +379,17 @@ export function AppInstanceForm({
       {clusterType === "generic" && (
         <>
           <Form.Item
-            label="Generic Cluster Site"
+            label="Generic Cluster"
             name="genericClusterSiteId"
             rules={[
               {
                 required: true,
-                message: "Please select a generic cluster site",
+                message: "Please select a generic cluster",
               },
             ]}
           >
             <Select
-              placeholder="Select generic cluster site"
+              placeholder="Select generic cluster"
               onChange={handleGenericSiteChange}
               value={selectedGenericSiteId}
             >
@@ -410,8 +410,8 @@ export function AppInstanceForm({
 
           {activeGenericSites.length === 0 && (
             <Alert
-              message="No Generic Cluster Sites"
-              description="You need to add at least one generic cluster site before creating generic app instances."
+              message="No Generic Clusters"
+              description="You need to add at least one generic cluster before creating generic app instances."
               type="warning"
               showIcon
               className="mb-4"
@@ -428,7 +428,7 @@ export function AppInstanceForm({
             <Select
               placeholder={
                 !selectedGenericSiteId
-                  ? "Select a generic cluster site first"
+                  ? "Select a generic cluster first"
                   : genericNamespacesLoading
                     ? "Loading namespaces..."
                     : "Select namespace"

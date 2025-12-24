@@ -25,7 +25,7 @@ export const useCreateGenericClusterSite = () => {
     onError: (error: any) => {
       message.error(
         error.response?.data?.message ||
-          "Failed to create generic cluster site",
+          "Failed to create generic cluster",
       );
     },
   });
@@ -49,7 +49,7 @@ export const useUpdateGenericClusterSite = () => {
     onError: (error: any) => {
       message.error(
         error.response?.data?.message ||
-          "Failed to update generic cluster site",
+          "Failed to update generic cluster",
       );
     },
   });
@@ -67,7 +67,7 @@ export const useDeleteGenericClusterSite = () => {
     onError: (error: any) => {
       message.error(
         error.response?.data?.message ||
-          "Failed to delete generic cluster site",
+          "Failed to delete generic cluster",
       );
     },
   });
