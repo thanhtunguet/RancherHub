@@ -21,6 +21,8 @@ import {
   UsersIcon,
   ShieldIcon,
   CloudIcon,
+  SettingsIcon,
+  FileTextIcon,
 } from "lucide-react";
 import { HomePage } from "./pages/HomePage";
 import { LandingPage } from "./pages/LandingPage";
@@ -41,6 +43,10 @@ import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManage
 import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { StorageViewPage } from "./pages/StorageViewPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
+import { MonitoringDashboardPage } from "./pages/MonitoringDashboardPage";
+import { MonitoredInstancesPage } from "./pages/MonitoredInstancesPage";
+import { MonitoringConfigPage } from "./pages/MonitoringConfigPage";
+import { MessageTemplatesPage } from "./pages/MessageTemplatesPage";
 import { SyncHistoryPage } from "./pages/SyncHistoryPage";
 import UserManagement from "./pages/users/UserManagement";
 import "./App.css";
@@ -153,64 +159,117 @@ function DashboardLayout() {
                 label: "Dashboard",
               },
               {
-                key: "/sites",
-                icon: <ServerIcon size={16} />,
-                label: "Rancher Sites",
+                type: 'divider',
               },
               {
-                key: "/generic-clusters",
-                icon: <CloudIcon size={16} />,
-                label: "Generic Clusters",
+                key: "sites-group",
+                label: "Sites",
+                type: "group",
+                children: [
+                  {
+                    key: "/sites",
+                    icon: <ServerIcon size={16} />,
+                    label: "Rancher Sites",
+                  },
+                  {
+                    key: "/harbor-sites",
+                    icon: <HardDriveIcon size={16} />,
+                    label: "Harbor Sites",
+                  },
+                  {
+                    key: "/generic-clusters",
+                    icon: <CloudIcon size={16} />,
+                    label: "Generic Clusters",
+                  },
+                ],
               },
               {
-                key: "/harbor-sites",
-                icon: <HardDriveIcon size={16} />,
-                label: "Harbor Sites",
+                key: "apps-group",
+                label: "Apps",
+                type: "group",
+                children: [
+                  {
+                    key: "/environments",
+                    icon: <LayersIcon size={16} />,
+                    label: "Environments",
+                  },
+                  {
+                    key: "/app-instances",
+                    icon: <DatabaseIcon size={16} />,
+                    label: "App Instances",
+                  },
+                ],
               },
               {
-                key: "/environments",
-                icon: <LayersIcon size={16} />,
-                label: "Environments",
+                key: "state-group",
+                label: "State Management",
+                type: "group",
+                children: [
+                  {
+                    key: "/services",
+                    icon: <GitBranchIcon size={16} />,
+                    label: "Services",
+                  },
+                  {
+                    key: "/configmap-diffs",
+                    icon: <GitCompareIcon size={16} />,
+                    label: "ConfigMaps",
+                  },
+                  {
+                    key: "/secret-diffs",
+                    icon: <ShieldIcon size={16} />,
+                    label: "Secrets",
+                  },
+                  {
+                    key: "/storage",
+                    icon: <DatabaseIcon size={16} />,
+                    label: "Storage View",
+                  },
+                  {
+                    key: "/sync-history",
+                    icon: <HistoryIcon size={16} />,
+                    label: "Sync History",
+                  },
+                ],
               },
               {
-                key: "/app-instances",
-                icon: <DatabaseIcon size={16} />,
-                label: "App Instances",
-              },
-              {
-                key: "/services",
-                icon: <GitBranchIcon size={16} />,
-                label: "Services",
-              },
-              {
-                key: "/configmap-diffs",
-                icon: <GitCompareIcon size={16} />,
-                label: "ConfigMaps",
-              },
-              {
-                key: "/secret-diffs",
-                icon: <ShieldIcon size={16} />,
-                label: "Secrets",
-              },
-              {
-                key: "/storage",
-                icon: <DatabaseIcon size={16} />,
-                label: "Storage View",
-              },
-              {
-                key: "/monitoring",
-                icon: <ActivityIcon size={16} />,
+                key: "monitoring-group",
                 label: "Monitoring",
+                type: "group",
+                children: [
+                  {
+                    key: "/monitoring",
+                    icon: <ActivityIcon size={16} />,
+                    label: "Dashboard",
+                  },
+                  {
+                    key: "/monitoring/instances",
+                    icon: <ServerIcon size={16} />,
+                    label: "Monitored Instances",
+                  },
+                  {
+                    key: "/monitoring/config",
+                    icon: <SettingsIcon size={16} />,
+                    label: "Configuration",
+                  },
+                  {
+                    key: "/monitoring/templates",
+                    icon: <FileTextIcon size={16} />,
+                    label: "Message Templates",
+                  },
+                ],
               },
               {
-                key: "/sync-history",
-                icon: <HistoryIcon size={16} />,
-                label: "Sync History",
-              },
-              {
-                key: "/users",
-                icon: <UsersIcon size={16} />,
-                label: "User Management",
+                key: "admin-group",
+                label: "Administration",
+                type: "group",
+                children: [
+                  {
+                    key: "/users",
+                    icon: <UsersIcon size={16} />,
+                    label: "User Management",
+                  },
+                ],
               },
             ]}
           />
@@ -235,7 +294,10 @@ function DashboardLayout() {
             <Route path="/storage" element={<StorageViewPage />} />
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
             <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />
-            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/monitoring" element={<MonitoringDashboardPage />} />
+            <Route path="/monitoring/instances" element={<MonitoredInstancesPage />} />
+            <Route path="/monitoring/config" element={<MonitoringConfigPage />} />
+            <Route path="/monitoring/templates" element={<MessageTemplatesPage />} />
             <Route path="/sync-history" element={<SyncHistoryPage />} />
             <Route path="/users" element={<UserManagement />} />
           </Routes>
