@@ -145,7 +145,7 @@ function DashboardLayout() {
       </Header>
 
       <Layout>
-        <Sider width={200} className="bg-white border-r border-gray-200">
+        <Sider width={250} className="bg-white border-r border-gray-200">
           <Menu
             mode="inline"
             selectedKeys={[location.pathname]}

@@ -1,43 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import Typography from "antd/es/typography";
-import Card from "antd/es/card";
-import Space from "antd/es/space";
-import Button from "antd/es/button";
 import Alert from "antd/es/alert";
-import Row from 'antd/es/row';
+import Badge from 'antd/es/badge';
+import Button from "antd/es/button";
+import Card from "antd/es/card";
 import Col from 'antd/es/col';
+import Empty from 'antd/es/empty';
+import Row from 'antd/es/row';
+import Space from "antd/es/space";
+import Spin from 'antd/es/spin';
 import Statistic from 'antd/es/statistic';
 import Table from 'antd/es/table';
-import Badge from 'antd/es/badge';
 import Tag from 'antd/es/tag';
-import Empty from 'antd/es/empty';
+import Typography from "antd/es/typography";
+import { useEffect, useState } from 'react';
 
-import message from 'antd/es/message';
-import {
-  ServerIcon,
-  LayersIcon,
-  DatabaseIcon,
-  ArrowRightIcon,
-  ActivityIcon,
-} from "lucide-react";
 import {
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
   CloseCircleOutlined,
-  WarningOutlined,
-  ReloadOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   PlayCircleOutlined,
-
+  ReloadOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
+import message from 'antd/es/message';
+import {
+  ArrowRightIcon,
+  DatabaseIcon,
+  LayersIcon,
+  ServerIcon,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSites } from "../hooks/useSites";
-import { useEnvironments } from "../hooks/useEnvironments";
 import { useAppInstances } from "../hooks/useAppInstances";
+import { useEnvironments } from "../hooks/useEnvironments";
+import { useSites } from "../hooks/useSites";
 import { monitoringApi } from '../services/api';
 
 const { Title, Paragraph, Text } = Typography;
-const { TabPane } = Tabs;
 
 interface MonitoredInstance {
   id: string;
@@ -461,47 +459,49 @@ export function HomePage() {
           </div>
 
           {/* Monitoring Statistics */}
-          <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="Total Instances"
-                  value={monitoringStats.total}
-                  prefix={<EyeOutlined />}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="Healthy"
-                  value={monitoringStats.healthy}
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="Warning"
-                  value={monitoringStats.warning}
-                  prefix={<WarningOutlined style={{ color: '#faad14' }} />}
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="Critical"
-                  value={monitoringStats.critical}
-                  prefix={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-                  valueStyle={{ color: '#ff4d4f' }}
-                />
-              </Card>
-            </Col>
-          </Row>
+          <Spin spinning={monitoringLoading}>
+            <Row gutter={16} style={{ marginBottom: 24 }}>
+              <Col span={6}>
+                <Card>
+                  <Statistic
+                    title="Total Instances"
+                    value={monitoringStats.total}
+                    prefix={<EyeOutlined />}
+                  />
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card>
+                  <Statistic
+                    title="Healthy"
+                    value={monitoringStats.healthy}
+                    prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                    valueStyle={{ color: '#52c41a' }}
+                  />
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card>
+                  <Statistic
+                    title="Warning"
+                    value={monitoringStats.warning}
+                    prefix={<WarningOutlined style={{ color: '#faad14' }} />}
+                    valueStyle={{ color: '#faad14' }}
+                  />
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card>
+                  <Statistic
+                    title="Critical"
+                    value={monitoringStats.critical}
+                    prefix={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
+                    valueStyle={{ color: '#ff4d4f' }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </Spin>
 
           {/* Active Alerts */}
           {alerts.length > 0 && (
@@ -515,45 +515,49 @@ export function HomePage() {
 
           {/* Monitored Instances Table */}
           <Card title="Monitored Instances" style={{ marginBottom: 24 }}>
-            {instances.length === 0 ? (
-              <Empty 
-                description="No monitored instances configured"
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              >
-                <Button 
-                  type="primary" 
-                  onClick={() => navigate('/monitoring/instances')}
+            <Spin spinning={monitoringLoading}>
+              {instances.length === 0 ? (
+                <Empty 
+                  description="No monitored instances configured"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
                 >
-                  Add Instance to Monitoring
-                </Button>
-              </Empty>
-            ) : (
-              <Table
-                columns={monitoringColumns}
-                dataSource={instances}
-                rowKey="id"
-                pagination={{
-                  total: instances.length,
-                  pageSize: 5,
-                  showSizeChanger: false,
-                }}
-              />
-            )}
+                  <Button 
+                    type="primary" 
+                    onClick={() => navigate('/monitoring/instances')}
+                  >
+                    Add Instance to Monitoring
+                  </Button>
+                </Empty>
+              ) : (
+                <Table
+                  columns={monitoringColumns}
+                  dataSource={instances}
+                  rowKey="id"
+                  pagination={{
+                    total: instances.length,
+                    pageSize: 5,
+                    showSizeChanger: false,
+                  }}
+                />
+              )}
+            </Spin>
           </Card>
 
           {/* Recent Alerts */}
           {alerts.length > 0 && (
             <Card title="Active Alerts">
-              <Table
-                columns={alertColumns}
-                dataSource={alerts}
-                rowKey="id"
-                pagination={{
-                  total: alerts.length,
-                  pageSize: 5,
-                  showSizeChanger: false,
-                }}
-              />
+              <Spin spinning={monitoringLoading}>
+                <Table
+                  columns={alertColumns}
+                  dataSource={alerts}
+                  rowKey="id"
+                  pagination={{
+                    total: alerts.length,
+                    pageSize: 5,
+                    showSizeChanger: false,
+                  }}
+                />
+              </Spin>
             </Card>
           )}
         </div>
