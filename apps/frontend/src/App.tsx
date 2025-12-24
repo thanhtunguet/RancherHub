@@ -43,7 +43,6 @@ import { HarborSiteManagement } from "./components/harbor-sites/HarborSiteManage
 import { HarborBrowser } from "./components/harbor-sites/HarborBrowser";
 import { StorageViewPage } from "./pages/StorageViewPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
-import { MonitoringDashboardPage } from "./pages/MonitoringDashboardPage";
 import { MonitoredInstancesPage } from "./pages/MonitoredInstancesPage";
 import { MonitoringConfigPage } from "./pages/MonitoringConfigPage";
 import { MessageTemplatesPage } from "./pages/MessageTemplatesPage";
@@ -238,11 +237,6 @@ function DashboardLayout() {
                 type: "group",
                 children: [
                   {
-                    key: "/monitoring",
-                    icon: <ActivityIcon size={16} />,
-                    label: "Dashboard",
-                  },
-                  {
                     key: "/monitoring/instances",
                     icon: <ServerIcon size={16} />,
                     label: "Monitored Instances",
@@ -294,7 +288,6 @@ function DashboardLayout() {
             <Route path="/storage" element={<StorageViewPage />} />
             <Route path="/harbor-sites" element={<HarborSiteManagement />} />
             <Route path="/harbor-sites/:siteId/browser" element={<HarborBrowser />} />
-            <Route path="/monitoring" element={<MonitoringDashboardPage />} />
             <Route path="/monitoring/instances" element={<MonitoredInstancesPage />} />
             <Route path="/monitoring/config" element={<MonitoringConfigPage />} />
             <Route path="/monitoring/templates" element={<MessageTemplatesPage />} />
