@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppInstance, SyncOperation, SyncHistory } from '../../entities';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { ClusterAdapterFactory } from '../../adapters/cluster-adapter.factory';
 
 export interface ConfigMapData {
   id: string;
@@ -60,6 +61,7 @@ export class ConfigMapsService {
     @InjectRepository(SyncHistory)
     private readonly syncHistoryRepository: Repository<SyncHistory>,
     private readonly rancherApiService: RancherApiService,
+    private readonly clusterAdapterFactory: ClusterAdapterFactory,
   ) {}
 
   async getConfigMapsByAppInstance(
@@ -67,9 +69,10 @@ export class ConfigMapsService {
   ): Promise<ConfigMapData[]> {
     this.logger.debug(`Getting ConfigMaps for app instance: ${appInstanceId}`);
 
+    // Load both relations - TypeORM will handle nulls gracefully
     const appInstance = await this.appInstanceRepository.findOne({
       where: { id: appInstanceId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'genericClusterSite'],
     });
 
     if (!appInstance) {
@@ -79,11 +82,12 @@ export class ConfigMapsService {
     }
 
     this.logger.debug(
-      `Found app instance: ${appInstance.name} in cluster: ${appInstance.cluster}, namespace: ${appInstance.namespace}`,
+      `Found app instance: ${appInstance.name} in cluster: ${appInstance.cluster}, namespace: ${appInstance.namespace}, clusterType: ${appInstance.clusterType}`,
     );
 
-    const configMaps = await this.rancherApiService.getConfigMapsFromK8sApi(
-      appInstance.rancherSite,
+    // Use adapter pattern to get ConfigMaps for both rancher and generic clusters
+    const adapter = await this.clusterAdapterFactory.createAdapter(appInstance);
+    const configMaps = await adapter.getConfigMaps(
       appInstance.cluster,
       appInstance.namespace,
     );
@@ -371,11 +375,11 @@ export class ConfigMapsService {
     const [sourceAppInstance, targetAppInstance] = await Promise.all([
       this.appInstanceRepository.findOne({
         where: { id: syncData.sourceAppInstanceId },
-        relations: ['rancherSite', 'environment'],
+        relations: ['rancherSite', 'genericClusterSite', 'environment'],
       }),
       this.appInstanceRepository.findOne({
         where: { id: syncData.targetAppInstanceId },
-        relations: ['rancherSite', 'environment'],
+        relations: ['rancherSite', 'genericClusterSite', 'environment'],
       }),
     ]);
 
@@ -404,9 +408,11 @@ export class ConfigMapsService {
     await this.syncOperationRepository.save(syncOperation);
 
     try {
-      // Update the ConfigMap key
-      await this.rancherApiService.updateConfigMapKey(
-        targetAppInstance.rancherSite,
+      // Use adapter pattern to update ConfigMap key for both rancher and generic clusters
+      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
+        targetAppInstance,
+      );
+      await targetAdapter.updateConfigMapKey(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
         syncData.configMapName,
@@ -513,11 +519,11 @@ export class ConfigMapsService {
     const [sourceAppInstance, targetAppInstance] = await Promise.all([
       this.appInstanceRepository.findOne({
         where: { id: syncData.sourceAppInstanceId },
-        relations: ['rancherSite', 'environment'],
+        relations: ['rancherSite', 'genericClusterSite', 'environment'],
       }),
       this.appInstanceRepository.findOne({
         where: { id: syncData.targetAppInstanceId },
-        relations: ['rancherSite', 'environment'],
+        relations: ['rancherSite', 'genericClusterSite', 'environment'],
       }),
     ]);
 
@@ -546,9 +552,11 @@ export class ConfigMapsService {
     await this.syncOperationRepository.save(syncOperation);
 
     try {
-      // Update multiple ConfigMap keys
-      await this.rancherApiService.syncConfigMapKeys(
-        targetAppInstance.rancherSite,
+      // Use adapter pattern to sync multiple ConfigMap keys for both rancher and generic clusters
+      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
+        targetAppInstance,
+      );
+      await targetAdapter.syncConfigMapKeys(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
         syncData.configMapName,
