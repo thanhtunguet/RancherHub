@@ -5,6 +5,7 @@ import { AppInstance } from '../../entities/app-instance.entity';
 import { SyncOperation } from '../../entities/sync-operation.entity';
 import { SyncHistory } from '../../entities/sync-history.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { ClusterAdapterFactory } from '../../adapters/cluster-adapter.factory';
 
 export interface SecretData {
   id: string;
@@ -96,14 +97,16 @@ export class SecretsService {
     @InjectRepository(SyncHistory)
     private readonly syncHistoryRepository: Repository<SyncHistory>,
     private readonly rancherApiService: RancherApiService,
+    private readonly clusterAdapterFactory: ClusterAdapterFactory,
   ) {}
 
   async getSecretsByAppInstance(appInstanceId: string): Promise<SecretData[]> {
     this.logger.debug(`Getting secrets for app instance: ${appInstanceId}`);
 
+    // Load both relations - TypeORM will handle nulls gracefully
     const appInstance = await this.appInstanceRepository.findOne({
       where: { id: appInstanceId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'genericClusterSite'],
     });
 
     if (!appInstance) {
@@ -111,8 +114,9 @@ export class SecretsService {
     }
 
     try {
-      const secrets = await this.rancherApiService.getSecretsFromK8sApi(
-        appInstance.rancherSite,
+      // Use adapter pattern to get Secrets for both rancher and generic clusters
+      const adapter = await this.clusterAdapterFactory.createAdapter(appInstance);
+      const secrets = await adapter.getSecrets(
         appInstance.cluster,
         appInstance.namespace,
       );
@@ -446,7 +450,7 @@ export class SecretsService {
 
     const targetAppInstance = await this.appInstanceRepository.findOne({
       where: { id: syncData.targetAppInstanceId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'genericClusterSite'],
     });
 
     if (!targetAppInstance) {
@@ -467,9 +471,11 @@ export class SecretsService {
       await this.syncOperationRepository.save(syncOperation);
 
     try {
-      // Update the secret key
-      await this.rancherApiService.updateSecretKey(
-        targetAppInstance.rancherSite,
+      // Use adapter pattern to update Secret key for both rancher and generic clusters
+      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
+        targetAppInstance,
+      );
+      await targetAdapter.updateSecretKey(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
         syncData.secretName,
@@ -531,7 +537,7 @@ export class SecretsService {
 
     const targetAppInstance = await this.appInstanceRepository.findOne({
       where: { id: syncData.targetAppInstanceId },
-      relations: ['rancherSite'],
+      relations: ['rancherSite', 'genericClusterSite'],
     });
 
     if (!targetAppInstance) {
@@ -552,9 +558,11 @@ export class SecretsService {
       await this.syncOperationRepository.save(syncOperation);
 
     try {
-      // Update the secret keys
-      await this.rancherApiService.syncSecretKeys(
-        targetAppInstance.rancherSite,
+      // Use adapter pattern to sync multiple Secret keys for both rancher and generic clusters
+      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
+        targetAppInstance,
+      );
+      await targetAdapter.syncSecretKeys(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
         syncData.secretName,
