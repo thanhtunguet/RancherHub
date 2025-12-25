@@ -1,6 +1,20 @@
-# Rancher Hub - Service Sync Manager
+# Rancher Hub - Kubernetes Environment Comparison & Sync Platform
 
-A comprehensive tool for managing and synchronizing services across different environments in Rancher clusters.
+A powerful, unified platform for managing, comparing, and synchronizing services, configurations, and secrets across diverse Kubernetes environments—from Rancher clusters to cloud-managed solutions like EKS, GKE, and AKS.
+
+## What is Rancher Hub?
+
+Rancher Hub is a comprehensive environment comparison and synchronization tool designed for modern multi-cluster Kubernetes deployments. Originally inspired by the need to manage Rancher clusters efficiently, it has evolved into a versatile platform that supports:
+
+- **Any Kubernetes Cluster**: Rancher, EKS, GKE, AKS, vanilla Kubernetes—all managed through a single interface
+- **Multiple Container Registries**: Harbor and DockerHub integration with extensible adapter architecture
+- **Cross-Cluster Operations**: Seamlessly sync services, ConfigMaps, and secrets between different cluster types
+- **Enterprise-Grade Security**: JWT authentication, mandatory 2FA, trusted device management, and audit trails
+- **Intelligent Monitoring**: Automated health checks with Telegram alerting and proxy support
+
+Whether you're managing hybrid cloud deployments, multi-region clusters, or transitioning between different Kubernetes platforms, Rancher Hub provides the visibility and control you need to maintain consistency across your entire infrastructure.
+
+> **A Tribute to Rancher**: This project began as a tool to simplify service synchronization in Rancher environments. We're grateful to the Rancher community and SUSE for creating such an exceptional Kubernetes management platform that inspired us to build better tooling for the ecosystem. While Rancher Hub has grown to support multiple cluster types, its roots in the Rancher ecosystem remain an important part of our story.
 
 ## Features
 
