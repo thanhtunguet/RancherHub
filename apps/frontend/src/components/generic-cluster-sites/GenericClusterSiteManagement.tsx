@@ -1,15 +1,17 @@
 import { useState } from "react";
 import Button from "antd/es/button";
-import Row from "antd/es/row";
-import Col from "antd/es/col";
+import Table from "antd/es/table";
 import Modal from "antd/es/modal";
-import Empty from "antd/es/empty";
 import Spin from "antd/es/spin";
 import Alert from "antd/es/alert";
 import Typography from "antd/es/typography";
-import { PlusOutlined, CloudServerOutlined } from "@ant-design/icons";
+import Tag from "antd/es/tag";
+import Space from "antd/es/space";
+import Popconfirm from "antd/es/popconfirm";
+import Tooltip from "antd/es/tooltip";
+import type { ColumnsType } from "antd/es/table";
+import { PlusOutlined, CloudServerOutlined, EditOutlined, DeleteOutlined, ApiOutlined } from "@ant-design/icons";
 import { ServerIcon } from "lucide-react";
-import { GenericClusterSiteCard } from "./GenericClusterSiteCard";
 import { GenericClusterSiteForm } from "./GenericClusterSiteForm";
 import {
   useGenericClusterSites,
@@ -80,6 +82,123 @@ export function GenericClusterSiteManagement() {
     setActiveMutation.mutate({ id: siteId, active });
   };
 
+  const columns: ColumnsType<GenericClusterSite> = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (name: string) => (
+        <div className="flex items-center gap-2">
+          <CloudServerOutlined className="text-blue-500" />
+          <span className="font-medium">{name}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Cluster Name",
+      dataIndex: "clusterName",
+      key: "clusterName",
+      render: (clusterName: string) =>
+        clusterName ? (
+          <span>{clusterName}</span>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
+    },
+    {
+      title: "Server URL",
+      dataIndex: "serverUrl",
+      key: "serverUrl",
+      render: (url: string) =>
+        url ? (
+          <Tooltip title={url}>
+            <span className="text-xs text-gray-700 truncate max-w-xs block">
+              {url}
+            </span>
+          </Tooltip>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
+    },
+    {
+      title: "Status",
+      dataIndex: "active",
+      key: "status",
+      width: 100,
+      render: (active: boolean) => (
+        <Tag color={active ? "green" : "default"}>
+          {active ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 200,
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Test Connection">
+            <Button
+              type="text"
+              icon={<ApiOutlined />}
+              onClick={() => handleTestConnection(record.id)}
+              loading={testingSiteId === record.id}
+              size="small"
+            >
+              Test
+            </Button>
+          </Tooltip>
+          {!record.active && (
+            <Tooltip title="Set as Active">
+              <Button
+                type="text"
+                onClick={() => handleToggleActive(record.id, true)}
+                size="small"
+              >
+                Activate
+              </Button>
+            </Tooltip>
+          )}
+          {record.active && (
+            <Tooltip title="Deactivate">
+              <Button
+                type="text"
+                onClick={() => handleToggleActive(record.id, false)}
+                size="small"
+              >
+                Deactivate
+              </Button>
+            </Tooltip>
+          )}
+          <Tooltip title="Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              size="small"
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Delete Cluster"
+            description="Are you sure you want to delete this cluster?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Tooltip title="Delete">
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -121,49 +240,43 @@ export function GenericClusterSiteManagement() {
         </Button>
       </div>
 
-      {sites && sites.length > 0 ? (
-        <div>
-          <div className="mb-4">
-            <Text className="text-gray-600">
-              {sites.length} cluster{sites.length !== 1 ? "s" : ""}
-            </Text>
-          </div>
-          <Row gutter={[16, 16]}>
-            {sites.map((site) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={site.id}>
-                <GenericClusterSiteCard
-                  site={site}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onTestConnection={handleTestConnection}
-                  onToggleActive={handleToggleActive}
-                  testingConnection={testingSiteId === site.id}
-                />
-              </Col>
-            ))}
-          </Row>
-        </div>
-      ) : (
-        <Empty
-          image={<ServerIcon size={64} className="mx-auto text-gray-400" />}
-          description={
-            <div className="text-center">
+      <div className="mb-4">
+        <Text className="text-gray-600">
+          {sites?.length || 0} cluster{(sites?.length || 0) !== 1 ? "s" : ""}
+        </Text>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={sites || []}
+        rowKey="id"
+        pagination={{
+          defaultPageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} clusters`,
+        }}
+        locale={{
+          emptyText: (
+            <div className="text-center py-8">
+              <ServerIcon
+                size={48}
+                className="mx-auto text-gray-400 mb-4"
+              />
               <p className="text-gray-500 mb-2">No generic clusters configured</p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm mb-4">
                 Add your first generic Kubernetes cluster to get started
               </p>
+              <Button
+                type="primary"
+                icon={<CloudServerOutlined />}
+                onClick={handleOpenModal}
+              >
+                Add Your First Cluster
+              </Button>
             </div>
-          }
-        >
-          <Button
-            type="primary"
-            icon={<CloudServerOutlined />}
-            onClick={handleOpenModal}
-          >
-            Add Your First Cluster
-          </Button>
-        </Empty>
-      )}
+          ),
+        }}
+      />
 
       <Modal
         title={editingSite ? "Edit Cluster" : "Add New Cluster"}
@@ -190,5 +303,3 @@ export function GenericClusterSiteManagement() {
     </div>
   );
 }
-
-

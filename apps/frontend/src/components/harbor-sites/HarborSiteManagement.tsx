@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import Card from 'antd/es/card';
-import Row from 'antd/es/row';
-import Col from 'antd/es/col';
+import Table from 'antd/es/table';
 import Button from 'antd/es/button';
 import Typography from 'antd/es/typography';
 import Spin from 'antd/es/spin';
 import Alert from 'antd/es/alert';
-import Empty from 'antd/es/empty';
 import Space from 'antd/es/space';
 import message from 'antd/es/message';
 import Modal from 'antd/es/modal';
+import Tag from 'antd/es/tag';
+import Popconfirm from 'antd/es/popconfirm';
+import Tooltip from 'antd/es/tooltip';
+import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
 import {
   PlusOutlined,
   ReloadOutlined,
   DatabaseOutlined,
   ExclamationCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  FolderOpenOutlined,
+  ApiOutlined,
 } from '@ant-design/icons';
-import { HarborSiteCard } from './HarborSiteCard';
 import { HarborSiteForm } from './HarborSiteForm';
 import { HarborSite, CreateHarborSiteRequest } from '../../types';
 import { harborSitesApi } from '../../services/api';
@@ -24,11 +30,13 @@ import { harborSitesApi } from '../../services/api';
 const { Title, Text } = Typography;
 
 export const HarborSiteManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [sites, setSites] = useState<HarborSite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formVisible, setFormVisible] = useState(false);
   const [editingSite, setEditingSite] = useState<HarborSite | null>(null);
+  const [testingSiteId, setTestingSiteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSites();
@@ -42,9 +50,9 @@ export const HarborSiteManagement: React.FC = () => {
       const data = await harborSitesApi.getAll();
       setSites(data);
     } catch (err: any) {
-      const message =
+      const errorMessage =
         err?.response?.data?.message || err?.message || 'An error occurred';
-      setError(message);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -69,9 +77,9 @@ export const HarborSiteManagement: React.FC = () => {
       }
       await fetchSites();
     } catch (err: any) {
-      const message =
+      const errorMessage =
         err?.response?.data?.message || err?.message || 'Failed to save Harbor site';
-      throw new Error(message);
+      throw new Error(errorMessage);
     }
   };
 
@@ -100,6 +108,7 @@ export const HarborSiteManagement: React.FC = () => {
   };
 
   const handleTestConnection = async (site: HarborSite) => {
+    setTestingSiteId(site.id);
     try {
       const result = await harborSitesApi.testSiteConnection(site.id);
 
@@ -126,10 +135,140 @@ export const HarborSiteManagement: React.FC = () => {
         content: errorMessage,
       });
       message.error('Harbor connection test failed');
+    } finally {
+      setTestingSiteId(null);
     }
   };
 
+  const handleBrowse = (siteId: string) => {
+    navigate(`/harbor-sites/${siteId}/browser`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const activeSite = sites.find(site => site.active);
+
+  const columns: ColumnsType<HarborSite> = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      key: 'name',
+      render: (name: string, record) => (
+        <div className="flex items-center gap-2">
+          <DatabaseOutlined className="text-blue-500" />
+          <span className="font-medium">{name}</span>
+          {record.active && (
+            <Tag color="green" icon={<CheckCircleOutlined />}>
+              Active
+            </Tag>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'URL',
+      dataIndex: 'url',
+      key: 'url',
+      render: (url: string) => (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">
+          {url}
+        </a>
+      ),
+    },
+    {
+      title: 'Username',
+      dataIndex: 'username',
+      key: 'username',
+      render: (username: string) => (
+        <code className="text-sm">{username}</code>
+      ),
+    },
+    {
+      title: 'Created',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      width: 120,
+      render: (date: string) => formatDate(date),
+    },
+    {
+      title: 'Updated',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      width: 120,
+      render: (date: string) => formatDate(date),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 280,
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Test Connection">
+            <Button
+              type="text"
+              icon={<ApiOutlined />}
+              onClick={() => handleTestConnection(record)}
+              loading={testingSiteId === record.id}
+              size="small"
+            >
+              Test
+            </Button>
+          </Tooltip>
+          <Tooltip title="Browse Registry">
+            <Button
+              type="text"
+              icon={<FolderOpenOutlined />}
+              onClick={() => handleBrowse(record.id)}
+              size="small"
+            >
+              Browse
+            </Button>
+          </Tooltip>
+          {!record.active && (
+            <Tooltip title="Set as Active">
+              <Button
+                type="text"
+                onClick={() => handleActivate(record.id)}
+                size="small"
+              >
+                Activate
+              </Button>
+            </Tooltip>
+          )}
+          <Tooltip title="Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              size="small"
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Delete Harbor Site"
+            description="Are you sure you want to delete this Harbor site?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Tooltip title="Delete">
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   if (loading) {
     return (
@@ -210,39 +349,31 @@ export const HarborSiteManagement: React.FC = () => {
         />
       )}
 
-      {sites.length === 0 && !loading && !error ? (
-        <Card>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div>
-                <p>No Harbor sites configured</p>
-                <Text type="secondary">
-                  Add your first Harbor registry to enable container image management
-                </Text>
-              </div>
-            }
-          >
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              Add Harbor Site
-            </Button>
-          </Empty>
-        </Card>
-      ) : (
-        <Row gutter={[16, 16]}>
-          {sites.map((site) => (
-            <Col xs={24} sm={12} lg={8} xl={6} key={site.id}>
-              <HarborSiteCard
-                site={site}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onActivate={handleActivate}
-                onTestConnection={handleTestConnection}
-              />
-            </Col>
-          ))}
-        </Row>
-      )}
+      <Table
+        columns={columns}
+        dataSource={sites}
+        rowKey="id"
+        loading={loading}
+        pagination={{
+          defaultPageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} Harbor sites`,
+        }}
+        locale={{
+          emptyText: (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <DatabaseOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+              <p style={{ color: '#666', marginBottom: 8 }}>No Harbor sites configured</p>
+              <Text type="secondary" style={{ marginBottom: 16, display: 'block' }}>
+                Add your first Harbor registry to enable container image management
+              </Text>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+                Add Harbor Site
+              </Button>
+            </div>
+          ),
+        }}
+      />
 
       <HarborSiteForm
         visible={formVisible}

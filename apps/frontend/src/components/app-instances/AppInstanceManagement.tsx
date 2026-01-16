@@ -1,15 +1,22 @@
 import { useState } from "react";
 import Button from "antd/es/button";
-import Row from "antd/es/row";
-import Col from "antd/es/col";
+import Table from "antd/es/table";
 import Modal from "antd/es/modal";
-import Empty from "antd/es/empty";
 import Spin from "antd/es/spin";
 import Alert from "antd/es/alert";
 import Typography from "antd/es/typography";
-import { PlusOutlined } from "@ant-design/icons";
-import { DatabaseIcon } from "lucide-react";
-import { AppInstanceCard } from "./AppInstanceCard";
+import Tag from "antd/es/tag";
+import Space from "antd/es/space";
+import Popconfirm from "antd/es/popconfirm";
+import Tooltip from "antd/es/tooltip";
+import type { ColumnsType } from "antd/es/table";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  DatabaseOutlined,
+} from "@ant-design/icons";
+import { ServerIcon, LayersIcon, CloudIcon } from "lucide-react";
 import { AppInstanceForm } from "./AppInstanceForm";
 import {
   useAppInstances,
@@ -82,6 +89,138 @@ export function AppInstanceManagement() {
     deleteAppInstanceMutation.mutate(appInstanceId);
   };
 
+  const columns: ColumnsType<AppInstance> = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (name: string, record) => (
+        <div className="flex items-center gap-2">
+          <DatabaseOutlined className="text-blue-500" />
+          <div>
+            <div className="font-medium">{name}</div>
+            <Tag
+              color={record.clusterType === "generic" ? "purple" : "blue"}
+              className="mt-1"
+            >
+              {record.clusterType === "generic" ? "Generic" : "Rancher"}
+            </Tag>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Environment",
+      dataIndex: "environment",
+      key: "environment",
+      render: (_, record) =>
+        record.environment ? (
+          <div className="flex items-center gap-2">
+            <LayersIcon size={14} className="text-gray-400" />
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: record.environment.color }}
+            />
+            <span>{record.environment.name}</span>
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
+    },
+    {
+      title: "Cluster",
+      dataIndex: "cluster",
+      key: "cluster",
+      render: (cluster: string) => (
+        <div className="flex items-center gap-2">
+          <ServerIcon size={14} className="text-gray-400" />
+          <span>{cluster}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Namespace",
+      dataIndex: "namespace",
+      key: "namespace",
+    },
+    {
+      title: "Site",
+      key: "site",
+      render: (_, record) => {
+        if (record.rancherSite) {
+          return (
+            <div className="flex items-center justify-between">
+              <span>{record.rancherSite.name}</span>
+              <Tag color={record.rancherSite.active ? "green" : "default"}>
+                {record.rancherSite.active ? "Active" : "Inactive"}
+              </Tag>
+            </div>
+          );
+        }
+        if (record.genericClusterSite) {
+          return (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CloudIcon size={14} className="text-gray-400" />
+                <span>{record.genericClusterSite.name}</span>
+              </div>
+              <Tag
+                color={record.genericClusterSite.active ? "green" : "default"}
+              >
+                {record.genericClusterSite.active ? "Active" : "Inactive"}
+              </Tag>
+            </div>
+          );
+        }
+        return <span className="text-gray-400">-</span>;
+      },
+    },
+    {
+      title: "Services",
+      key: "services",
+      width: 80,
+      render: (_, record) =>
+        record.services ? (
+          <Tag color="blue">{record.services.length}</Tag>
+        ) : (
+          <span className="text-gray-400">0</span>
+        ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Edit">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              size="small"
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Delete App Instance"
+            description="Are you sure you want to delete this app instance?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Tooltip title="Delete">
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
   if (environmentsLoading || sitesLoading || genericSitesLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -150,50 +289,44 @@ export function AppInstanceManagement() {
         </Button>
       </div>
 
-      {appInstances && appInstances.length > 0 ? (
-        <div>
-          <div className="mb-4">
-            <Text className="text-gray-600">
-              {appInstances.length} app instance
-              {appInstances.length !== 1 ? "s" : ""}
-            </Text>
-          </div>
-          <Row gutter={[16, 16]}>
-            {appInstances.map((appInstance) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={appInstance.id}>
-                <AppInstanceCard
-                  appInstance={appInstance}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              </Col>
-            ))}
-          </Row>
-        </div>
-      ) : (
-        <Empty
-          image={<DatabaseIcon size={64} className="mx-auto text-gray-400" />}
-          description={
-            <div className="text-center">
-              <p className="text-gray-500 mb-2">
-                No app instances configured
-              </p>
-              <p className="text-gray-400 text-sm">
+      <div className="mb-4">
+        <Text className="text-gray-600">
+          {appInstances?.length || 0} app instance
+          {(appInstances?.length || 0) !== 1 ? "s" : ""}
+        </Text>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={appInstances || []}
+        rowKey="id"
+        pagination={{
+          defaultPageSize: 10,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} app instances`,
+        }}
+        locale={{
+          emptyText: (
+            <div className="text-center py-8">
+              <DatabaseOutlined
+                style={{ fontSize: 48, color: "#d9d9d9", marginBottom: 16 }}
+              />
+              <p className="text-gray-500 mb-2">No app instances configured</p>
+              <p className="text-gray-400 text-sm mb-4">
                 Create your first app instance to link an environment with a
-                Rancher cluster
+                cluster
               </p>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleOpenModal}
+              >
+                Create First App Instance
+              </Button>
             </div>
-          }
-        >
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenModal}
-          >
-            Create First App Instance
-          </Button>
-        </Empty>
-      )}
+          ),
+        }}
+      />
 
       <Modal
         title={
