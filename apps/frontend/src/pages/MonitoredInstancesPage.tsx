@@ -225,7 +225,6 @@ export const MonitoredInstancesPage: React.FC = () => {
       dataIndex: 'checkIntervalMinutes',
       key: 'interval',
       render: (minutes: number) => `${minutes}m`,
-      width: 80,
     },
     {
       title: 'Failures',
@@ -251,12 +250,10 @@ export const MonitoredInstancesPage: React.FC = () => {
           loading={updatingIds.has(record.id)}
         />
       ),
-      width: 100,
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
       render: (_, record) => (
         <Space>
           <Tooltip title="Edit">

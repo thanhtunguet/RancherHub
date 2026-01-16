@@ -159,15 +159,10 @@ export const HarborSiteManagement: React.FC = () => {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record) => (
+      render: (name: string) => (
         <div className="flex items-center gap-2">
           <DatabaseOutlined className="text-blue-500" />
           <span className="font-medium">{name}</span>
-          {record.active && (
-            <Tag color="green" icon={<CheckCircleOutlined />}>
-              Active
-            </Tag>
-          )}
         </div>
       ),
     },
@@ -190,23 +185,30 @@ export const HarborSiteManagement: React.FC = () => {
       ),
     },
     {
+      title: 'Status',
+      dataIndex: 'active',
+      key: 'status',
+      render: (active: boolean) => (
+        <Tag color={active ? "green" : "default"} icon={active ? <CheckCircleOutlined /> : undefined}>
+          {active ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
       title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 120,
       render: (date: string) => formatDate(date),
     },
     {
       title: 'Updated',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
-      width: 120,
       render: (date: string) => formatDate(date),
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 280,
       render: (_, record) => (
         <Space>
           <Tooltip title="Test Connection">

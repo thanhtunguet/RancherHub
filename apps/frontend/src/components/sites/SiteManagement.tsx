@@ -86,13 +86,10 @@ export function SiteManagement() {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (name: string, record) => (
+      render: (name: string) => (
         <div className="flex items-center gap-2">
           <ServerIcon size={16} className="text-blue-500" />
           <span className="font-medium">{name}</span>
-          {record.active && (
-            <Tag color="blue">Active</Tag>
-          )}
         </div>
       ),
     },
@@ -112,16 +109,24 @@ export function SiteManagement() {
       ),
     },
     {
+      title: "Status",
+      dataIndex: "active",
+      key: "status",
+      render: (active: boolean) => (
+        <Tag color={active ? "blue" : "default"}>
+          {active ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
+    {
       title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 120,
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: "Actions",
       key: "actions",
-      width: 260,
       render: (_, record) => (
         <Space>
           <Tooltip title="Test Connection">

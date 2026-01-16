@@ -124,7 +124,6 @@ export function GenericClusterSiteManagement() {
       title: "Status",
       dataIndex: "active",
       key: "status",
-      width: 100,
       render: (active: boolean) => (
         <Tag color={active ? "green" : "default"}>
           {active ? "Active" : "Inactive"}
@@ -134,7 +133,6 @@ export function GenericClusterSiteManagement() {
     {
       title: "Actions",
       key: "actions",
-      width: 200,
       render: (_, record) => (
         <Space>
           <Tooltip title="Test Connection">

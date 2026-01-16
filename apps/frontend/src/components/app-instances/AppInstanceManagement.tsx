@@ -94,19 +94,21 @@ export function AppInstanceManagement() {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (name: string, record) => (
+      render: (name: string) => (
         <div className="flex items-center gap-2">
           <DatabaseOutlined className="text-blue-500" />
-          <div>
-            <div className="font-medium">{name}</div>
-            <Tag
-              color={record.clusterType === "generic" ? "purple" : "blue"}
-              className="mt-1"
-            >
-              {record.clusterType === "generic" ? "Generic" : "Rancher"}
-            </Tag>
-          </div>
+          <span className="font-medium">{name}</span>
         </div>
+      ),
+    },
+    {
+      title: "Type",
+      dataIndex: "clusterType",
+      key: "clusterType",
+      render: (clusterType: string) => (
+        <Tag color={clusterType === "generic" ? "purple" : "blue"}>
+          {clusterType === "generic" ? "Generic" : "Rancher"}
+        </Tag>
       ),
     },
     {
@@ -148,28 +150,35 @@ export function AppInstanceManagement() {
       key: "site",
       render: (_, record) => {
         if (record.rancherSite) {
+          return <span>{record.rancherSite.name}</span>;
+        }
+        if (record.genericClusterSite) {
           return (
-            <div className="flex items-center justify-between">
-              <span>{record.rancherSite.name}</span>
-              <Tag color={record.rancherSite.active ? "green" : "default"}>
-                {record.rancherSite.active ? "Active" : "Inactive"}
-              </Tag>
+            <div className="flex items-center gap-2">
+              <CloudIcon size={14} className="text-gray-400" />
+              <span>{record.genericClusterSite.name}</span>
             </div>
+          );
+        }
+        return <span className="text-gray-400">-</span>;
+      },
+    },
+    {
+      title: "Site Status",
+      key: "siteStatus",
+      render: (_, record) => {
+        if (record.rancherSite) {
+          return (
+            <Tag color={record.rancherSite.active ? "green" : "default"}>
+              {record.rancherSite.active ? "Active" : "Inactive"}
+            </Tag>
           );
         }
         if (record.genericClusterSite) {
           return (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CloudIcon size={14} className="text-gray-400" />
-                <span>{record.genericClusterSite.name}</span>
-              </div>
-              <Tag
-                color={record.genericClusterSite.active ? "green" : "default"}
-              >
-                {record.genericClusterSite.active ? "Active" : "Inactive"}
-              </Tag>
-            </div>
+            <Tag color={record.genericClusterSite.active ? "green" : "default"}>
+              {record.genericClusterSite.active ? "Active" : "Inactive"}
+            </Tag>
           );
         }
         return <span className="text-gray-400">-</span>;
@@ -178,7 +187,6 @@ export function AppInstanceManagement() {
     {
       title: "Services",
       key: "services",
-      width: 80,
       render: (_, record) =>
         record.services ? (
           <Tag color="blue">{record.services.length}</Tag>
@@ -189,7 +197,6 @@ export function AppInstanceManagement() {
     {
       title: "Actions",
       key: "actions",
-      width: 100,
       render: (_, record) => (
         <Space>
           <Tooltip title="Edit">

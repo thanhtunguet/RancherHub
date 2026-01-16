@@ -102,7 +102,6 @@ export function EnvironmentManagement() {
     {
       title: "App Instances",
       key: "appInstances",
-      width: 120,
       render: (_, record) => {
         const count = record.appInstances?.length || 0;
         return (
@@ -119,13 +118,11 @@ export function EnvironmentManagement() {
       title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 120,
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: "Actions",
       key: "actions",
-      width: 120,
       render: (_, record) => (
         <Space>
           <Tooltip title="Edit">
