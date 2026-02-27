@@ -22,6 +22,16 @@ All MVP features have been successfully implemented and are fully functional. Mu
 - **Monitoring System** - Health checks with Telegram alerting
 - **Sync History** - Complete audit trail of all operations
 - **Cross-Cluster Synchronization** - Sync between Rancher and generic Kubernetes clusters
+- **Frontend Parity Fixes (`apps/rancher-hub-ui`)**
+  - Trusted-device authentication fields restored in login/2FA flow (`trustDevice`, `deviceFingerprint`)
+  - Monitoring instance lifecycle restored (edit, delete, and enable/disable toggle)
+  - Compare sync now sends source service IDs (not service names) in `serviceIds`
+  - Harbor browser repository/tag endpoints now URL-encode dynamic path segments
+  - Storage View restored with `/storage` route + navigation and new UI implementation
+  - Generic cluster active toggle now sends required `{ active }` payload and supports explicit deactivate
+  - ConfigMaps/Secrets compare flow now supports `Sync Selected` actions via `sync-key` / `sync-keys`
+  - Added dark/light theme switching using `next-themes` with default dark theme
+  - Added Rancher/Harbor site activate/deactivate success toast feedback to match Generic Clusters UX
 
 ### ✅ Completed: Multi-Cluster (Generic Kubernetes) Support
 - **Adapter Layer (Backend)** - IClusterAdapter, RancherClusterAdapter, GenericClusterAdapter, and ClusterAdapterFactory implemented
@@ -46,7 +56,7 @@ All MVP features have been successfully implemented and are fully functional. Mu
 - **Rollback Capabilities**: Undo failed synchronizations with one-click rollback
 
 #### Enhanced UI/UX
-- **Dark/Light Mode**: Theme switching with user preferences
+- **Theme Personalization**: Extend current dark/light support with per-user theme preferences beyond device storage
 - **Advanced Filtering**: Multi-criteria service filtering and search
 - **Real-time Updates**: WebSocket integration for live status updates
 - **Responsive Design**: Mobile-friendly interface

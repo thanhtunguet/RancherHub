@@ -1,0 +1,3 @@
+[submodule "apps/rancher-hub-ui"]
+	path = apps/rancher-hub-ui
+	url = git@github.com:thanhtunguet/rancher-hub-ui.git

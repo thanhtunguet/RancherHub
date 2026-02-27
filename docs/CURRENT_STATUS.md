@@ -9,6 +9,35 @@
 
 Rancher Hub has successfully completed its MVP phase with all core features implemented, tested, and fully functional. The application provides comprehensive service management and synchronization capabilities across multiple Rancher environments with enterprise-grade security and monitoring.
 
+### Recent Updates (February 27, 2026)
+- `apps/rancher-hub-ui` login flow parity fix:
+  - Added device fingerprint generation and device name detection during authentication
+  - Restored trusted-device login payload support (`trustDevice`, `deviceFingerprint`) in 2FA flow
+- `apps/rancher-hub-ui` monitoring parity fix:
+  - Added full monitored-instance lifecycle actions (edit settings, remove instance, enable/disable toggle)
+  - Reused monitoring create/update/delete APIs directly from the new frontend
+- `apps/rancher-hub-ui` service sync parity fix:
+  - Compare mode now resolves selected services to real source service IDs before calling sync
+  - Prevents sending service names as `serviceIds` in sync payload
+- `apps/rancher-hub-ui` harbor browser parity fix:
+  - Restored URL encoding for Harbor path params (`projectName`, `repositoryName`, `tag`)
+  - Prevents path breakage for repositories/tags containing special characters
+- `apps/rancher-hub-ui` storage view parity fix:
+  - Restored `/storage` route and sidebar navigation entry in new frontend
+  - Implemented new Storage View UI with app-instance selection, size summary, and service storage table
+- `apps/rancher-hub-ui` generic cluster toggle parity fix:
+  - `set-active` API now sends required `{ active: boolean }` request body
+  - Generic cluster page now supports explicit activate/deactivate actions with loading feedback
+- `apps/rancher-hub-ui` ConfigMap/Secret sync parity fix:
+  - Compare mode now includes `Sync Selected` actions for both ConfigMaps and Secrets
+  - Sync flow now uses backend `sync-key`/`sync-keys` payload contracts and refreshes compare data after writes
+- `apps/rancher-hub-ui` theming enhancement:
+  - Added Tailwind + shadcn-compatible dark/light theme support via `next-themes`
+  - Dark theme remains the default and users can toggle theme from the top bar
+- `apps/rancher-hub-ui` site toggle UX parity fix:
+  - Added success toast feedback for Rancher site activate/deactivate actions
+  - Added success toast feedback for Harbor site activate/deactivate actions
+
 ---
 
 ## ✅ Implemented Features Overview
