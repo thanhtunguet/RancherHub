@@ -32,6 +32,7 @@ All MVP features have been successfully implemented and are fully functional. Mu
   - ConfigMaps/Secrets compare flow now supports `Sync Selected` actions via `sync-key` / `sync-keys`
   - Added dark/light theme switching using `next-themes` with default dark theme
   - Added Rancher/Harbor site activate/deactivate success toast feedback to match Generic Clusters UX
+  - Service compare table now includes `Source Image Tag` and `Target Image Tag` columns with old-FE style image-tag formatting
 
 ### ✅ Completed: Multi-Cluster (Generic Kubernetes) Support
 - **Adapter Layer (Backend)** - IClusterAdapter, RancherClusterAdapter, GenericClusterAdapter, and ClusterAdapterFactory implemented

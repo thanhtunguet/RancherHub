@@ -37,6 +37,9 @@ Rancher Hub has successfully completed its MVP phase with all core features impl
 - `apps/rancher-hub-ui` site toggle UX parity fix:
   - Added success toast feedback for Rancher site activate/deactivate actions
   - Added success toast feedback for Harbor site activate/deactivate actions
+- `apps/rancher-hub-ui` service comparison table parity fix:
+  - Added `Source Image Tag` and `Target Image Tag` columns in compare mode
+  - Matches old frontend behavior by formatting full image paths to `repository:tag` and showing source/target status
 
 ---
 
