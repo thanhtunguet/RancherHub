@@ -89,6 +89,9 @@
     ],
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
+    "moduleNameMapper": {
+      "^@kubernetes/client-node$": "<rootDir>/test/mocks/kubernetes-client-node.mock.ts"
+    },
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },

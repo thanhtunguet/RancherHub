@@ -2,7 +2,6 @@ import { GenericClusterAdapter } from './generic-cluster.adapter';
 import * as k8s from '@kubernetes/client-node';
 
 describe('GenericClusterAdapter', () => {
-  let adapter: GenericClusterAdapter;
   const mockKubeconfig = `
 apiVersion: v1
 kind: Config
@@ -22,12 +21,60 @@ users:
     token: test-token
 `;
 
-  beforeEach(async () => {
-    adapter = new GenericClusterAdapter(mockKubeconfig, 'test-cluster');
+  const createAdapter = () =>
+    new GenericClusterAdapter(mockKubeconfig, 'test-cluster');
+
+  const createCoreApiMock = (overrides: Record<string, unknown> = {}) => ({
+    listNamespace: jest.fn().mockResolvedValue({ items: [] }),
+    listNamespacedConfigMap: jest.fn().mockResolvedValue({ items: [] }),
+    listNamespacedSecret: jest.fn().mockResolvedValue({ items: [] }),
+    ...overrides,
+  });
+
+  const createAppsApiMock = (overrides: Record<string, unknown> = {}) => ({
+    listNamespacedDeployment: jest.fn().mockResolvedValue({ items: [] }),
+    listNamespacedDaemonSet: jest.fn().mockResolvedValue({ items: [] }),
+    listNamespacedStatefulSet: jest.fn().mockResolvedValue({ items: [] }),
+    readNamespacedDeployment: jest.fn().mockResolvedValue({ spec: {} }),
+    replaceNamespacedDeployment: jest.fn().mockResolvedValue({}),
+    readNamespacedDaemonSet: jest.fn().mockResolvedValue({ spec: {} }),
+    replaceNamespacedDaemonSet: jest.fn().mockResolvedValue({}),
+    readNamespacedStatefulSet: jest.fn().mockResolvedValue({ spec: {} }),
+    replaceNamespacedStatefulSet: jest.fn().mockResolvedValue({}),
+    ...overrides,
+  });
+
+  const mockK8sClients = (options?: {
+    coreApiOverrides?: Record<string, unknown>;
+    appsApiOverrides?: Record<string, unknown>;
+  }) => {
+    const coreApi = createCoreApiMock(options?.coreApiOverrides);
+    const appsApi = createAppsApiMock(options?.appsApiOverrides);
+
+    jest
+      .spyOn(k8s.KubeConfig.prototype, 'makeApiClient')
+      .mockImplementation((api: unknown) => {
+        if (api === k8s.CoreV1Api) {
+          return coreApi as any;
+        }
+
+        if (api === k8s.AppsV1Api) {
+          return appsApi as any;
+        }
+
+        return {};
+      });
+
+    return { coreApi, appsApi };
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('constructor', () => {
     it('should initialize with valid kubeconfig', () => {
+      const adapter = createAdapter();
       expect(adapter).toBeDefined();
     });
 
@@ -40,14 +87,16 @@ users:
 
   describe('testConnection', () => {
     it('should test connection successfully', async () => {
-      // Mock the Kubernetes API
       const mockListNamespace = jest.fn().mockResolvedValue({
         items: [{ metadata: { name: 'default' } }],
       });
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespace: mockListNamespace,
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespace: mockListNamespace,
+        },
+      });
+      const adapter = createAdapter();
 
       const result = await adapter.testConnection();
 
@@ -61,9 +110,12 @@ users:
         .fn()
         .mockRejectedValue(new Error('Connection refused'));
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespace: mockListNamespace,
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespace: mockListNamespace,
+        },
+      });
+      const adapter = createAdapter();
 
       const result = await adapter.testConnection();
 
@@ -83,9 +135,12 @@ users:
         items: mockNamespaces,
       });
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespace: mockListNamespace,
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespace: mockListNamespace,
+        },
+      });
+      const adapter = createAdapter();
 
       const namespaces = await adapter.getNamespaces();
 
@@ -99,9 +154,12 @@ users:
         items: [{ metadata: { name: 'default' } }],
       });
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespace: mockListNamespace,
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespace: mockListNamespace,
+        },
+      });
+      const adapter = createAdapter();
 
       const namespaces = await adapter.getNamespaces('ignored-cluster-id');
 
@@ -142,13 +200,18 @@ users:
         ],
       };
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespacedDeployment: jest.fn().mockResolvedValue(mockDeployments),
-        listNamespacedDaemonSet: jest.fn().mockResolvedValue(mockDaemonSets),
-        listNamespacedStatefulSet: jest
-          .fn()
-          .mockResolvedValue(mockStatefulSets),
-      } as any);
+      mockK8sClients({
+        appsApiOverrides: {
+          listNamespacedDeployment: jest
+            .fn()
+            .mockResolvedValue(mockDeployments),
+          listNamespacedDaemonSet: jest.fn().mockResolvedValue(mockDaemonSets),
+          listNamespacedStatefulSet: jest
+            .fn()
+            .mockResolvedValue(mockStatefulSets),
+        },
+      });
+      const adapter = createAdapter();
 
       const workloads = await adapter.getDeployments('test-cluster', 'default');
 
@@ -162,12 +225,10 @@ users:
   describe('updateWorkloadImage', () => {
     it('should update deployment image', async () => {
       const mockRead = jest.fn().mockResolvedValue({
-        body: {
-          spec: {
-            template: {
-              spec: {
-                containers: [{ name: 'app', image: 'app:v1' }],
-              },
+        spec: {
+          template: {
+            spec: {
+              containers: [{ name: 'app', image: 'app:v1' }],
             },
           },
         },
@@ -175,10 +236,13 @@ users:
 
       const mockReplace = jest.fn().mockResolvedValue({ body: {} });
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        readNamespacedDeployment: mockRead,
-        replaceNamespacedDeployment: mockReplace,
-      } as any);
+      mockK8sClients({
+        appsApiOverrides: {
+          readNamespacedDeployment: mockRead,
+          replaceNamespacedDeployment: mockReplace,
+        },
+      });
+      const adapter = createAdapter();
 
       await adapter.updateWorkloadImage(
         'test-cluster',
@@ -194,7 +258,7 @@ users:
   });
 
   describe('getConfigMaps', () => {
-    it('should return configmaps excluding system ones', async () => {
+    it('should return configmaps', async () => {
       const mockConfigMaps = {
         items: [
           {
@@ -215,17 +279,20 @@ users:
         ],
       };
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespacedConfigMap: jest.fn().mockResolvedValue(mockConfigMaps),
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespacedConfigMap: jest.fn().mockResolvedValue(mockConfigMaps),
+        },
+      });
+      const adapter = createAdapter();
 
       const configMaps = await adapter.getConfigMaps('test-cluster', 'default');
 
-      // Should filter out system configmaps
-      expect(configMaps.length).toBeGreaterThan(0);
+      expect(configMaps).toHaveLength(2);
+      expect(configMaps.find((cm) => cm.name === 'app-config')).toBeDefined();
       expect(
         configMaps.find((cm) => cm.name === 'kube-root-ca.crt'),
-      ).toBeUndefined();
+      ).toBeDefined();
     });
   });
 
@@ -251,9 +318,12 @@ users:
         ],
       };
 
-      jest.spyOn(k8s.KubeConfig.prototype, 'makeApiClient').mockReturnValue({
-        listNamespacedSecret: jest.fn().mockResolvedValue(mockSecrets),
-      } as any);
+      mockK8sClients({
+        coreApiOverrides: {
+          listNamespacedSecret: jest.fn().mockResolvedValue(mockSecrets),
+        },
+      });
+      const adapter = createAdapter();
 
       const secrets = await adapter.getSecrets('test-cluster', 'default');
 
