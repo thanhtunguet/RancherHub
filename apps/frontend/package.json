@@ -10,7 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "preview:ssg": "vite-react-ssg preview",
-    "test": "jest --passWithNoTests"
+    "test": "jest --config jest.config.cjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
