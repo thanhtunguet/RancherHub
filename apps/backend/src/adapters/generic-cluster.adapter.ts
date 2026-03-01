@@ -285,10 +285,28 @@ export class GenericClusterAdapter implements IClusterAdapter {
     value: string,
   ): Promise<any> {
     try {
-      const configMap = await this.k8sApi.readNamespacedConfigMap({
-        name: configMapName,
-        namespace,
-      });
+      let configMap: any;
+      try {
+        configMap = await this.k8sApi.readNamespacedConfigMap({
+          name: configMapName,
+          namespace,
+        });
+      } catch (readError) {
+        if (readError?.response?.statusCode === 404 || readError?.statusCode === 404) {
+          // ConfigMap does not exist on target — create it
+          this.logger.debug(`ConfigMap ${configMapName} not found in ${namespace}, creating it`);
+          return this.k8sApi.createNamespacedConfigMap({
+            namespace,
+            body: {
+              apiVersion: 'v1',
+              kind: 'ConfigMap',
+              metadata: { name: configMapName, namespace },
+              data: { [key]: value },
+            },
+          });
+        }
+        throw readError;
+      }
       if (!configMap.data) {
         configMap.data = {};
       }
@@ -311,14 +329,31 @@ export class GenericClusterAdapter implements IClusterAdapter {
     keys: Record<string, string>,
   ): Promise<any> {
     try {
-      const configMap = await this.k8sApi.readNamespacedConfigMap({
-        name: configMapName,
-        namespace,
-      });
+      let configMap: any;
+      try {
+        configMap = await this.k8sApi.readNamespacedConfigMap({
+          name: configMapName,
+          namespace,
+        });
+      } catch (readError) {
+        if (readError?.response?.statusCode === 404 || readError?.statusCode === 404) {
+          // ConfigMap does not exist on target — create it with all keys
+          this.logger.debug(`ConfigMap ${configMapName} not found in ${namespace}, creating it`);
+          return this.k8sApi.createNamespacedConfigMap({
+            namespace,
+            body: {
+              apiVersion: 'v1',
+              kind: 'ConfigMap',
+              metadata: { name: configMapName, namespace },
+              data: { ...keys },
+            },
+          });
+        }
+        throw readError;
+      }
       if (!configMap.data) {
         configMap.data = {};
       }
-      // Update multiple keys
       for (const [key, value] of Object.entries(keys)) {
         configMap.data[key] = value;
       }
@@ -378,14 +413,32 @@ export class GenericClusterAdapter implements IClusterAdapter {
     value: string,
   ): Promise<any> {
     try {
-      const secret = await this.k8sApi.readNamespacedSecret({
-        name: secretName,
-        namespace,
-      });
+      let secret: any;
+      try {
+        secret = await this.k8sApi.readNamespacedSecret({
+          name: secretName,
+          namespace,
+        });
+      } catch (readError) {
+        if (readError?.response?.statusCode === 404 || readError?.statusCode === 404) {
+          // Secret does not exist on target — create it
+          this.logger.debug(`Secret ${secretName} not found in ${namespace}, creating it`);
+          return this.k8sApi.createNamespacedSecret({
+            namespace,
+            body: {
+              apiVersion: 'v1',
+              kind: 'Secret',
+              type: 'Opaque',
+              metadata: { name: secretName, namespace },
+              data: { [key]: Buffer.from(value).toString('base64') },
+            },
+          });
+        }
+        throw readError;
+      }
       if (!secret.data) {
         secret.data = {};
       }
-      // Base64 encode the value (Kubernetes stores secrets as base64)
       secret.data[key] = Buffer.from(value).toString('base64');
       return this.k8sApi.replaceNamespacedSecret({
         name: secretName,
@@ -405,14 +458,36 @@ export class GenericClusterAdapter implements IClusterAdapter {
     keys: Record<string, string>,
   ): Promise<any> {
     try {
-      const secret = await this.k8sApi.readNamespacedSecret({
-        name: secretName,
-        namespace,
-      });
+      let secret: any;
+      try {
+        secret = await this.k8sApi.readNamespacedSecret({
+          name: secretName,
+          namespace,
+        });
+      } catch (readError) {
+        if (readError?.response?.statusCode === 404 || readError?.statusCode === 404) {
+          // Secret does not exist on target — create it with all keys
+          this.logger.debug(`Secret ${secretName} not found in ${namespace}, creating it`);
+          const encodedData: Record<string, string> = {};
+          for (const [k, v] of Object.entries(keys)) {
+            encodedData[k] = Buffer.from(v).toString('base64');
+          }
+          return this.k8sApi.createNamespacedSecret({
+            namespace,
+            body: {
+              apiVersion: 'v1',
+              kind: 'Secret',
+              type: 'Opaque',
+              metadata: { name: secretName, namespace },
+              data: encodedData,
+            },
+          });
+        }
+        throw readError;
+      }
       if (!secret.data) {
         secret.data = {};
       }
-      // Update multiple keys (base64 encode all values)
       for (const [key, value] of Object.entries(keys)) {
         secret.data[key] = Buffer.from(value).toString('base64');
       }

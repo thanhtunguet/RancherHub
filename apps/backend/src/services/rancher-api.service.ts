@@ -802,14 +802,36 @@ export class RancherApiService {
       timeout: 30000,
     });
 
-    // First, get the current ConfigMap
+    // First, get the current ConfigMap (create if not found)
     const getEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
     this.logger.debug(
       `Getting ConfigMap for update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
     );
 
-    const getResponse = await client.get(getEndpoint);
-    const configMap = getResponse.data;
+    let configMap: any;
+    try {
+      const getResponse = await client.get(getEndpoint);
+      configMap = getResponse.data;
+    } catch (getError) {
+      if (getError.response?.status === 404) {
+        // ConfigMap does not exist on target — create it
+        this.logger.debug(
+          `ConfigMap ${configMapName} not found in ${namespace}, creating it`,
+        );
+        const createResponse = await client.post(
+          `/v1/configmaps/${namespace}`,
+          {
+            apiVersion: 'v1',
+            kind: 'ConfigMap',
+            metadata: { name: configMapName, namespace },
+            data: { [key]: value },
+          },
+        );
+        this.logger.debug(`ConfigMap key created successfully: ${key}`);
+        return createResponse.data;
+      }
+      throw getError;
+    }
 
     // Update the specific key
     if (!configMap.data) {
@@ -846,14 +868,34 @@ export class RancherApiService {
       timeout: 30000,
     });
 
-    // First, get the current Secret
+    // First, get the current Secret (create if not found)
     const getEndpoint = `/v1/secrets/${namespace}/${secretName}`;
     this.logger.debug(
       `Getting Secret for update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
     );
 
-    const getResponse = await client.get(getEndpoint);
-    const secret = getResponse.data;
+    let secret: any;
+    try {
+      const getResponse = await client.get(getEndpoint);
+      secret = getResponse.data;
+    } catch (getError) {
+      if (getError.response?.status === 404) {
+        // Secret does not exist on target — create it
+        this.logger.debug(
+          `Secret ${secretName} not found in ${namespace}, creating it`,
+        );
+        const createResponse = await client.post(`/v1/secrets/${namespace}`, {
+          apiVersion: 'v1',
+          kind: 'Secret',
+          type: 'Opaque',
+          metadata: { name: secretName, namespace },
+          data: { [key]: value },
+        });
+        this.logger.debug(`Secret key created successfully: ${key}`);
+        return createResponse.data;
+      }
+      throw getError;
+    }
 
     // Update the specific key
     if (!secret.data) {
@@ -889,14 +931,36 @@ export class RancherApiService {
       timeout: 30000,
     });
 
-    // First, get the current Secret
+    // First, get the current Secret (create if not found)
     const getEndpoint = `/v1/secrets/${namespace}/${secretName}`;
     this.logger.debug(
       `Getting Secret for bulk update: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
     );
 
-    const getResponse = await client.get(getEndpoint);
-    const secret = getResponse.data;
+    let secret: any;
+    try {
+      const getResponse = await client.get(getEndpoint);
+      secret = getResponse.data;
+    } catch (getError) {
+      if (getError.response?.status === 404) {
+        // Secret does not exist on target — create it with all keys
+        this.logger.debug(
+          `Secret ${secretName} not found in ${namespace}, creating it`,
+        );
+        const createResponse = await client.post(`/v1/secrets/${namespace}`, {
+          apiVersion: 'v1',
+          kind: 'Secret',
+          type: 'Opaque',
+          metadata: { name: secretName, namespace },
+          data: { ...keys },
+        });
+        this.logger.debug(
+          `Secret created successfully: ${Object.keys(keys).join(', ')}`,
+        );
+        return createResponse.data;
+      }
+      throw getError;
+    }
 
     // Update multiple keys
     if (!secret.data) {
@@ -934,14 +998,38 @@ export class RancherApiService {
       timeout: 30000,
     });
 
-    // First, get the current ConfigMap
+    // First, get the current ConfigMap (create if not found)
     const getEndpoint = `/v1/configmaps/${namespace}/${configMapName}`;
     this.logger.debug(
       `Getting ConfigMap for bulk sync: ${site.url}/k8s/clusters/${clusterId}${getEndpoint}`,
     );
 
-    const getResponse = await client.get(getEndpoint);
-    const configMap = getResponse.data;
+    let configMap: any;
+    try {
+      const getResponse = await client.get(getEndpoint);
+      configMap = getResponse.data;
+    } catch (getError) {
+      if (getError.response?.status === 404) {
+        // ConfigMap does not exist on target — create it with all keys
+        this.logger.debug(
+          `ConfigMap ${configMapName} not found in ${namespace}, creating it`,
+        );
+        const createResponse = await client.post(
+          `/v1/configmaps/${namespace}`,
+          {
+            apiVersion: 'v1',
+            kind: 'ConfigMap',
+            metadata: { name: configMapName, namespace },
+            data: { ...keysToSync },
+          },
+        );
+        this.logger.debug(
+          `ConfigMap created successfully: ${Object.keys(keysToSync).join(', ')}`,
+        );
+        return createResponse.data;
+      }
+      throw getError;
+    }
 
     // Update multiple keys
     if (!configMap.data) {

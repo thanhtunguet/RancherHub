@@ -52,7 +52,7 @@ export class SyncHistory {
   @Column({ name: 'previous_image_tag', length: 255, nullable: true })
   previousImageTag: string;
 
-  @Column({ name: 'new_image_tag', length: 255 })
+  @Column({ name: 'new_image_tag', length: 255, nullable: true })
   newImageTag: string;
 
   @Column({ name: 'container_name', length: 255, nullable: true })
