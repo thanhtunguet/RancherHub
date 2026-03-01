@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MonitoredInstance } from '../../entities/monitored-instance.entity';
 import { RancherApiService } from '../../services/rancher-api.service';
+import { GenericClusterAdapter } from '../../adapters/generic-cluster.adapter';
 import { MonitoringService } from './monitoring.service';
 import {
   HealthCheckResult,
@@ -71,12 +72,8 @@ export class HealthCheckService {
         `Checking health for instance: ${instance.appInstance?.name}`,
       );
 
-      // Get workloads for this app instance using the same method as regular service loading
-      const workloads = await this.rancherApiService.getDeploymentsFromK8sApi(
-        instance.appInstance.rancherSite,
-        instance.appInstance.cluster,
-        instance.appInstance.namespace,
-      );
+      // Get workloads for this app instance, routing by cluster type
+      const workloads = await this.getWorkloads(instance);
 
       const responseTime = Date.now() - startTime;
 
@@ -193,6 +190,36 @@ export class HealthCheckService {
 
       throw error;
     }
+  }
+
+  private async getWorkloads(
+    instance: MonitoredInstance,
+  ): Promise<RancherWorkload[]> {
+    const { appInstance } = instance;
+
+    if (appInstance.clusterType === 'generic') {
+      if (!appInstance.genericClusterSite) {
+        throw new Error(
+          `Generic cluster site not found for app instance ${appInstance.name}`,
+        );
+      }
+      const adapter = new GenericClusterAdapter(
+        appInstance.genericClusterSite.kubeconfig,
+        appInstance.cluster,
+      );
+      return adapter.getDeployments(appInstance.cluster, appInstance.namespace);
+    }
+
+    if (!appInstance.rancherSite) {
+      throw new Error(
+        `Rancher site not found for app instance ${appInstance.name}`,
+      );
+    }
+    return this.rancherApiService.getDeploymentsFromK8sApi(
+      appInstance.rancherSite,
+      appInstance.cluster,
+      appInstance.namespace,
+    );
   }
 
   private isWorkloadHealthy(workload: RancherWorkload): boolean {

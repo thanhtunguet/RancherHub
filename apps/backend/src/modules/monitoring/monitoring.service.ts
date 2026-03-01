@@ -263,6 +263,7 @@ export class MonitoringService {
         'appInstance',
         'appInstance.environment',
         'appInstance.rancherSite',
+        'appInstance.genericClusterSite',
       ],
     });
   }
