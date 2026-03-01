@@ -115,7 +115,8 @@ export class SecretsService {
 
     try {
       // Use adapter pattern to get Secrets for both rancher and generic clusters
-      const adapter = await this.clusterAdapterFactory.createAdapter(appInstance);
+      const adapter =
+        await this.clusterAdapterFactory.createAdapter(appInstance);
       const secrets = await adapter.getSecrets(
         appInstance.cluster,
         appInstance.namespace,
@@ -472,9 +473,8 @@ export class SecretsService {
 
     try {
       // Use adapter pattern to update Secret key for both rancher and generic clusters
-      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
-        targetAppInstance,
-      );
+      const targetAdapter =
+        await this.clusterAdapterFactory.createAdapter(targetAppInstance);
       await targetAdapter.updateSecretKey(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
@@ -559,9 +559,8 @@ export class SecretsService {
 
     try {
       // Use adapter pattern to sync multiple Secret keys for both rancher and generic clusters
-      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
-        targetAppInstance,
-      );
+      const targetAdapter =
+        await this.clusterAdapterFactory.createAdapter(targetAppInstance);
       await targetAdapter.syncSecretKeys(
         targetAppInstance.cluster,
         targetAppInstance.namespace,

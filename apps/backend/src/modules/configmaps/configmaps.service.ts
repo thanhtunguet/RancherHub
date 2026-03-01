@@ -409,9 +409,8 @@ export class ConfigMapsService {
 
     try {
       // Use adapter pattern to update ConfigMap key for both rancher and generic clusters
-      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
-        targetAppInstance,
-      );
+      const targetAdapter =
+        await this.clusterAdapterFactory.createAdapter(targetAppInstance);
       await targetAdapter.updateConfigMapKey(
         targetAppInstance.cluster,
         targetAppInstance.namespace,
@@ -553,9 +552,8 @@ export class ConfigMapsService {
 
     try {
       // Use adapter pattern to sync multiple ConfigMap keys for both rancher and generic clusters
-      const targetAdapter = await this.clusterAdapterFactory.createAdapter(
-        targetAppInstance,
-      );
+      const targetAdapter =
+        await this.clusterAdapterFactory.createAdapter(targetAppInstance);
       await targetAdapter.syncConfigMapKeys(
         targetAppInstance.cluster,
         targetAppInstance.namespace,

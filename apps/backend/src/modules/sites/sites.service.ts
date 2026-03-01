@@ -92,11 +92,6 @@ export class SitesService {
 
   async setActive(id: string, active: boolean): Promise<RancherSite> {
     const site = await this.findOne(id);
-
-    if (active) {
-      await this.sitesRepository.update({ active: true }, { active: false });
-    }
-
     site.active = active;
     return await this.sitesRepository.save(site);
   }
