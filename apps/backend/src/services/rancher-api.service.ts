@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { RancherSite } from '../entities/rancher-site.entity';
+import { assertValidK8sName } from '../common/validators/k8s-name.validator';
 
 export interface RancherProject {
   id: string;
@@ -109,79 +110,19 @@ export class RancherApiService {
   async testApiEndpoints(
     site: RancherSite,
   ): Promise<{ success: boolean; message: string; data?: any }> {
+    // Security: only probe the single registered base URL.
+    // The previous implementation iterated multiple URL variants
+    // (/v3, /v1, /api, /) which turned this method into a network
+    // scanner against whatever host site.url resolves to.
     try {
-      this.logger.debug(`Testing API endpoints for site: ${site.name}`);
-
-      // Test different base URLs
-      const baseUrls = [
-        `${site.url}/v3`,
-        `${site.url}/v1`,
-        `${site.url}/api`,
-        `${site.url}`,
-      ];
-
-      for (const baseUrl of baseUrls) {
-        try {
-          this.logger.debug(`Testing base URL: ${baseUrl}`);
-          const testClient = axios.create({
-            baseURL: baseUrl,
-            headers: {
-              Authorization: `Bearer ${site.token}`,
-              'Content-Type': 'application/json',
-            },
-            timeout: 10000,
-          });
-
-          const response = await testClient.get('/');
-          this.logger.debug(
-            `Base URL ${baseUrl} works! Response keys: ${Object.keys(response.data || {}).join(', ')}`,
-          );
-
-          // Test some common endpoints to see what's available
-          const availableEndpoints = [];
-
-          // Test clusters endpoint
-          try {
-            await testClient.get('/clusters');
-            availableEndpoints.push('clusters');
-          } catch (e) {
-            this.logger.debug(`Clusters endpoint not available: ${e.message}`);
-          }
-
-          // Test workloads endpoint
-          try {
-            await testClient.get('/workloads');
-            availableEndpoints.push('workloads');
-          } catch (e) {
-            this.logger.debug(`Workloads endpoint not available: ${e.message}`);
-          }
-
-          // Test projects endpoint
-          try {
-            await testClient.get('/projects');
-            availableEndpoints.push('projects');
-          } catch (e) {
-            this.logger.debug(`Projects endpoint not available: ${e.message}`);
-          }
-
-          return {
-            success: true,
-            message: `API endpoint found at ${baseUrl}`,
-            data: {
-              workingBaseUrl: baseUrl,
-              responseData: response.data,
-              availableEndpoints,
-            },
-          };
-        } catch (endpointError) {
-          this.logger.debug(
-            `Base URL ${baseUrl} failed: ${endpointError.message}`,
-          );
-          continue;
-        }
-      }
-
-      return { success: false, message: 'No working API endpoints found' };
+      this.logger.debug(`Testing API endpoint for site: ${site.name}`);
+      const client = this.getClient(site);
+      const response = await client.get('/');
+      return {
+        success: true,
+        message: 'API endpoint reachable',
+        data: { responseData: response.data },
+      };
     } catch (error) {
       return {
         success: false,
@@ -618,6 +559,7 @@ export class RancherApiService {
     clusterId: string,
     namespace: string,
   ): Promise<RancherWorkload[]> {
+    assertValidK8sName(namespace, 'namespace');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -670,6 +612,7 @@ export class RancherApiService {
     clusterId: string,
     namespace: string,
   ): Promise<any[]> {
+    assertValidK8sName(namespace, 'namespace');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -725,6 +668,7 @@ export class RancherApiService {
     clusterId: string,
     namespace: string,
   ): Promise<any[]> {
+    assertValidK8sName(namespace, 'namespace');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -790,6 +734,8 @@ export class RancherApiService {
     key: string,
     value: string,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(configMapName, 'configMapName');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -856,6 +802,8 @@ export class RancherApiService {
     key: string,
     value: string,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(secretName, 'secretName');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -919,6 +867,8 @@ export class RancherApiService {
     secretName: string,
     keys: Record<string, string>,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(secretName, 'secretName');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -986,6 +936,8 @@ export class RancherApiService {
     configMapName: string,
     keysToSync: Record<string, string>,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(configMapName, 'configMapName');
     const client = axios.create({
       baseURL: `${site.url}/k8s/clusters/${clusterId}`,
       headers: {
@@ -1158,6 +1110,8 @@ export class RancherApiService {
     newImageTag: string,
   ): Promise<any> {
     try {
+      assertValidK8sName(namespace, 'namespace');
+      assertValidK8sName(workloadName, 'workloadName');
       this.logger.log(
         `Updating ${workloadType} ${workloadName} in ${clusterId}/${namespace} to image ${newImageTag}`,
       );
@@ -1269,43 +1223,17 @@ export class RancherApiService {
   async testApiStructure(
     site: RancherSite,
   ): Promise<{ success: boolean; message: string; data?: any }> {
+    // Security: only probe the registered base URL root.
+    // Probing multiple sub-endpoints against an untrusted host can be used
+    // for internal-network enumeration.
     try {
       this.logger.debug(`Testing API structure for site: ${site.name}`);
-
       const client = this.getClient(site);
-
-      // Test the root endpoint to see what's available
       const rootResponse = await client.get('/');
-      this.logger.debug(
-        `Root response keys: ${Object.keys(rootResponse.data || {}).join(', ')}`,
-      );
-
-      // Test common endpoints
-      const endpoints = ['clusters', 'projects', 'workloads', 'namespaces'];
-      const availableEndpoints = [];
-
-      for (const endpoint of endpoints) {
-        try {
-          const response = await client.get(`/${endpoint}`);
-          availableEndpoints.push({
-            endpoint,
-            status: response.status,
-            hasData: !!response.data,
-            dataKeys: response.data ? Object.keys(response.data) : [],
-          });
-          this.logger.debug(`Endpoint /${endpoint} is available`);
-        } catch (error) {
-          this.logger.debug(`Endpoint /${endpoint} failed: ${error.message}`);
-        }
-      }
-
       return {
         success: true,
         message: 'API structure test completed',
-        data: {
-          rootResponse: rootResponse.data,
-          availableEndpoints,
-        },
+        data: { rootResponse: rootResponse.data },
       };
     } catch (error) {
       return {

@@ -29,6 +29,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('services')
 @Controller('api/services')
@@ -284,6 +285,7 @@ export class ServicesController {
   }
 
   @Get('test-api/:siteId')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Test Rancher API endpoints' })
   @ApiResponse({
     status: 200,
@@ -303,6 +305,7 @@ export class ServicesController {
   }
 
   @Get('test-structure/:siteId')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Test Rancher API structure' })
   @ApiResponse({
     status: 200,
@@ -323,6 +326,7 @@ export class ServicesController {
 
   @Post('sync')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Synchronize services between environments' })
   @ApiResponse({
     status: 200,

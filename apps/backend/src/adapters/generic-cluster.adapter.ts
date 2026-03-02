@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
 import * as k8s from '@kubernetes/client-node';
 import { IClusterAdapter } from './cluster-adapter.interface';
+import { assertValidK8sName } from '../common/validators/k8s-name.validator';
 import {
   RancherNamespace,
   RancherWorkload,
@@ -78,6 +79,7 @@ export class GenericClusterAdapter implements IClusterAdapter {
     clusterId: string,
     namespace: string,
   ): Promise<RancherWorkload[]> {
+    assertValidK8sName(namespace, 'namespace');
     try {
       // Get all workload types
       const deployments = await this.appsApi.listNamespacedDeployment({
@@ -163,6 +165,8 @@ export class GenericClusterAdapter implements IClusterAdapter {
     workloadType: string,
     newImageTag: string,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(workloadName, 'workloadName');
     try {
       const normalizedType = workloadType.toLowerCase().replace(/s$/, ''); // Remove trailing 's'
 
@@ -252,6 +256,7 @@ export class GenericClusterAdapter implements IClusterAdapter {
   }
 
   async getConfigMaps(clusterId: string, namespace: string): Promise<any[]> {
+    assertValidK8sName(namespace, 'namespace');
     try {
       const response = await this.k8sApi.listNamespacedConfigMap({
         namespace,
@@ -284,6 +289,8 @@ export class GenericClusterAdapter implements IClusterAdapter {
     key: string,
     value: string,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(configMapName, 'configMapName');
     try {
       let configMap: any;
       try {
@@ -328,6 +335,8 @@ export class GenericClusterAdapter implements IClusterAdapter {
     configMapName: string,
     keys: Record<string, string>,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(configMapName, 'configMapName');
     try {
       let configMap: any;
       try {
@@ -369,6 +378,7 @@ export class GenericClusterAdapter implements IClusterAdapter {
   }
 
   async getSecrets(clusterId: string, namespace: string): Promise<any[]> {
+    assertValidK8sName(namespace, 'namespace');
     try {
       const response = await this.k8sApi.listNamespacedSecret({ namespace });
       // Filter out system secrets (same logic as RancherApiService)
@@ -412,6 +422,8 @@ export class GenericClusterAdapter implements IClusterAdapter {
     key: string,
     value: string,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(secretName, 'secretName');
     try {
       let secret: any;
       try {
@@ -457,6 +469,8 @@ export class GenericClusterAdapter implements IClusterAdapter {
     secretName: string,
     keys: Record<string, string>,
   ): Promise<any> {
+    assertValidK8sName(namespace, 'namespace');
+    assertValidK8sName(secretName, 'secretName');
     try {
       let secret: any;
       try {

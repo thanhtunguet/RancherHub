@@ -6,7 +6,7 @@ import { CreateSiteDto } from './dto/create-site.dto';
 import { UpdateSiteDto } from './dto/update-site.dto';
 import { TestConnectionResponseDto } from './dto/test-connection.dto';
 import { RancherApiService } from '../../services/rancher-api.service';
-import axios from 'axios';
+import { parseSafeBaseUrl } from '../../common/validators/safe-url.validator';
 
 @Injectable()
 export class SitesService {
@@ -17,7 +17,10 @@ export class SitesService {
   ) {}
 
   async create(createSiteDto: CreateSiteDto): Promise<RancherSite> {
-    const site = this.sitesRepository.create(createSiteDto);
+    // Normalise URL to origin-only (strips path/query/fragment) as a defence
+    // against SSRF via crafted paths embedded in the URL field.
+    const safeUrl = parseSafeBaseUrl(createSiteDto.url).toString();
+    const site = this.sitesRepository.create({ ...createSiteDto, url: safeUrl });
     return await this.sitesRepository.save(site);
   }
 
@@ -37,8 +40,16 @@ export class SitesService {
 
   async update(id: string, updateSiteDto: UpdateSiteDto): Promise<RancherSite> {
     const site = await this.findOne(id);
+    if (updateSiteDto.url) {
+      updateSiteDto.url = parseSafeBaseUrl(updateSiteDto.url).toString();
+    }
     Object.assign(site, updateSiteDto);
-    return await this.sitesRepository.save(site);
+    const saved = await this.sitesRepository.save(site);
+    // Evict the cached Axios client so the next call rebuilds it against the
+    // newly-validated URL. Without this, an attacker who updates a site URL
+    // could leave a stale client pointing at the old (possibly malicious) host.
+    this.rancherApiService.clearClient(id);
+    return saved;
   }
 
   async remove(id: string): Promise<void> {
@@ -48,46 +59,9 @@ export class SitesService {
 
   async testConnection(id: string): Promise<TestConnectionResponseDto> {
     const site = await this.findOne(id);
-
-    try {
-      const response = await axios.get(`${site.url}/v3`, {
-        headers: {
-          Authorization: `Bearer ${site.token}`,
-        },
-        timeout: 10000,
-      });
-
-      if (response.status === 200) {
-        return {
-          success: true,
-          message: 'Connection successful',
-          data: {
-            rancherVersion: response.data?.rancherVersion || 'Unknown',
-            serverVersion: response.data?.serverVersion || 'Unknown',
-          },
-        };
-      } else {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (error) {
-      let message = 'Connection failed';
-      if (error.code === 'ECONNREFUSED') {
-        message = 'Connection refused - server may be down';
-      } else if (error.code === 'ENOTFOUND') {
-        message = 'Server not found - check URL';
-      } else if (error.response?.status === 401) {
-        message = 'Authentication failed - check token';
-      } else if (error.response?.status === 403) {
-        message = 'Access forbidden - insufficient permissions';
-      } else if (error.message) {
-        message = error.message;
-      }
-
-      return {
-        success: false,
-        message,
-      };
-    }
+    // Delegate to RancherApiService so all outbound HTTP goes through a single
+    // audited path that uses the validated/normalised site.url.
+    return this.rancherApiService.testConnection(site);
   }
 
   async setActive(id: string, active: boolean): Promise<RancherSite> {

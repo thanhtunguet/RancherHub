@@ -24,6 +24,7 @@ import { Disable2FADto } from './dto/disable-2fa.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Require2FAGuard } from './guards/require-2fa.guard';
 import { AllowWithout2FA } from './decorators/allow-without-2fa.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
@@ -32,6 +33,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })

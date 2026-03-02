@@ -15,6 +15,34 @@ async function bootstrap() {
     }),
   );
 
+  // CSRF defence: reject mutation requests whose Content-Type is not
+  // application/json.  This prevents cross-origin HTML form submissions
+  // from triggering state-changing endpoints, even if cookie-based auth is
+  // introduced in the future.
+  // DELETE is excluded because it is semantically bodyless; enforcing a
+  // Content-Type on it would break standard REST clients and Swagger UI.
+  app.use(
+    (
+      req: import('express').Request,
+      res: import('express').Response,
+      next: import('express').NextFunction,
+    ) => {
+      const mutationMethods = ['POST', 'PUT', 'PATCH'];
+      if (mutationMethods.includes(req.method)) {
+        const ct = req.headers['content-type'] ?? '';
+        if (!ct.startsWith('application/json')) {
+          res.status(415).json({
+            statusCode: 415,
+            message:
+              'Unsupported Media Type: Content-Type must be application/json',
+          });
+          return;
+        }
+      }
+      next();
+    },
+  );
+
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true,

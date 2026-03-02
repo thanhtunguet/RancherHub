@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
@@ -43,6 +45,9 @@ import { HarborApiService } from './services/harbor-api.service';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    // Global rate limiter: 120 requests per minute per IP by default.
+    // Sensitive endpoints override this with tighter limits via @Throttle().
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     TypeOrmModule.forRoot(
       process.env.DATABASE_TYPE === 'postgres'
         ? {
@@ -117,6 +122,13 @@ import { HarborApiService } from './services/harbor-api.service';
     TrustedDevicesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RancherApiService, HarborApiService],
+  providers: [
+    AppService,
+    RancherApiService,
+    HarborApiService,
+    // Apply the global throttle guard to every endpoint.
+    // Endpoints can override the limit with @Throttle({ default: { ... } }).
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

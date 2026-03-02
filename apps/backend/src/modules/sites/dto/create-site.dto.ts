@@ -1,5 +1,6 @@
-import { IsString, IsUrl, IsNotEmpty, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsSafeRancherUrl } from '../../../common/validators/safe-url.validator';
 
 export class CreateSiteDto {
   @ApiProperty({
@@ -13,9 +14,10 @@ export class CreateSiteDto {
 
   @ApiProperty({
     example: 'https://rancher.example.com',
-    description: 'Rancher server URL',
+    description:
+      'Rancher server URL (http:// or https://; path/query will be stripped)',
   })
-  @IsUrl()
+  @IsSafeRancherUrl()
   @IsNotEmpty()
   url: string;
 

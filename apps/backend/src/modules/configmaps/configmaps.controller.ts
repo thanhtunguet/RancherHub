@@ -19,6 +19,9 @@ import {
 import { ConfigMapsService } from './configmaps.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
+import { SyncConfigMapKeyDto } from './dto/sync-configmap-key.dto';
+import { SyncConfigMapKeysDto } from './dto/sync-configmap-keys.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('configmaps')
 @Controller('api/configmaps')
@@ -149,6 +152,7 @@ export class ConfigMapsController {
   }
 
   @Post('sync-key')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Sync a single key from source ConfigMap to target ConfigMap',
   })
@@ -157,22 +161,21 @@ export class ConfigMapsController {
     description: 'Key synced successfully',
   })
   async syncConfigMapKey(
-    @Body()
-    syncData: {
-      sourceAppInstanceId: string;
-      targetAppInstanceId: string;
-      configMapName: string;
-      key: string;
-      value: string;
-    },
+    @Body() syncData: SyncConfigMapKeyDto,
     @Request() req,
   ) {
-    this.logger.debug(`syncConfigMapKey called with:`, syncData);
+    this.logger.debug(`syncConfigMapKey called with:`, {
+      sourceAppInstanceId: syncData.sourceAppInstanceId,
+      targetAppInstanceId: syncData.targetAppInstanceId,
+      configMapName: syncData.configMapName,
+      key: syncData.key,
+    });
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.configMapsService.syncConfigMapKey(syncData, initiatedBy);
   }
 
   @Post('sync-keys')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Sync multiple keys from source ConfigMap to target ConfigMap',
   })
@@ -181,16 +184,15 @@ export class ConfigMapsController {
     description: 'Keys synced successfully',
   })
   async syncConfigMapKeys(
-    @Body()
-    syncData: {
-      sourceAppInstanceId: string;
-      targetAppInstanceId: string;
-      configMapName: string;
-      keys: Record<string, string>;
-    },
+    @Body() syncData: SyncConfigMapKeysDto,
     @Request() req,
   ) {
-    this.logger.debug(`syncConfigMapKeys called with:`, syncData);
+    this.logger.debug(`syncConfigMapKeys called with:`, {
+      sourceAppInstanceId: syncData.sourceAppInstanceId,
+      targetAppInstanceId: syncData.targetAppInstanceId,
+      configMapName: syncData.configMapName,
+      keysCount: Object.keys(syncData.keys || {}).length,
+    });
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.configMapsService.syncConfigMapKeys(syncData, initiatedBy);
   }

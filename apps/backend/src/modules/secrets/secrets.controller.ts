@@ -19,6 +19,9 @@ import {
 import { SecretsService } from './secrets.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
+import { SyncSecretKeyDto } from './dto/sync-secret-key.dto';
+import { SyncSecretKeysDto } from './dto/sync-secret-keys.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('secrets')
 @Controller('api/secrets')
@@ -145,6 +148,7 @@ export class SecretsController {
   }
 
   @Post('sync-key')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Sync a single key from source Secret to target Secret',
   })
@@ -153,14 +157,7 @@ export class SecretsController {
     description: 'Key synced successfully',
   })
   async syncSecretKey(
-    @Body()
-    syncData: {
-      sourceAppInstanceId: string;
-      targetAppInstanceId: string;
-      secretName: string;
-      key: string;
-      value: string;
-    },
+    @Body() syncData: SyncSecretKeyDto,
     @Request() req,
   ) {
     this.logger.debug('syncSecretKey called with metadata', {
@@ -174,6 +171,7 @@ export class SecretsController {
   }
 
   @Post('sync-keys')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Sync multiple keys from source Secret to target Secret',
   })
@@ -182,13 +180,7 @@ export class SecretsController {
     description: 'Keys synced successfully',
   })
   async syncSecretKeys(
-    @Body()
-    syncData: {
-      sourceAppInstanceId: string;
-      targetAppInstanceId: string;
-      secretName: string;
-      keys: Record<string, string>;
-    },
+    @Body() syncData: SyncSecretKeysDto,
     @Request() req,
   ) {
     this.logger.debug('syncSecretKeys called with metadata', {

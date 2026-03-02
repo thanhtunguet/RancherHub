@@ -26,6 +26,7 @@ import { UpdateSiteDto } from './dto/update-site.dto';
 import { TestConnectionResponseDto } from './dto/test-connection.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Require2FAGuard } from '../auth/guards/require-2fa.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('sites')
 @Controller('api/sites')
@@ -88,6 +89,7 @@ export class SitesController {
   }
 
   @Post(':id/test')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Test connection to a Rancher site' })
   @ApiResponse({
     status: 200,
