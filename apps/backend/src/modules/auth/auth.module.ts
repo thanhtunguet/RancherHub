@@ -20,8 +20,13 @@ import { TrustedDevicesModule } from '../trusted-devices/trusted-devices.module'
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('JWT_SECRET') || 'rancher-hub-secret-key',
+        secret: (() => {
+          const jwtSecret = configService.get<string>('JWT_SECRET');
+          if (!jwtSecret) {
+            throw new Error('JWT_SECRET environment variable is required');
+          }
+          return jwtSecret;
+        })(),
         signOptions: {
           expiresIn: '24h',
         },

@@ -31,4 +31,12 @@ export class HarborSite {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  toJSON?: () => Record<string, unknown> = () => {
+    const { password, toJSON, ...safe } = this;
+    return {
+      ...safe,
+      hasPassword: Boolean(password),
+    };
+  };
 }

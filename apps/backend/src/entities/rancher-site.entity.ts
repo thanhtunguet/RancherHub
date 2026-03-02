@@ -33,4 +33,12 @@ export class RancherSite {
 
   @OneToMany(() => AppInstance, (appInstance) => appInstance.rancherSite)
   appInstances: AppInstance[];
+
+  toJSON?: () => Record<string, unknown> = () => {
+    const { token, toJSON, ...safe } = this;
+    return {
+      ...safe,
+      hasToken: Boolean(token),
+    };
+  };
 }

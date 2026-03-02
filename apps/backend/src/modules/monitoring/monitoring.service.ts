@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitoringConfig } from '../../entities/monitoring-config.entity';
@@ -30,6 +34,37 @@ export class MonitoringService {
     private readonly telegramService: TelegramService,
   ) {}
 
+  private getTrimmedOrUndefined(value?: string): string | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private sanitizeSensitiveFields<T extends Record<string, any>>(
+    payload: T,
+    fields: string[],
+  ): T {
+    const sanitized = { ...payload };
+
+    for (const field of fields) {
+      const value = sanitized[field];
+
+      if (value === undefined || value === null) {
+        delete sanitized[field];
+        continue;
+      }
+
+      if (typeof value === 'string' && value.trim() === '') {
+        delete sanitized[field];
+      }
+    }
+
+    return sanitized as T;
+  }
+
   // Monitoring Configuration
   async getConfig(): Promise<MonitoringConfig | null> {
     try {
@@ -48,12 +83,16 @@ export class MonitoringService {
     dto: CreateMonitoringConfigDto,
   ): Promise<MonitoringConfig> {
     const existingConfig = await this.getConfig();
+    const sanitizedDto = this.sanitizeSensitiveFields(dto, [
+      'telegramBotToken',
+      'proxyPassword',
+    ]);
 
     if (existingConfig) {
-      Object.assign(existingConfig, dto);
+      Object.assign(existingConfig, sanitizedDto);
       return this.monitoringConfigRepository.save(existingConfig);
     } else {
-      const config = this.monitoringConfigRepository.create(dto);
+      const config = this.monitoringConfigRepository.create(sanitizedDto);
       return this.monitoringConfigRepository.save(config);
     }
   }
@@ -66,20 +105,55 @@ export class MonitoringService {
       throw new NotFoundException('Monitoring configuration not found');
     }
 
-    Object.assign(config, dto);
+    const sanitizedDto = this.sanitizeSensitiveFields(dto, [
+      'telegramBotToken',
+      'proxyPassword',
+    ]);
+    Object.assign(config, sanitizedDto);
     return this.monitoringConfigRepository.save(config);
   }
 
   async testTelegramConnection(dto: {
-    telegramBotToken: string;
-    telegramChatId: string;
+    telegramBotToken?: string;
+    telegramChatId?: string;
     proxyHost?: string;
     proxyPort?: number;
     proxyUsername?: string;
     proxyPassword?: string;
+    taggedUsers?: string[];
   }): Promise<{ success: boolean; message: string }> {
     try {
-      await this.telegramService.testConnection(dto);
+      const storedConfig = await this.getConfig();
+
+      const telegramBotToken =
+        this.getTrimmedOrUndefined(dto.telegramBotToken) ||
+        storedConfig?.telegramBotToken;
+      const telegramChatId =
+        this.getTrimmedOrUndefined(dto.telegramChatId) ||
+        storedConfig?.telegramChatId;
+
+      if (!telegramBotToken || !telegramChatId) {
+        return {
+          success: false,
+          message:
+            'Telegram bot token and chat ID are required. Configure monitoring settings first.',
+        };
+      }
+
+      await this.telegramService.testConnection({
+        telegramBotToken,
+        telegramChatId,
+        proxyHost:
+          this.getTrimmedOrUndefined(dto.proxyHost) || storedConfig?.proxyHost,
+        proxyPort: dto.proxyPort ?? storedConfig?.proxyPort,
+        proxyUsername:
+          this.getTrimmedOrUndefined(dto.proxyUsername) ||
+          storedConfig?.proxyUsername,
+        proxyPassword:
+          this.getTrimmedOrUndefined(dto.proxyPassword) ||
+          storedConfig?.proxyPassword,
+        taggedUsers: dto.taggedUsers || storedConfig?.taggedUsers || [],
+      });
       return {
         success: true,
         message: 'Telegram connection test successful',

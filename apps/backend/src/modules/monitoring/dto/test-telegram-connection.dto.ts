@@ -5,16 +5,20 @@ export class TestTelegramConnectionDto {
   @ApiProperty({
     description: 'Telegram bot token for testing',
     example: '1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  telegramBotToken: string;
+  telegramBotToken?: string;
 
   @ApiProperty({
     description: 'Telegram chat ID for testing',
     example: '123456789',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  telegramChatId: string;
+  telegramChatId?: string;
 
   @ApiPropertyOptional({
     description: 'SOCKS5 proxy host for testing',

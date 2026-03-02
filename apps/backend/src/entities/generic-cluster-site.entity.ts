@@ -36,4 +36,12 @@ export class GenericClusterSite {
 
   @OneToMany(() => AppInstance, (appInstance) => appInstance.genericClusterSite)
   appInstances: AppInstance[];
+
+  toJSON?: () => Record<string, unknown> = () => {
+    const { kubeconfig, toJSON, ...safe } = this;
+    return {
+      ...safe,
+      hasKubeconfig: Boolean(kubeconfig),
+    };
+  };
 }

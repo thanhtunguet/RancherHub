@@ -26,11 +26,13 @@ interface MonitoringConfigFormProps {
 interface MonitoringConfig {
   id?: string;
   telegramBotToken?: string;
+  hasTelegramBotToken?: boolean;
   telegramChatId?: string;
   proxyHost?: string;
   proxyPort?: number;
   proxyUsername?: string;
   proxyPassword?: string;
+  hasProxyPassword?: boolean;
   monitoringEnabled: boolean;
   alertThreshold: number;
   notificationSchedule: string;
@@ -46,6 +48,8 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
   const [config, setConfig] = useState<MonitoringConfig | null>(null);
   const [newUsername, setNewUsername] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
+  const watchedTelegramBotToken = Form.useWatch('telegramBotToken', form);
+  const watchedTelegramChatId = Form.useWatch('telegramChatId', form);
 
   useEffect(() => {
     loadConfig();
@@ -57,7 +61,12 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
       const data = await monitoringApi.getConfig();
       if (data) {
         setConfig(data);
-        form.setFieldsValue(data);
+        // Sensitive fields are not returned by API for security; keep these empty.
+        form.setFieldsValue({
+          ...data,
+          telegramBotToken: undefined,
+          proxyPassword: undefined,
+        });
         setTaggedUsers(data.taggedUsers || []);
       }
     } catch (error) {
@@ -74,6 +83,15 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
         ...values,
         taggedUsers,
       };
+
+      // Do not send empty/undefined sensitive fields, otherwise backend may clear them.
+      if (!configData.telegramBotToken || !configData.telegramBotToken.trim()) {
+        delete configData.telegramBotToken;
+      }
+      if (!configData.proxyPassword || !configData.proxyPassword.trim()) {
+        delete configData.proxyPassword;
+      }
+
       if (config?.id) {
         await monitoringApi.updateConfig(configData);
         message.success('Monitoring configuration updated successfully');
@@ -233,7 +251,10 @@ export const MonitoringConfigForm: React.FC<MonitoringConfigFormProps> = ({
                 icon={<MessageOutlined />}
                 onClick={handleTestTelegram}
                 loading={testing}
-                disabled={!form.getFieldValue('telegramBotToken') || !form.getFieldValue('telegramChatId')}
+                disabled={
+                  !watchedTelegramChatId ||
+                  (!watchedTelegramBotToken && !config?.hasTelegramBotToken)
+                }
               >
                 Test Telegram Connection
               </Button>

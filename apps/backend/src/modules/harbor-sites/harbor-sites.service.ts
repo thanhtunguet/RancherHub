@@ -53,25 +53,9 @@ export class HarborSitesService {
     testConnectionDto: TestHarborConnectionDto,
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-      const credentials = `${testConnectionDto.username}:${testConnectionDto.password}`;
-      const base64Credentials = Buffer.from(credentials).toString('base64');
-      const basicAuth = base64Credentials;
-
-      // Log authorization header in development mode only
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `[Harbor Test Connection Debug] Username: ${testConnectionDto.username}`,
-        );
-        console.log(
-          `[Harbor Test Connection Debug] Credentials (username:password): ${credentials}`,
-        );
-        console.log(
-          `[Harbor Test Connection Debug] Base64 encoded: ${base64Credentials}`,
-        );
-        console.log(
-          `[Harbor Test Connection Debug] Full Authorization header: Basic ${basicAuth}`,
-        );
-      }
+      const basicAuth = Buffer.from(
+        `${testConnectionDto.username}:${testConnectionDto.password}`,
+      ).toString('base64');
 
       // Normalize the URL by removing trailing slashes
       let baseUrl = testConnectionDto.url.replace(/\/+$/, '');
@@ -105,23 +89,6 @@ export class HarborSitesService {
 
       const authHeaderValue = `Basic ${basicAuth}`;
 
-      // Log full request details in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `[Harbor Test Connection Debug] Full request URL: ${currentUserUrl}`,
-        );
-        console.log(`[Harbor Test Connection Debug] Request method: GET`);
-        console.log(
-          `[Harbor Test Connection Debug] Full Authorization header value: ${authHeaderValue}`,
-        );
-        console.log(
-          `[Harbor Test Connection Debug] Request headers: ${JSON.stringify({
-            Authorization: authHeaderValue,
-            'Content-Type': 'application/json',
-          })}`,
-        );
-      }
-
       const userResponse = await axios.get(currentUserUrl, {
         headers: {
           Authorization: authHeaderValue,
@@ -129,16 +96,6 @@ export class HarborSitesService {
         },
         timeout: 10000,
       });
-
-      // Log response details in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `[Harbor Test Connection Debug] Response status: ${userResponse.status} ${userResponse.statusText}`,
-        );
-        console.log(
-          `[Harbor Test Connection Debug] Response headers: ${JSON.stringify(userResponse.headers)}`,
-        );
-      }
 
       this.logger.log(
         `[Harbor Test Connection] ✅ Response status: ${userResponse.status} ${userResponse.statusText}`,
@@ -158,13 +115,6 @@ export class HarborSitesService {
           this.logger.log(
             `[Harbor Test Connection] Fetching projects: GET ${projectsUrl}`,
           );
-
-          // Log full authorization header in development
-          if (process.env.NODE_ENV === 'development') {
-            console.log(
-              `[Harbor Test Connection Debug] Projects API - Full Authorization header value: Basic ${basicAuth}`,
-            );
-          }
 
           const projectsResponse = await axios.get(projectsUrl, {
             headers: {

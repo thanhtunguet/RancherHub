@@ -46,4 +46,13 @@ export class MonitoringConfig {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  toJSON?: () => Record<string, unknown> = () => {
+    const { telegramBotToken, proxyPassword, toJSON, ...safe } = this;
+    return {
+      ...safe,
+      hasTelegramBotToken: Boolean(telegramBotToken),
+      hasProxyPassword: Boolean(proxyPassword),
+    };
+  };
 }

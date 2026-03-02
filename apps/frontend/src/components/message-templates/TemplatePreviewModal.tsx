@@ -53,22 +53,20 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
     try {
       setSending(true);
 
-      // Get monitoring config to get Telegram credentials
+      // Get monitoring config and use stored credentials server-side
       const config = await monitoringApi.getConfig();
 
-      if (!config?.telegramBotToken || !config?.telegramChatId) {
+      if (!config?.hasTelegramBotToken || !config?.telegramChatId) {
         message.warning('Please configure Telegram settings in Monitoring Configuration first');
         return;
       }
 
       // Send test message via Telegram test connection endpoint
       const result = await monitoringApi.testTelegramConnection({
-        telegramBotToken: config.telegramBotToken,
         telegramChatId: config.telegramChatId,
         proxyHost: config.proxyHost,
         proxyPort: config.proxyPort,
         proxyUsername: config.proxyUsername,
-        proxyPassword: config.proxyPassword,
         taggedUsers: config.taggedUsers,
       });
 

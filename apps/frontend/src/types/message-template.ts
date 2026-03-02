@@ -40,12 +40,12 @@ export interface PreviewTemplateResponse {
 
 export interface MonitoringConfig {
   id: string;
-  telegramBotToken?: string;
   telegramChatId?: string;
+  hasTelegramBotToken?: boolean;
   proxyHost?: string;
   proxyPort?: number;
   proxyUsername?: string;
-  proxyPassword?: string;
+  hasProxyPassword?: boolean;
   monitoringEnabled: boolean;
   alertThreshold: number;
   notificationSchedule: 'immediate' | 'hourly' | 'daily';
@@ -55,8 +55,8 @@ export interface MonitoringConfig {
 }
 
 export interface TestTelegramConnectionDto {
-  telegramBotToken: string;
-  telegramChatId: string;
+  telegramBotToken?: string;
+  telegramChatId?: string;
   proxyHost?: string;
   proxyPort?: number;
   proxyUsername?: string;

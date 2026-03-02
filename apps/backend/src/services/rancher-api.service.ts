@@ -740,9 +740,6 @@ export class RancherApiService {
     );
 
     const response = await client.get(endpoint);
-    this.logger.debug(
-      `Raw Secrets response: ${JSON.stringify(response.data).slice(0, 1000)}`,
-    );
 
     let items: any[] = [];
     if (Array.isArray(response.data.items)) {

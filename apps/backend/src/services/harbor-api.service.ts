@@ -140,19 +140,7 @@ export class HarborApiService {
   private getAuthHeader(harborSite: HarborSite): string {
     const credentials = `${harborSite.username}:${harborSite.password}`;
     const base64Credentials = Buffer.from(credentials).toString('base64');
-    const authHeader = `Basic ${base64Credentials}`;
-
-    // Log authorization header in development mode only
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Harbor Auth Debug] Username: ${harborSite.username}`);
-      console.log(
-        `[Harbor Auth Debug] Credentials (username:password): ${credentials}`,
-      );
-      console.log(`[Harbor Auth Debug] Base64 encoded: ${base64Credentials}`);
-      console.log(`[Harbor Auth Debug] Authorization header: ${authHeader}`);
-    }
-
-    return authHeader;
+    return `Basic ${base64Credentials}`;
   }
 
   private async makeRequest<T>(
@@ -200,33 +188,6 @@ export class HarborApiService {
             `[Harbor API] Query params: ${JSON.stringify(params)}`,
           );
         }
-        this.logger.log(
-          `[Harbor API] Headers: Authorization=Basic (user: ${harborSite.username}), Content-Type=application/json`,
-        );
-
-        // Log full authorization header in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            `[Harbor API Debug] Full Authorization header value: ${authHeader}`,
-          );
-        }
-
-        // Log full request details in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[Harbor API Debug] Full request URL: ${url}`);
-          console.log(`[Harbor API Debug] Request method: GET`);
-          console.log(
-            `[Harbor API Debug] Request headers: ${JSON.stringify({
-              Authorization: authHeader,
-              'Content-Type': 'application/json',
-            })}`,
-          );
-          if (params && Object.keys(params).length > 0) {
-            console.log(
-              `[Harbor API Debug] Request query params: ${JSON.stringify(params)}`,
-            );
-          }
-        }
 
         const response: AxiosResponse<T> = await axios.get(url, {
           headers: {
@@ -240,16 +201,6 @@ export class HarborApiService {
         this.logger.log(
           `[Harbor API] ✅ Success! Status: ${response.status} ${response.statusText}`,
         );
-
-        // Log response details in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            `[Harbor API Debug] Response status: ${response.status} ${response.statusText}`,
-          );
-          console.log(
-            `[Harbor API Debug] Response headers: ${JSON.stringify(response.headers)}`,
-          );
-        }
         this.logger.debug(
           `[Harbor API] Response data type: ${typeof response.data}, isArray: ${Array.isArray(response.data)}`,
         );

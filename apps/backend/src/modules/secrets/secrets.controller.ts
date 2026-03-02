@@ -163,7 +163,12 @@ export class SecretsController {
     },
     @Request() req,
   ) {
-    this.logger.debug(`syncSecretKey called with:`, syncData);
+    this.logger.debug('syncSecretKey called with metadata', {
+      sourceAppInstanceId: syncData.sourceAppInstanceId,
+      targetAppInstanceId: syncData.targetAppInstanceId,
+      secretName: syncData.secretName,
+      key: syncData.key,
+    });
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.secretsService.syncSecretKey(syncData, initiatedBy);
   }
@@ -186,7 +191,12 @@ export class SecretsController {
     },
     @Request() req,
   ) {
-    this.logger.debug(`syncSecretKeys called with:`, syncData);
+    this.logger.debug('syncSecretKeys called with metadata', {
+      sourceAppInstanceId: syncData.sourceAppInstanceId,
+      targetAppInstanceId: syncData.targetAppInstanceId,
+      secretName: syncData.secretName,
+      keysCount: Object.keys(syncData.keys || {}).length,
+    });
     const initiatedBy = req.user?.username || req.user?.userId || 'system';
     return this.secretsService.syncSecretKeys(syncData, initiatedBy);
   }
