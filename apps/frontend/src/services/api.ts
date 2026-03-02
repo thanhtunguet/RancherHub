@@ -61,6 +61,9 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_user');
       window.location.href = '/login';
     }
+    if (error.response?.status === 429) {
+      error.message = 'Too many requests — please wait a moment and try again.';
+    }
     console.error("API Error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
@@ -89,13 +92,13 @@ export const sitesApi = {
     api.delete(`/api/sites/${id}`).then(() => undefined),
 
   testConnection: (id: string): Promise<TestConnectionResponse> =>
-    api.post(`/api/sites/${id}/test`).then((res) => res.data),
+    api.post(`/api/sites/${id}/test`, {}).then((res) => res.data),
 
   activate: (id: string): Promise<RancherSite> =>
-    api.post(`/api/sites/${id}/activate`).then((res) => res.data),
+    api.post(`/api/sites/${id}/activate`, {}).then((res) => res.data),
 
   deactivate: (id: string): Promise<RancherSite> =>
-    api.post(`/api/sites/${id}/deactivate`).then((res) => res.data),
+    api.post(`/api/sites/${id}/deactivate`, {}).then((res) => res.data),
 
   getClusters: (id: string): Promise<RancherCluster[]> =>
     api.get(`/api/sites/${id}/clusters`).then((res) => res.data),
@@ -133,7 +136,7 @@ export const genericClusterSitesApi = {
     api.delete(`/api/generic-clusters/${id}`).then(() => undefined),
 
   testConnection: (id: string): Promise<TestConnectionResponse> =>
-    api.post(`/api/generic-clusters/${id}/test`).then((res) => res.data),
+    api.post(`/api/generic-clusters/${id}/test`, {}).then((res) => res.data),
 
   setActive: (id: string, active: boolean): Promise<GenericClusterSite> =>
     api
@@ -304,15 +307,15 @@ export const harborSitesApi = {
     api.delete(`/api/harbor-sites/${id}`).then(() => undefined),
 
   activate: (id: string): Promise<HarborSite> =>
-    api.post(`/api/harbor-sites/${id}/activate`).then((res) => res.data),
+    api.post(`/api/harbor-sites/${id}/activate`, {}).then((res) => res.data),
 
   deactivate: (id: string): Promise<HarborSite> =>
-    api.post(`/api/harbor-sites/${id}/deactivate`).then((res) => res.data),
+    api.post(`/api/harbor-sites/${id}/deactivate`, {}).then((res) => res.data),
 
   testConnection: (data: TestHarborConnectionRequest): Promise<{ success: boolean; message: string }> =>
     api.post("/api/harbor-sites/test-connection", data).then((res) => res.data),
   testSiteConnection: (id: string): Promise<{ success: boolean; message: string }> =>
-    api.post(`/api/harbor-sites/${id}/test`).then((res) => res.data),
+    api.post(`/api/harbor-sites/${id}/test`, {}).then((res) => res.data),
 
   testImageSize: (id: string, imageTag: string): Promise<any> =>
     api
@@ -468,10 +471,10 @@ export const monitoringApi = {
 
   // Manual Triggers
   triggerDailyCheck: (): Promise<{ message: string }> =>
-    api.post("/api/monitoring/trigger/daily-check").then((res) => res.data),
+    api.post("/api/monitoring/trigger/daily-check", {}).then((res) => res.data),
 
   triggerHourlyCheck: (): Promise<{ message: string }> =>
-    api.post("/api/monitoring/trigger/hourly-check").then((res) => res.data),
+    api.post("/api/monitoring/trigger/hourly-check", {}).then((res) => res.data),
 };
 
 export const usersApi = {
@@ -514,7 +517,7 @@ export const messageTemplatesApi = {
     api.delete(`/api/message-templates/${id}`).then(() => undefined),
 
   restore: (id: string): Promise<any> =>
-    api.post(`/api/message-templates/${id}/restore`).then((res) => res.data),
+    api.post(`/api/message-templates/${id}/restore`, {}).then((res) => res.data),
 
   preview: (data: any): Promise<{ renderedMessage: string; sampleData: any }> =>
     api.post("/api/message-templates/preview", data).then((res) => res.data),
