@@ -56,7 +56,7 @@ export const authService = {
   },
 
   async setup2FA(): Promise<Setup2FAResponse> {
-    const response = await authApi.post('/setup-2fa');
+    const response = await authApi.post('/setup-2fa', {});
     return response.data;
   },
 
