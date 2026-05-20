@@ -1,6 +1,6 @@
 # Rancher Hub Backend
 
-A NestJS-based backend service for managing and synchronizing services across different Rancher environments.
+Go backend service for managing and synchronizing services across different Rancher environments.
 
 ## Quick Start
 
@@ -16,9 +16,16 @@ docker run -d \
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NODE_ENV` | Application environment | `production` |
 | `PORT` | Server port | `3000` |
 | `DATABASE_PATH` | SQLite database path | `/app/data/rancher-hub.db` |
+| `DATABASE_TYPE` | Database driver: `sqlite` or `postgres` | `sqlite` |
+| `DATABASE_HOST` | PostgreSQL host | `localhost` |
+| `DATABASE_PORT` | PostgreSQL port | `5432` |
+| `DATABASE_NAME` | PostgreSQL database | `rancher_hub` |
+| `DATABASE_USERNAME` | PostgreSQL username | `rancher_hub` |
+| `DATABASE_PASSWORD` | PostgreSQL password | `rancher_hub_password` |
+| `DATABASE_SSL` | Enable PostgreSQL SSL | `false` |
+| `JWT_SECRET` | JWT signing secret | development default |
 
 ## Volumes
 
@@ -34,8 +41,8 @@ curl http://localhost:3000/health
 
 ## API Documentation
 
-Access the Swagger API documentation at:
-```
+Access the OpenAPI documentation at:
+```bash
 http://localhost:3000/api/docs
 ```
 
@@ -48,10 +55,9 @@ http://localhost:3000/api/docs
 
 ## Architecture
 
-- **Framework**: NestJS with TypeScript
-- **Package Manager**: Yarn for dependency management
-- **Database**: SQLite with TypeORM
-- **API**: RESTful API with OpenAPI/Swagger documentation
+- **Framework**: Go with Gin
+- **Database**: SQLite/PostgreSQL with GORM
+- **API**: RESTful API compatible with the previous NestJS routes
 - **Security**: Non-root container execution, input validation
 
 ## Production Deployment
@@ -66,7 +72,6 @@ services:
     container_name: rancher-hub-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
       - PORT=3000
       - DATABASE_PATH=/app/data/rancher-hub.db
     volumes:
@@ -106,8 +111,6 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: NODE_ENV
-          value: "production"
         volumeMounts:
         - name: data
           mountPath: /app/data

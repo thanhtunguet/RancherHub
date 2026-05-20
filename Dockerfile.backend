@@ -1,32 +1,34 @@
-# Dockerfile.backend
+FROM golang:1.26-alpine AS builder
+WORKDIR /src
 
-# Production stage
-FROM node:22-alpine AS production
+RUN apk add --no-cache build-base ca-certificates
+
+COPY apps/backend/go.mod apps/backend/go.sum ./
+RUN go mod download
+
+COPY apps/backend ./
+RUN CGO_CFLAGS="-O0" go build -tags=nomsgpack -o /out/rancher-hub-backend ./cmd/server
+
+FROM alpine:3.21 AS production
 WORKDIR /app
 
-# Create app user with UID within system limits
-RUN addgroup -g 1001 nodejs && adduser -D -u 1001 -G nodejs nestjs
+RUN apk add --no-cache ca-certificates \
+  && addgroup -g 1001 rancherhub \
+  && adduser -D -u 1001 -G rancherhub rancherhub \
+  && mkdir -p /app/data \
+  && chown -R rancherhub:rancherhub /app
 
-# Copy the built application (built in GitHub Actions)
-COPY --chown=nestjs:nodejs apps/backend/dist ./dist
+COPY --from=builder --chown=rancherhub:rancherhub /out/rancher-hub-backend ./rancher-hub-backend
 
-# Copy the backend's package.json and the lock file
-COPY apps/backend/package.json ./package.json
-COPY package-lock.json* ./
+ENV GIN_MODE=release
+ENV PORT=3000
+ENV DATABASE_PATH=/app/data/rancher-hub.db
 
-# Install only production dependencies for the backend including optional dependencies
-RUN npm install --production --include=optional
-
-# Copy healthcheck script
-COPY apps/backend/healthcheck.js ./healthcheck.js
-
-# Set ownership and user
-RUN chown -R nestjs:nodejs /app
-USER nestjs
+USER rancherhub
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000/health || exit 1
 
-CMD ["node", "dist/main"]
+CMD ["./rancher-hub-backend"]
