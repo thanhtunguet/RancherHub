@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Rancher Sync Manager for managing and synchronizing services across environments",
   "private": true,
-  "workspaces": [
-    "apps/frontend",
-    "apps/backend"
-  ],
   "devDependencies": {
     "concurrently": "^8.2.2",
     "nx": "^22.2.3",
