@@ -2,6 +2,12 @@ packages:
   - 'apps/frontend'
   - 'apps/backend'
 
+allowBuilds:
+  '@nestjs/core': true
+  '@scarf/scarf': true
+  esbuild: true
+  nx: true
+
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'

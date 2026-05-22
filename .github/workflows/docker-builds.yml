@@ -65,7 +65,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --include=optional
+        run: pnpm install --allow-scripts
 
       - name: Build frontend
         run: pnpm --filter rancher-hub-frontend build
