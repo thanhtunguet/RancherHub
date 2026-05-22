@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Rancher Sync Manager for managing and synchronizing services across environments",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "nx": "^22.2.3",

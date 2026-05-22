@@ -1,8 +1,9 @@
 packages:
   - 'apps/frontend'
   - 'apps/backend'
-allowBuilds:
-  '@nestjs/core': set this to true or false
-  '@scarf/scarf': set this to true or false
-  esbuild: set this to true or false
-  nx: set this to true or false
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@scarf/scarf'
+  - esbuild
+  - nx
