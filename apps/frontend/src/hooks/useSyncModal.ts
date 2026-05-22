@@ -23,9 +23,9 @@ export function useSyncModal({
   >([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [closeTimeoutId, setCloseTimeoutId] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  const [closeTimeoutId, setCloseTimeoutId] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const { data: targetAppInstances } =
     useAppInstancesByEnvironment(targetEnvironmentId);
