@@ -58,6 +58,9 @@ jobs:
         with:
           version: 8
 
+      - name: Allow pnpm workspace root installs
+        run: pnpm config set ignore-workspace-root-check true
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
