@@ -304,7 +304,7 @@ func (m *User) BeforeCreate(*gorm.DB) error {
 
 type MessageTemplate struct {
 	ID                 string    `gorm:"type:uuid;primaryKey" json:"id"`
-	TemplateType       string    `gorm:"column:template_type;size:50;uniqueIndex;not null" json:"templateType"`
+	TemplateType       string    `gorm:"column:template_type;size:50;unique;not null" json:"templateType"`
 	TemplateName       string    `gorm:"column:template_name;size:255;not null" json:"templateName"`
 	MessageTemplate    string    `gorm:"column:message_template;type:text;not null" json:"messageTemplate"`
 	Description        *string   `gorm:"type:text" json:"description"`
