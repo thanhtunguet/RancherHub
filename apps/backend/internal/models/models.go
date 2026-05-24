@@ -284,8 +284,8 @@ func (AlertHistory) TableName() string {
 
 type User struct {
 	ID               string          `gorm:"type:uuid;primaryKey" json:"id"`
-	Username         string          `gorm:"size:255;uniqueIndex;not null" json:"username"`
-	Email            string          `gorm:"size:255;uniqueIndex;not null" json:"email"`
+	Username         string          `gorm:"size:255;unique;not null" json:"username"`
+	Email            string          `gorm:"size:255;unique;not null" json:"email"`
 	Password         string          `gorm:"type:text;not null" json:"-"`
 	TwoFactorEnabled bool            `gorm:"column:twoFactorEnabled;default:false" json:"twoFactorEnabled"`
 	TwoFactorSecret  *string         `gorm:"column:twoFactorSecret;type:text" json:"-"`

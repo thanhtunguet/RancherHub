@@ -1,11 +1,15 @@
 package database
 
 import (
+	"sync"
 	"testing"
 	"time"
 
+	"rancher-hub-backend/internal/models"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 type legacyAlertHistory struct {
@@ -57,5 +61,25 @@ func TestMigrate_BackfillsAlertTypeForLegacyAlertHistoryRows(t *testing.T) {
 	}
 	if alertType == "" {
 		t.Fatalf("expected legacy row alert_type to be backfilled")
+	}
+}
+
+func TestUserSchemaMatchesNestUniqueColumns(t *testing.T) {
+	userSchema, err := schema.Parse(&models.User{}, &sync.Map{}, schema.NamingStrategy{})
+	if err != nil {
+		t.Fatalf("parse user schema: %v", err)
+	}
+
+	for _, fieldName := range []string{"Username", "Email"} {
+		field := userSchema.FieldsByName[fieldName]
+		if field == nil {
+			t.Fatalf("expected %s field in user schema", fieldName)
+		}
+		if !field.Unique {
+			t.Fatalf("expected %s to use a column-level unique constraint", fieldName)
+		}
+		if field.UniqueIndex != "" {
+			t.Fatalf("expected %s not to use uniqueIndex, got %q", fieldName, field.UniqueIndex)
+		}
 	}
 }
