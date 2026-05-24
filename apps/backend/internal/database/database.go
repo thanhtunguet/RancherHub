@@ -36,6 +36,10 @@ func Open(cfg config.Config) (*gorm.DB, error) {
 }
 
 func Migrate(db *gorm.DB) error {
+	if err := prepareAlertHistoryAlertTypeMigration(db); err != nil {
+		return err
+	}
+
 	return db.AutoMigrate(
 		&models.RancherSite{},
 		&models.GenericClusterSite{},
@@ -53,6 +57,30 @@ func Migrate(db *gorm.DB) error {
 		&models.MessageTemplate{},
 		&models.TrustedDevice{},
 	)
+}
+
+func prepareAlertHistoryAlertTypeMigration(db *gorm.DB) error {
+	if !db.Migrator().HasTable(&models.AlertHistory{}) {
+		return nil
+	}
+
+	if !db.Migrator().HasColumn(&models.AlertHistory{}, "alert_type") {
+		if err := db.Exec(`ALTER TABLE "alert_history" ADD COLUMN "alert_type" varchar(50)`).Error; err != nil {
+			return err
+		}
+	}
+
+	if err := db.Exec(`UPDATE "alert_history" SET "alert_type" = 'service_failure' WHERE "alert_type" IS NULL OR "alert_type" = ''`).Error; err != nil {
+		return err
+	}
+
+	if db.Dialector.Name() == "postgres" {
+		if err := db.Exec(`ALTER TABLE "alert_history" ALTER COLUMN "alert_type" SET NOT NULL`).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func SeedDefaultAdmin(db *gorm.DB) error {
