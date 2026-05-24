@@ -17,6 +17,10 @@ env:
 jobs:
   build-backend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64, amd64]
+    name: Build backend (${{ matrix.arch }})
     steps:
       - uses: actions/checkout@v4
 
@@ -42,15 +46,19 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.backend
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/${{ matrix.arch }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.backend-meta.outputs.tags }}
           labels: ${{ steps.backend-meta.outputs.labels }}
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend
+          cache-from: type=gha,scope=backend-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=backend-${{ matrix.arch }}
 
   build-frontend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [arm64, amd64]
+    name: Build frontend (${{ matrix.arch }})
     steps:
       - uses: actions/checkout@v4
 
@@ -61,7 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
@@ -93,9 +101,9 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.frontend
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/${{ matrix.arch }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.frontend-meta.outputs.tags }}
           labels: ${{ steps.frontend-meta.outputs.labels }}
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,mode=max,scope=frontend
+          cache-from: type=gha,scope=frontend-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=frontend-${{ matrix.arch }}
