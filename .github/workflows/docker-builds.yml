@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - golang
+  workflow_dispatch:
 
 env:
   DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME || 'thanhtunguet' }}
