@@ -12,9 +12,9 @@ type RancherSite struct {
 	Name      string        `gorm:"size:255;not null" json:"name"`
 	URL       string        `gorm:"size:500;not null" json:"url"`
 	Token     string        `gorm:"type:text;not null" json:"-"`
-	Active    bool          `gorm:"default:true" json:"active"`
-	CreatedAt time.Time     `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt time.Time     `gorm:"column:updatedAt" json:"updatedAt"`
+	Active    bool          `gorm:"default:true;not null" json:"active"`
+	CreatedAt time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	Instances []AppInstance `gorm:"foreignKey:RancherSiteID" json:"appInstances,omitempty"`
 }
 
@@ -29,9 +29,9 @@ type GenericClusterSite struct {
 	Kubeconfig   string        `gorm:"type:text;not null" json:"-"`
 	ClusterName  *string       `gorm:"column:clusterName;size:255" json:"clusterName"`
 	ServerURL    *string       `gorm:"column:serverUrl;size:500" json:"serverUrl"`
-	Active       bool          `gorm:"default:true" json:"active"`
-	CreatedAt    time.Time     `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt    time.Time     `gorm:"column:updatedAt" json:"updatedAt"`
+	Active       bool          `gorm:"default:true;not null" json:"active"`
+	CreatedAt    time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt    time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	AppInstances []AppInstance `gorm:"foreignKey:GenericClusterSiteID" json:"appInstances,omitempty"`
 }
 
@@ -46,9 +46,9 @@ type HarborSite struct {
 	URL       string    `gorm:"size:500;not null" json:"url"`
 	Username  string    `gorm:"size:255;not null" json:"username"`
 	Password  string    `gorm:"type:text;not null" json:"-"`
-	Active    bool      `gorm:"default:true" json:"active"`
-	CreatedAt time.Time `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt time.Time `gorm:"column:updatedAt" json:"updatedAt"`
+	Active    bool      `gorm:"default:true;not null" json:"active"`
+	CreatedAt time.Time `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt time.Time `gorm:"column:updatedAt;not null" json:"updatedAt"`
 }
 
 func (m *HarborSite) BeforeCreate(*gorm.DB) error {
@@ -60,9 +60,9 @@ type Environment struct {
 	ID           string        `gorm:"type:uuid;primaryKey" json:"id"`
 	Name         string        `gorm:"size:255;not null" json:"name"`
 	Description  *string       `gorm:"type:text" json:"description"`
-	Color        string        `gorm:"size:7;default:#1890ff" json:"color"`
-	CreatedAt    time.Time     `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt    time.Time     `gorm:"column:updatedAt" json:"updatedAt"`
+	Color        string        `gorm:"size:7;default:#1890ff;not null" json:"color"`
+	CreatedAt    time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt    time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	AppInstances []AppInstance `gorm:"foreignKey:EnvironmentID" json:"appInstances,omitempty"`
 }
 
@@ -79,16 +79,17 @@ type AppInstance struct {
 	Name                 string              `gorm:"size:255;not null" json:"name"`
 	Cluster              string              `gorm:"size:255;not null" json:"cluster"`
 	Namespace            string              `gorm:"size:255;not null" json:"namespace"`
-	ClusterType          string              `gorm:"column:cluster_type;size:50;default:rancher" json:"clusterType"`
+	ClusterType          string              `gorm:"column:cluster_type;size:50;default:rancher;not null" json:"clusterType"`
 	RancherSiteID        *string             `gorm:"column:rancher_site_id" json:"rancherSiteId"`
 	GenericClusterSiteID *string             `gorm:"column:generic_cluster_site_id" json:"genericClusterSiteId"`
 	EnvironmentID        string              `gorm:"column:environment_id;not null" json:"environmentId"`
-	CreatedAt            time.Time           `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt            time.Time           `gorm:"column:updatedAt" json:"updatedAt"`
+	CreatedAt            time.Time           `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt            time.Time           `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	RancherSite          *RancherSite        `gorm:"foreignKey:RancherSiteID" json:"rancherSite,omitempty"`
 	GenericClusterSite   *GenericClusterSite `gorm:"foreignKey:GenericClusterSiteID" json:"genericClusterSite,omitempty"`
 	Environment          *Environment        `gorm:"foreignKey:EnvironmentID" json:"environment,omitempty"`
 	Services             []Service           `gorm:"foreignKey:AppInstanceID" json:"services,omitempty"`
+	MonitoredInstances   []MonitoredInstance `gorm:"foreignKey:AppInstanceID" json:"monitoredInstances,omitempty"`
 }
 
 func (m *AppInstance) BeforeCreate(*gorm.DB) error {
@@ -103,14 +104,14 @@ type Service struct {
 	ID                string       `gorm:"type:uuid;primaryKey" json:"id"`
 	Name              string       `gorm:"size:255;not null;uniqueIndex:idx_services_name_app_instance" json:"name"`
 	AppInstanceID     string       `gorm:"column:app_instance_id;not null;uniqueIndex:idx_services_name_app_instance" json:"appInstanceId"`
-	Status            string       `gorm:"size:50;default:unknown" json:"status"`
-	Replicas          int          `gorm:"default:1" json:"replicas"`
-	AvailableReplicas int          `gorm:"column:available_replicas;default:0" json:"availableReplicas"`
+	Status            string       `gorm:"size:50;default:unknown;not null" json:"status"`
+	Replicas          int          `gorm:"default:1;not null" json:"replicas"`
+	AvailableReplicas int          `gorm:"column:available_replicas;default:0;not null" json:"availableReplicas"`
 	ImageTag          *string      `gorm:"column:image_tag;size:255" json:"imageTag"`
-	WorkloadType      string       `gorm:"column:workload_type;size:50;default:Deployment" json:"workloadType"`
+	WorkloadType      string       `gorm:"column:workload_type;size:50;default:Deployment;not null" json:"workloadType"`
 	LastSynced        *time.Time   `gorm:"column:last_synced" json:"lastSynced"`
-	CreatedAt         time.Time    `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt         time.Time    `gorm:"column:updatedAt" json:"updatedAt"`
+	CreatedAt         time.Time    `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt         time.Time    `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	AppInstance       *AppInstance `gorm:"foreignKey:AppInstanceID" json:"appInstance,omitempty"`
 }
 
@@ -132,12 +133,12 @@ type SyncOperation struct {
 	ID                  string        `gorm:"type:uuid;primaryKey" json:"id"`
 	SourceEnvironmentID string        `gorm:"column:source_environment_id;not null" json:"sourceEnvironmentId"`
 	TargetEnvironmentID string        `gorm:"column:target_environment_id;not null" json:"targetEnvironmentId"`
-	ServiceIDs          []string      `gorm:"column:serviceIds;serializer:json" json:"serviceIds"`
-	Status              string        `gorm:"size:50;default:pending" json:"status"`
-	StartTime           time.Time     `gorm:"column:start_time" json:"startTime"`
+	ServiceIDs          []string      `gorm:"column:serviceIds;serializer:json;not null" json:"serviceIds"`
+	Status              string        `gorm:"size:50;default:pending;not null" json:"status"`
+	StartTime           time.Time     `gorm:"column:start_time;not null" json:"startTime"`
 	EndTime             *time.Time    `gorm:"column:end_time" json:"endTime"`
-	InitiatedBy         string        `gorm:"column:initiated_by;size:255" json:"initiatedBy"`
-	CreatedAt           time.Time     `gorm:"column:createdAt" json:"createdAt"`
+	InitiatedBy         string        `gorm:"column:initiated_by;size:255;not null" json:"initiatedBy"`
+	CreatedAt           time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
 	SyncHistory         []SyncHistory `gorm:"foreignKey:SyncOperationID" json:"syncHistory,omitempty"`
 }
 
@@ -171,8 +172,8 @@ type SyncHistory struct {
 	Error                 *string        `gorm:"type:text" json:"error"`
 	DurationMS            *int           `gorm:"column:duration_ms" json:"durationMs"`
 	InitiatedBy           *string        `gorm:"column:initiated_by;size:255" json:"initiatedBy"`
-	Timestamp             time.Time      `json:"timestamp"`
-	CreatedAt             time.Time      `gorm:"column:createdAt" json:"createdAt"`
+	Timestamp             time.Time      `gorm:"not null" json:"timestamp"`
+	CreatedAt             time.Time      `gorm:"column:createdAt;not null" json:"createdAt"`
 	SyncOperation         *SyncOperation `gorm:"foreignKey:SyncOperationID" json:"syncOperation,omitempty"`
 }
 
@@ -193,12 +194,12 @@ type MonitoringConfig struct {
 	ProxyPort            *int      `gorm:"column:proxy_port" json:"proxyPort"`
 	ProxyUsername        *string   `gorm:"column:proxy_username;size:255" json:"proxyUsername"`
 	ProxyPassword        *string   `gorm:"column:proxy_password;size:255" json:"-"`
-	MonitoringEnabled    bool      `gorm:"column:monitoring_enabled;default:true" json:"monitoringEnabled"`
-	AlertThreshold       int       `gorm:"column:alert_threshold;default:3" json:"alertThreshold"`
-	NotificationSchedule string    `gorm:"column:notification_schedule;size:50;default:daily" json:"notificationSchedule"`
+	MonitoringEnabled    bool      `gorm:"column:monitoring_enabled;default:true;not null" json:"monitoringEnabled"`
+	AlertThreshold       int       `gorm:"column:alert_threshold;default:3;not null" json:"alertThreshold"`
+	NotificationSchedule string    `gorm:"column:notification_schedule;size:50;default:daily;not null" json:"notificationSchedule"`
 	TaggedUsers          []string  `gorm:"column:tagged_users;serializer:json" json:"taggedUsers"`
-	CreatedAt            time.Time `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt            time.Time `gorm:"column:updatedAt" json:"updatedAt"`
+	CreatedAt            time.Time `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt            time.Time `gorm:"column:updatedAt;not null" json:"updatedAt"`
 }
 
 func (m *MonitoringConfig) BeforeCreate(*gorm.DB) error {
@@ -213,17 +214,19 @@ func (m *MonitoringConfig) BeforeCreate(*gorm.DB) error {
 }
 
 type MonitoredInstance struct {
-	ID                   string       `gorm:"type:uuid;primaryKey" json:"id"`
-	AppInstanceID        string       `gorm:"column:app_instance_id;not null" json:"appInstanceId"`
-	MonitoringEnabled    bool         `gorm:"column:monitoring_enabled;default:true" json:"monitoringEnabled"`
-	CheckIntervalMinutes int          `gorm:"column:check_interval_minutes;default:60" json:"checkIntervalMinutes"`
-	LastCheckTime        *time.Time   `gorm:"column:last_check_time" json:"lastCheckTime"`
-	LastStatus           *string      `gorm:"column:last_status;size:50" json:"lastStatus"`
-	ConsecutiveFailures  int          `gorm:"column:consecutive_failures;default:0" json:"consecutiveFailures"`
-	AlertSent            bool         `gorm:"column:alert_sent;default:false" json:"alertSent"`
-	CreatedAt            time.Time    `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt            time.Time    `gorm:"column:updatedAt" json:"updatedAt"`
-	AppInstance          *AppInstance `gorm:"foreignKey:AppInstanceID" json:"appInstance,omitempty"`
+	ID                   string              `gorm:"type:uuid;primaryKey" json:"id"`
+	AppInstanceID        string              `gorm:"column:app_instance_id;not null" json:"appInstanceId"`
+	MonitoringEnabled    bool                `gorm:"column:monitoring_enabled;default:true;not null" json:"monitoringEnabled"`
+	CheckIntervalMinutes int                 `gorm:"column:check_interval_minutes;default:60;not null" json:"checkIntervalMinutes"`
+	LastCheckTime        *time.Time          `gorm:"column:last_check_time" json:"lastCheckTime"`
+	LastStatus           *string             `gorm:"column:last_status;size:50" json:"lastStatus"`
+	ConsecutiveFailures  int                 `gorm:"column:consecutive_failures;default:0;not null" json:"consecutiveFailures"`
+	AlertSent            bool                `gorm:"column:alert_sent;default:false;not null" json:"alertSent"`
+	CreatedAt            time.Time           `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt            time.Time           `gorm:"column:updatedAt;not null" json:"updatedAt"`
+	AppInstance          *AppInstance        `gorm:"foreignKey:AppInstanceID" json:"appInstance,omitempty"`
+	MonitoringHistory    []MonitoringHistory `gorm:"foreignKey:MonitoredInstanceID" json:"monitoringHistory,omitempty"`
+	AlertHistory         []AlertHistory      `gorm:"foreignKey:MonitoredInstanceID" json:"alertHistory,omitempty"`
 }
 
 func (m *MonitoredInstance) BeforeCreate(*gorm.DB) error {
@@ -246,7 +249,7 @@ type MonitoringHistory struct {
 	PausedServices      *int               `gorm:"column:paused_services" json:"pausedServices"`
 	Details             *string            `gorm:"type:text" json:"details"`
 	Error               *string            `gorm:"type:text" json:"error"`
-	CreatedAt           time.Time          `gorm:"column:createdAt" json:"createdAt"`
+	CreatedAt           time.Time          `gorm:"column:createdAt;not null" json:"createdAt"`
 	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance,omitempty"`
 }
 
@@ -265,11 +268,11 @@ type AlertHistory struct {
 	AlertType           string             `gorm:"size:50;not null" json:"alertType"`
 	Severity            string             `gorm:"size:50;not null" json:"severity"`
 	Message             string             `gorm:"type:text;not null" json:"message"`
-	TelegramSent        bool               `gorm:"column:telegram_sent;default:false" json:"telegramSent"`
+	TelegramSent        bool               `gorm:"column:telegram_sent;default:false;not null" json:"telegramSent"`
 	TelegramMessageID   *string            `gorm:"column:telegram_message_id;size:255" json:"telegramMessageId"`
-	Resolved            bool               `gorm:"default:false" json:"resolved"`
+	Resolved            bool               `gorm:"default:false;not null" json:"resolved"`
 	ResolvedAt          *time.Time         `gorm:"column:resolved_at" json:"resolvedAt"`
-	CreatedAt           time.Time          `gorm:"column:createdAt" json:"createdAt"`
+	CreatedAt           time.Time          `gorm:"column:createdAt;not null" json:"createdAt"`
 	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance,omitempty"`
 }
 
@@ -287,14 +290,14 @@ type User struct {
 	Username         string          `gorm:"size:255;unique;not null" json:"username"`
 	Email            string          `gorm:"size:255;unique;not null" json:"email"`
 	Password         string          `gorm:"type:text;not null" json:"-"`
-	TwoFactorEnabled bool            `gorm:"column:twoFactorEnabled;default:false" json:"twoFactorEnabled"`
+	TwoFactorEnabled bool            `gorm:"column:twoFactorEnabled;default:false;not null" json:"twoFactorEnabled"`
 	TwoFactorSecret  *string         `gorm:"column:twoFactorSecret;type:text" json:"-"`
-	Active           bool            `gorm:"default:true" json:"active"`
-	IsFirstLogin     bool            `gorm:"column:isFirstLogin;default:false" json:"isFirstLogin"`
+	Active           bool            `gorm:"default:true;not null" json:"active"`
+	IsFirstLogin     bool            `gorm:"column:isFirstLogin;default:false;not null" json:"isFirstLogin"`
 	LastLoginAt      *time.Time      `gorm:"column:lastLoginAt" json:"lastLoginAt"`
 	TrustedDevices   []TrustedDevice `gorm:"foreignKey:UserID" json:"trustedDevices,omitempty"`
-	CreatedAt        time.Time       `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt        time.Time       `gorm:"column:updatedAt" json:"updatedAt"`
+	CreatedAt        time.Time       `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt        time.Time       `gorm:"column:updatedAt;not null" json:"updatedAt"`
 }
 
 func (m *User) BeforeCreate(*gorm.DB) error {
@@ -309,10 +312,10 @@ type MessageTemplate struct {
 	MessageTemplate    string    `gorm:"column:message_template;type:text;not null" json:"messageTemplate"`
 	Description        *string   `gorm:"type:text" json:"description"`
 	AvailableVariables []string  `gorm:"column:available_variables;serializer:json" json:"availableVariables"`
-	IsActive           bool      `gorm:"column:is_active;default:true" json:"isActive"`
-	IsDefault          bool      `gorm:"column:is_default;default:false" json:"isDefault"`
-	CreatedAt          time.Time `gorm:"column:created_at" json:"createdAt"`
-	UpdatedAt          time.Time `gorm:"column:updated_at" json:"updatedAt"`
+	IsActive           bool      `gorm:"column:is_active;default:true;not null" json:"isActive"`
+	IsDefault          bool      `gorm:"column:is_default;default:false;not null" json:"isDefault"`
+	CreatedAt          time.Time `gorm:"column:created_at;not null" json:"createdAt"`
+	UpdatedAt          time.Time `gorm:"column:updated_at;not null" json:"updatedAt"`
 }
 
 func (m *MessageTemplate) BeforeCreate(*gorm.DB) error {
@@ -329,8 +332,8 @@ type TrustedDevice struct {
 	UserAgent         *string   `gorm:"column:user_agent;type:text" json:"userAgent"`
 	LastUsedAt        time.Time `gorm:"column:last_used_at;not null" json:"lastUsedAt"`
 	ExpiresAt         time.Time `gorm:"column:expires_at;index;not null" json:"expiresAt"`
-	CreatedAt         time.Time `gorm:"column:createdAt" json:"createdAt"`
-	UpdatedAt         time.Time `gorm:"column:updatedAt" json:"updatedAt"`
+	CreatedAt         time.Time `gorm:"column:createdAt;not null" json:"createdAt"`
+	UpdatedAt         time.Time `gorm:"column:updatedAt;not null" json:"updatedAt"`
 	User              *User     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
 }
 
