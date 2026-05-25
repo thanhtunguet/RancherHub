@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Rancher Sync Manager for managing and synchronizing services across environments",
   "private": true,
-  "workspaces": [
-    "apps/frontend",
-    "apps/backend"
-  ],
   "devDependencies": {
     "concurrently": "^8.2.2",
     "nx": "^22.2.3",
@@ -26,23 +22,20 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd apps/backend && npm run start:dev",
+    "dev:backend": "cd apps/backend && CGO_CFLAGS='-O0' go run -tags=nomsgpack ./cmd/server",
     "dev:frontend": "cd apps/frontend && npm run dev",
     "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd apps/backend && npm run build",
+    "build:backend": "cd apps/backend && mkdir -p dist && CGO_CFLAGS='-O0' go build -tags=nomsgpack -o dist/rancher-hub-backend ./cmd/server",
     "build:frontend": "cd apps/frontend && npm run build",
     "test": "npm run test:backend && npm run test:frontend",
-    "test:backend": "cd apps/backend && npm run test",
+    "test:backend": "cd apps/backend && CGO_CFLAGS='-O0' go test -tags=nomsgpack ./...",
     "test:frontend": "cd apps/frontend && npm run test",
     "lint": "npm run lint:backend && npm run lint:frontend",
-    "lint:backend": "cd apps/backend && npm run lint",
+    "lint:backend": "cd apps/backend && gofmt -w cmd internal",
     "lint:frontend": "cd apps/frontend && npm run lint"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
-  },
-  "dependencies": {
-    "@kubernetes/client-node": "^1.4.0"
   }
 }
