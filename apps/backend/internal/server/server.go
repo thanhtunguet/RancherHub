@@ -769,7 +769,7 @@ func (s *Server) createEnvironment(c *gin.Context) {
 }
 
 func (s *Server) listEnvironments(c *gin.Context) {
-	var rows []models.Environment
+	rows := make([]models.Environment, 0)
 	s.db.Preload("AppInstances").Order("createdAt ASC").Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -864,20 +864,20 @@ func (s *Server) listAppInstances(c *gin.Context) {
 	if env := c.Query("env"); env != "" {
 		q = q.Where("environment_id = ?", env)
 	}
-	var rows []models.AppInstance
+	rows := make([]models.AppInstance, 0)
 	q.Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
 
 func (s *Server) appInstancesByEnvironment(c *gin.Context) {
-	var rows []models.AppInstance
+	rows := make([]models.AppInstance, 0)
 	s.db.Preload("RancherSite").Preload("GenericClusterSite").Preload("Environment").Preload("Services").
 		Where("environment_id = ?", c.Param("environmentId")).Order("createdAt ASC").Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
 
 func (s *Server) appInstancesBySite(c *gin.Context) {
-	var rows []models.AppInstance
+	rows := make([]models.AppInstance, 0)
 	s.db.Preload("RancherSite").Preload("GenericClusterSite").Preload("Environment").Preload("Services").
 		Where("rancher_site_id = ?", c.Param("siteId")).Order("createdAt ASC").Find(&rows)
 	c.JSON(http.StatusOK, rows)
@@ -1253,7 +1253,7 @@ func (s *Server) harborSite(c *gin.Context) (models.HarborSite, bool) {
 }
 
 func (s *Server) listServices(c *gin.Context) {
-	var rows []models.Service
+	rows := make([]models.Service, 0)
 	if env := c.Query("env"); env != "" {
 		rows = s.servicesForEnvironment(env)
 	} else {
@@ -1289,7 +1289,7 @@ func (s *Server) servicesByAppInstance(c *gin.Context) {
 }
 
 func filterServices(rows []models.Service, workloadType, search string) []models.Service {
-	filtered := rows[:0]
+	filtered := make([]models.Service, 0, len(rows))
 	workloadType = strings.ToLower(workloadType)
 	search = strings.ToLower(search)
 	for _, row := range rows {
@@ -1338,7 +1338,7 @@ func (s *Server) servicesForAppInstanceParam(c *gin.Context, appInstanceID strin
 func (s *Server) refreshServicesForAppInstance(app models.AppInstance) []models.Service {
 	workloads, err := s.workloadsForAppInstance(app)
 	if err != nil {
-		var cached []models.Service
+		cached := make([]models.Service, 0)
 		s.db.Preload("AppInstance").Where("app_instance_id = ?", app.ID).Find(&cached)
 		return cached
 	}
@@ -1376,7 +1376,7 @@ func (s *Server) refreshServicesForAppInstance(app models.AppInstance) []models.
 	if len(serviceIDs) == 0 {
 		return []models.Service{}
 	}
-	var services []models.Service
+	services := make([]models.Service, 0)
 	s.db.Preload("AppInstance").Where("id IN ?", serviceIDs).Find(&services)
 	return services
 }
@@ -1392,7 +1392,7 @@ func (s *Server) servicesWithImageSizes(c *gin.Context) {
 }
 
 func (s *Server) appInstanceTree(c *gin.Context) {
-	var envs []models.Environment
+	envs := make([]models.Environment, 0)
 	s.db.Preload("AppInstances").Preload("AppInstances.Services").Order("createdAt ASC").Find(&envs)
 	c.JSON(http.StatusOK, envs)
 }
@@ -1920,7 +1920,7 @@ func (s *Server) syncHistory(c *gin.Context) {
 	if env := c.Query("env"); env != "" {
 		q = q.Where("source_environment_id = ? OR target_environment_id = ?", env, env)
 	}
-	var rows []models.SyncOperation
+	rows := make([]models.SyncOperation, 0)
 	q.Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -1946,7 +1946,7 @@ func (s *Server) compareServicesByInstance(c *gin.Context) {
 }
 
 func (s *Server) debugAppInstances(c *gin.Context) {
-	var rows []models.AppInstance
+	rows := make([]models.AppInstance, 0)
 	s.db.Preload("RancherSite").Preload("GenericClusterSite").Where("environment_id = ?", c.Param("environmentId")).Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -2022,7 +2022,7 @@ func (s *Server) testTelegramConnection(c *gin.Context) {
 }
 
 func (s *Server) listMonitoredInstances(c *gin.Context) {
-	var rows []models.MonitoredInstance
+	rows := make([]models.MonitoredInstance, 0)
 	s.db.Preload("AppInstance").Preload("AppInstance.Environment").Order("createdAt DESC").Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -2106,7 +2106,7 @@ func (s *Server) monitoringHistory(c *gin.Context) {
 	}
 	days, _ := strconv.Atoi(defaultString(c.Query("days"), "7"))
 	q = q.Where("check_time >= ?", time.Now().AddDate(0, 0, -days))
-	var rows []models.MonitoringHistory
+	rows := make([]models.MonitoringHistory, 0)
 	q.Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -2119,7 +2119,7 @@ func (s *Server) alertHistory(c *gin.Context) {
 	if resolved := c.Query("resolved"); resolved != "" {
 		q = q.Where("resolved = ?", resolved == "true")
 	}
-	var rows []models.AlertHistory
+	rows := make([]models.AlertHistory, 0)
 	q.Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
@@ -2311,7 +2311,7 @@ func (s *Server) deleteUser(c *gin.Context) {
 }
 
 func (s *Server) listMessageTemplates(c *gin.Context) {
-	var rows []models.MessageTemplate
+	rows := make([]models.MessageTemplate, 0)
 	s.db.Order("template_type ASC").Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }
