@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Bash(git *)",
+      "Bash(jq *)",
+      "mcp__gitlab__*",
+      "mcp__jira__*"
+    ],
+    "deny": [
+      "Edit",
+      "Write",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  }
+}
