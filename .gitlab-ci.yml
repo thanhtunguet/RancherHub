@@ -8,12 +8,14 @@
 #   JIRA_EMAIL          — Jira account email for API auth
 #   JIRA_API_TOKEN      — Jira API token (masked)
 #   JIRA_PROJECT_KEY    — Jira project key, e.g. RANCHER
+#   JIRA_WORKLOG_ISSUE_KEY — Issue key to log review time against (e.g. SCRUM-42)
 #
 # Optional:
 #   GITLAB_ACCESS_TOKEN — Project/group PAT with api scope for MR comments + Jira push
 #                         (defaults to CI_JOB_TOKEN; may need PAT if job token lacks write access)
 #   JIRA_ISSUE_TYPE     — Default: Task
 #   JIRA_LABELS         — Default: code-review,claude-ci
+#   JIRA_WORKLOG_TIME_SPENT — Default: 15m (Jira format, e.g. 30m, 1h)
 #   CLAUDE_MODEL        — e.g. claude-sonnet-4-6
 #   CLAUDE_MAX_TURNS    — Default: 25
 #
@@ -55,11 +57,14 @@ claude-code-review:
     - export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
     - command -v claude
     - command -v node
-    - chmod +x ci/setup-claude-review.sh ci/run-claude-review.sh
+    - chmod +x ci/setup-claude-review.sh ci/run-claude-review.sh ci/post-jira-worklog.sh
     - ./ci/setup-claude-review.sh
   script:
     - export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
     - ./ci/run-claude-review.sh
+  after_script:
+    - export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+    - ./ci/post-jira-worklog.sh
   artifacts:
     when: always
     expire_in: 14 days
