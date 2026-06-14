@@ -34,7 +34,7 @@ claude-code-review:
     - linux
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"
+    - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
   timeout: 30m
   before_script:
