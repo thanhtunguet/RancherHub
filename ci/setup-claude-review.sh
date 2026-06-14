@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo "setup-claude-review.sh v2 (ANTHROPIC_AUTH_TOKEN only)"
+echo "Pipeline commit: ${CI_COMMIT_SHA:-unknown}"
+
 # Resolve GitLab API URL and token for the GitLab MCP server.
 export GITLAB_API_URL="${GITLAB_API_URL:-${CI_API_V4_URL}}"
 export GITLAB_PERSONAL_ACCESS_TOKEN="${GITLAB_ACCESS_TOKEN:-${CI_JOB_TOKEN}}"
 
 # Anthropic auth via CI/CD variables (gateway or direct endpoint).
-: "${ANTHROPIC_AUTH_TOKEN:?Set ANTHROPIC_AUTH_TOKEN as a masked CI/CD variable}"
+if [[ -z "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
+  echo "ANTHROPIC_AUTH_TOKEN is not available in this job." >&2
+  echo "If you already added it under Settings → CI/CD → Variables, check:" >&2
+  echo "  - Variable key is exactly ANTHROPIC_AUTH_TOKEN" >&2
+  echo "  - Protected variables only apply to protected branches/tags" >&2
+  echo "  - Environment-scoped variables require a matching environment on the job" >&2
+  echo "  - This pipeline must run code that expects ANTHROPIC_AUTH_TOKEN (not ANTHROPIC_API_KEY)" >&2
+  exit 1
+fi
 export ANTHROPIC_AUTH_TOKEN
 [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
 echo "Anthropic auth configured${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL set}"

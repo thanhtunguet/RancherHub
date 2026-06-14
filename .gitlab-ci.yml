@@ -3,6 +3,7 @@
 # Required CI/CD variables (Settings → CI/CD → Variables):
 #   ANTHROPIC_AUTH_TOKEN — Bearer token for Anthropic API or compatible gateway (masked)
 #   ANTHROPIC_BASE_URL   — Optional API/gateway endpoint (e.g. https://your-gateway/v1)
+#                          Protected variables are only injected on protected branches/tags.
 #   JIRA_BASE_URL       — e.g. https://your-org.atlassian.net
 #   JIRA_EMAIL          — Jira account email for API auth
 #   JIRA_API_TOKEN      — Jira API token (masked)
@@ -32,6 +33,8 @@ claude-code-review:
       when: manual
   timeout: 30m
   before_script:
+    - echo "Pipeline commit ${CI_COMMIT_SHA}"
+    - head -n 12 ci/setup-claude-review.sh
     - export PATH="$HOME/.local/bin:$PATH"
     - apk add --no-cache git curl bash jq gettext
     - curl -fsSL https://claude.ai/install.sh | bash
