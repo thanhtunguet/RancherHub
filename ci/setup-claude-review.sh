@@ -5,7 +5,19 @@ set -euo pipefail
 export GITLAB_API_URL="${GITLAB_API_URL:-${CI_API_V4_URL}}"
 export GITLAB_PERSONAL_ACCESS_TOKEN="${GITLAB_ACCESS_TOKEN:-${CI_JOB_TOKEN}}"
 
-: "${ANTHROPIC_API_KEY:?Set ANTHROPIC_API_KEY as a masked CI/CD variable}"
+# Anthropic auth: direct API key or gateway (AUTH_TOKEN + optional BASE_URL).
+if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
+  export ANTHROPIC_AUTH_TOKEN
+  [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
+  # Gateway route: Claude Code prefers API_KEY when set; clear it if unset in CI.
+  export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
+elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+  export ANTHROPIC_API_KEY
+  [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
+else
+  echo "Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN as a masked CI/CD variable" >&2
+  exit 1
+fi
 : "${JIRA_BASE_URL:?Set JIRA_BASE_URL (e.g. https://your-org.atlassian.net)}"
 : "${JIRA_EMAIL:?Set JIRA_EMAIL}"
 : "${JIRA_API_TOKEN:?Set JIRA_API_TOKEN as a masked CI/CD variable}"
