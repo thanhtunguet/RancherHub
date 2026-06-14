@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+eval "$(~/.local/bin/mise activate bash)"
+
 PROMPT_FILE="/tmp/claude-review-prompt.md"
 MCP_CONFIG="/tmp/claude-mcp.json"
 SETTINGS_FILE=".claude/ci-code-review-settings.json"

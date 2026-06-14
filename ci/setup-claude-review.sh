@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+eval "$(~/.local/bin/mise activate bash)"
+
 echo "setup-claude-review.sh v2 (ANTHROPIC_AUTH_TOKEN only)"
 echo "Pipeline commit: ${CI_COMMIT_SHA:-unknown}"
 
