@@ -40,6 +40,7 @@ claude-code-review:
   before_script:
     - curl https://mise.run | sh
     - eval "$(~/.local/bin/mise activate bash)"
+    - mise use -g node@22
     - echo "Pipeline commit ${CI_COMMIT_SHA}"
     - head -n 12 ci/setup-claude-review.sh
     - export PATH="$HOME/.local/bin:$PATH"
