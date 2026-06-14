@@ -11,11 +11,14 @@ if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
   [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
   # Gateway route: Claude Code prefers API_KEY when set; clear it if unset in CI.
   export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
+  echo "Anthropic auth: gateway (ANTHROPIC_AUTH_TOKEN set${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL configured})"
 elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
   export ANTHROPIC_API_KEY
   [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
+  echo "Anthropic auth: direct API key${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL configured}"
 else
-  echo "Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN as a masked CI/CD variable" >&2
+  echo "Anthropic auth missing. Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN in Settings → CI/CD → Variables." >&2
+  echo "If variables are marked Protected, the pipeline branch must be protected too." >&2
   exit 1
 fi
 : "${JIRA_BASE_URL:?Set JIRA_BASE_URL (e.g. https://your-org.atlassian.net)}"

@@ -5,6 +5,13 @@ PROMPT_FILE="/tmp/claude-review-prompt.md"
 MCP_CONFIG="/tmp/claude-mcp.json"
 SETTINGS_FILE=".claude/ci-code-review-settings.json"
 OUTPUT_FILE="${CI_PROJECT_DIR}/claude-review-result.json"
+CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude || true)}"
+CLAUDE_BIN="${CLAUDE_BIN:-$HOME/.local/bin/claude}"
+
+if [[ ! -x "$CLAUDE_BIN" ]]; then
+  echo "Claude Code not found. Expected at $HOME/.local/bin/claude" >&2
+  exit 1
+fi
 
 MODEL_FLAG=()
 if [[ -n "${CLAUDE_MODEL:-}" ]]; then
@@ -23,7 +30,7 @@ if [[ -n "${ANTHROPIC_BASE_URL:-}" ]]; then
   CLAUDE_ENV+=(ANTHROPIC_BASE_URL="$ANTHROPIC_BASE_URL")
 fi
 
-env "${CLAUDE_ENV[@]}" claude \
+env "${CLAUDE_ENV[@]}" "$CLAUDE_BIN" \
   -p "$(cat "$PROMPT_FILE")" \
   --mcp-config "$MCP_CONFIG" \
   --strict-mcp-config \

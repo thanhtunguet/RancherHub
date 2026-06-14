@@ -36,8 +36,11 @@ claude-code-review:
       when: manual
   timeout: 30m
   before_script:
+    - export PATH="$HOME/.local/bin:$PATH"
     - apk add --no-cache git curl bash jq gettext
     - curl -fsSL https://claude.ai/install.sh | bash
+    - export PATH="$HOME/.local/bin:$PATH"
+    - command -v claude
     - chmod +x ci/setup-claude-review.sh ci/run-claude-review.sh
     - ./ci/setup-claude-review.sh
   script:
