@@ -17,9 +17,8 @@
 #   CLAUDE_MODEL        — e.g. claude-sonnet-4-6
 #   CLAUDE_MAX_TURNS    — Default: 25
 #
-# Runner: assign a self-hosted runner with tags desktop + linux to this project.
+# Runner: self-hosted Ubuntu runner with tags desktop + linux (shell executor).
 # GitLab matches jobs to runners by tags — there is no manual runner picker on Run pipeline.
-# The runner should use the Docker executor (job uses image: node:24-alpine).
 
 stages:
   - review
@@ -33,7 +32,6 @@ claude-code-review:
   tags:
     - desktop
     - linux
-  image: node:24-alpine3.21
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web" && $RUN_CLAUDE_REVIEW == "true"'
@@ -43,7 +41,17 @@ claude-code-review:
     - echo "Pipeline commit ${CI_COMMIT_SHA}"
     - head -n 12 ci/setup-claude-review.sh
     - export PATH="$HOME/.local/bin:$PATH"
-    - apk add --no-cache git curl bash jq gettext
+    - |
+      export DEBIAN_FRONTEND=noninteractive
+      if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq git curl jq gettext-base nodejs npm
+      else
+        apt-get update -qq
+        apt-get install -y -qq git curl jq gettext-base nodejs npm
+      fi
+    - node --version
+    - npm --version
     - curl -fsSL https://claude.ai/install.sh | bash
     - export PATH="$HOME/.local/bin:$PATH"
     - command -v claude
