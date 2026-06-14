@@ -1,12 +1,8 @@
 # Claude Code automated MR review → Jira issues + MR comment
 #
 # Required CI/CD variables (Settings → CI/CD → Variables):
-#   ANTHROPIC_API_KEY   — Anthropic API key (masked); use for direct Anthropic API access
-#   — OR —
-#   ANTHROPIC_AUTH_TOKEN — Bearer token for a compatible gateway/proxy (masked)
-#   ANTHROPIC_BASE_URL   — Gateway endpoint (e.g. https://your-gateway/v1); pair with AUTH_TOKEN
-#                          When using AUTH_TOKEN, leave ANTHROPIC_API_KEY unset so Claude Code
-#                          does not bypass the gateway.
+#   ANTHROPIC_AUTH_TOKEN — Bearer token for Anthropic API or compatible gateway (masked)
+#   ANTHROPIC_BASE_URL   — Optional API/gateway endpoint (e.g. https://your-gateway/v1)
 #   JIRA_BASE_URL       — e.g. https://your-org.atlassian.net
 #   JIRA_EMAIL          — Jira account email for API auth
 #   JIRA_API_TOKEN      — Jira API token (masked)

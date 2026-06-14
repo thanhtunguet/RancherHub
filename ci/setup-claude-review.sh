@@ -5,22 +5,11 @@ set -euo pipefail
 export GITLAB_API_URL="${GITLAB_API_URL:-${CI_API_V4_URL}}"
 export GITLAB_PERSONAL_ACCESS_TOKEN="${GITLAB_ACCESS_TOKEN:-${CI_JOB_TOKEN}}"
 
-# Anthropic auth: direct API key or gateway (AUTH_TOKEN + optional BASE_URL).
-if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
-  export ANTHROPIC_AUTH_TOKEN
-  [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
-  # Gateway route: Claude Code prefers API_KEY when set; clear it if unset in CI.
-  export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}"
-  echo "Anthropic auth: gateway (ANTHROPIC_AUTH_TOKEN set${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL configured})"
-elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-  export ANTHROPIC_API_KEY
-  [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
-  echo "Anthropic auth: direct API key${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL configured}"
-else
-  echo "Anthropic auth missing. Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN in Settings → CI/CD → Variables." >&2
-  echo "If variables are marked Protected, the pipeline branch must be protected too." >&2
-  exit 1
-fi
+# Anthropic auth via CI/CD variables (gateway or direct endpoint).
+: "${ANTHROPIC_AUTH_TOKEN:?Set ANTHROPIC_AUTH_TOKEN as a masked CI/CD variable}"
+export ANTHROPIC_AUTH_TOKEN
+[[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
+echo "Anthropic auth configured${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL set}"
 : "${JIRA_BASE_URL:?Set JIRA_BASE_URL (e.g. https://your-org.atlassian.net)}"
 : "${JIRA_EMAIL:?Set JIRA_EMAIL}"
 : "${JIRA_API_TOKEN:?Set JIRA_API_TOKEN as a masked CI/CD variable}"

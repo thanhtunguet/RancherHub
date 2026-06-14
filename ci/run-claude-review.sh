@@ -19,13 +19,7 @@ if [[ -n "${CLAUDE_MODEL:-}" ]]; then
 fi
 
 # Pass Anthropic auth/endpoint explicitly so Claude Code picks up CI/CD variables.
-CLAUDE_ENV=()
-if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
-  CLAUDE_ENV+=(ANTHROPIC_AUTH_TOKEN="$ANTHROPIC_AUTH_TOKEN")
-  CLAUDE_ENV+=(ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}")
-elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-  CLAUDE_ENV+=(ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY")
-fi
+CLAUDE_ENV=(ANTHROPIC_AUTH_TOKEN="${ANTHROPIC_AUTH_TOKEN:?Set ANTHROPIC_AUTH_TOKEN as a masked CI/CD variable}")
 if [[ -n "${ANTHROPIC_BASE_URL:-}" ]]; then
   CLAUDE_ENV+=(ANTHROPIC_BASE_URL="$ANTHROPIC_BASE_URL")
 fi
