@@ -16,6 +16,10 @@
 #   JIRA_LABELS         — Default: code-review,claude-ci
 #   CLAUDE_MODEL        — e.g. claude-sonnet-4-6
 #   CLAUDE_MAX_TURNS    — Default: 25
+#
+# Runner: assign a self-hosted runner with tags desktop + linux to this project.
+# GitLab matches jobs to runners by tags — there is no manual runner picker on Run pipeline.
+# The runner should use the Docker executor (job uses image: node:24-alpine).
 
 stages:
   - review
@@ -26,6 +30,9 @@ variables:
 
 claude-code-review:
   stage: review
+  tags:
+    - desktop
+    - linux
   image: node:24-alpine3.21
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
