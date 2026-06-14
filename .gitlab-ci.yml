@@ -38,6 +38,7 @@ claude-code-review:
       when: manual
   timeout: 30m
   before_script:
+    - eval "$(~/.local/bin/mise activate bash)"
     - echo "Pipeline commit ${CI_COMMIT_SHA}"
     - head -n 12 ci/setup-claude-review.sh
     - export PATH="$HOME/.local/bin:$PATH"
