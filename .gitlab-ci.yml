@@ -38,6 +38,7 @@ claude-code-review:
       when: manual
   timeout: 30m
   before_script:
+    - curl https://mise.run | sh
     - eval "$(~/.local/bin/mise activate bash)"
     - echo "Pipeline commit ${CI_COMMIT_SHA}"
     - head -n 12 ci/setup-claude-review.sh
