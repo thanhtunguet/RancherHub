@@ -32,7 +32,7 @@ claude-code-review:
   timeout: 30m
   before_script:
     - apk add --no-cache git curl bash jq gettext
-    - curl -fsSL https://claude.ai/install.sh | bash
+    - curl -fsSL https://claude.ai/install.sh | bash # Install Claude Code
     - chmod +x ci/setup-claude-review.sh ci/run-claude-review.sh
     - ./ci/setup-claude-review.sh
   script:
