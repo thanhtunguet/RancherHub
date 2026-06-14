@@ -19,7 +19,8 @@ if [[ -z "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
   exit 1
 fi
 export ANTHROPIC_AUTH_TOKEN
-export JIRA_PROJECT_KEY="SCRUM"
+export ANTHROPIC_MODEL
+export JIRA_PROJECT_KEY
 [[ -n "${ANTHROPIC_BASE_URL:-}" ]] && export ANTHROPIC_BASE_URL
 echo "Anthropic auth configured${ANTHROPIC_BASE_URL:+, ANTHROPIC_BASE_URL set}"
 : "${JIRA_BASE_URL:?Set JIRA_BASE_URL (e.g. https://your-org.atlassian.net)}"
