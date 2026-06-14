@@ -11,7 +11,19 @@ if [[ -n "${CLAUDE_MODEL:-}" ]]; then
   MODEL_FLAG=(--model "$CLAUDE_MODEL")
 fi
 
-claude \
+# Pass Anthropic auth/endpoint explicitly so Claude Code picks up CI/CD variables.
+CLAUDE_ENV=()
+if [[ -n "${ANTHROPIC_AUTH_TOKEN:-}" ]]; then
+  CLAUDE_ENV+=(ANTHROPIC_AUTH_TOKEN="$ANTHROPIC_AUTH_TOKEN")
+  CLAUDE_ENV+=(ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}")
+elif [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
+  CLAUDE_ENV+=(ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY")
+fi
+if [[ -n "${ANTHROPIC_BASE_URL:-}" ]]; then
+  CLAUDE_ENV+=(ANTHROPIC_BASE_URL="$ANTHROPIC_BASE_URL")
+fi
+
+env "${CLAUDE_ENV[@]}" claude \
   -p "$(cat "$PROMPT_FILE")" \
   --mcp-config "$MCP_CONFIG" \
   --strict-mcp-config \
