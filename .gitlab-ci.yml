@@ -34,6 +34,7 @@ claude-code-review:
   stage: review
   tags:
     - linux
+    - ubuntu
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
