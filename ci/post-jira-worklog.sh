@@ -56,7 +56,6 @@ ${mr_line}
 Findings: ${findings_count} | Jira tickets created: ${jira_tickets}
 ${summary}"
 
-payload
 payload="$(jq -n \
   --arg timeSpent "$TIME_SPENT" \
   --arg text "$comment_text" \
@@ -77,7 +76,6 @@ payload="$(jq -n \
 worklog_url="${JIRA_BASE_URL}/rest/api/3/issue/${JIRA_WORKLOG_ISSUE_KEY}/worklog"
 echo "Posting ${TIME_SPENT} worklog to ${JIRA_WORKLOG_ISSUE_KEY}..."
 
-http_code
 http_code="$(curl -fsS -o /tmp/jira-worklog-response.json -w '%{http_code}' \
   -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
   -H "Content-Type: application/json" \
