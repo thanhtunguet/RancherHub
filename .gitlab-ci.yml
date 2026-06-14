@@ -33,7 +33,6 @@ variables:
 claude-code-review:
   stage: review
   tags:
-    - desktop
     - linux
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
