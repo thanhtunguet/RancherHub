@@ -8,7 +8,7 @@
 #   JIRA_EMAIL          — Jira account email for API auth
 #   JIRA_API_TOKEN      — Jira API token (masked)
 #   JIRA_PROJECT_KEY    — Jira project key, e.g. RANCHER
-#   JIRA_WORKLOG_ISSUE_KEY — Issue key to log review time against (e.g. SCRUM-42)
+#   JIRA_WORKLOG_ISSUE_KEY — Issue key to log review time against (default: SCRUM-1)
 #
 # Optional:
 #   GITLAB_ACCESS_TOKEN — Project/group PAT with api scope for MR comments + Jira push

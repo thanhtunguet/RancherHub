@@ -4,7 +4,7 @@ set -euo pipefail
 : "${JIRA_BASE_URL:?Set JIRA_BASE_URL}"
 : "${JIRA_EMAIL:?Set JIRA_EMAIL}"
 : "${JIRA_API_TOKEN:?Set JIRA_API_TOKEN}"
-: "${JIRA_WORKLOG_ISSUE_KEY:?Set JIRA_WORKLOG_ISSUE_KEY (issue to log review time against)}"
+JIRA_WORKLOG_ISSUE_KEY="${JIRA_WORKLOG_ISSUE_KEY:-SCRUM-1}"
 
 TIME_SPENT="${JIRA_WORKLOG_TIME_SPENT:-15m}"
 OUTPUT_FILE="${CI_PROJECT_DIR:-.}/claude-review-result.json"
