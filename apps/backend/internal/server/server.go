@@ -144,7 +144,7 @@ func New(cfg config.Config, db *gorm.DB) *gin.Engine {
 	services.GET("/test-structure/:siteId", s.testRancherAPIEndpoint)
 	services.POST("/sync", s.createSyncOperation)
 	services.GET("/sync/history", s.syncHistory)
-	services.GET("/sync/history/detailed", s.syncHistory)
+	services.GET("/sync/history/detailed", s.detailedSyncHistory)
 	services.GET("/compare", s.compareServices)
 	services.GET("/compare/by-instance", s.compareServicesByInstance)
 	services.GET("/debug/app-instances/:environmentId", s.debugAppInstances)
@@ -1256,8 +1256,6 @@ func (s *Server) listServices(c *gin.Context) {
 	rows := make([]models.Service, 0)
 	if env := c.Query("env"); env != "" {
 		rows = s.servicesForEnvironment(env)
-	} else {
-		s.db.Model(&models.Service{}).Preload("AppInstance").Order("services.name ASC").Find(&rows)
 	}
 	rows = filterServices(rows, c.Query("type"), c.Query("search"))
 	c.JSON(http.StatusOK, rows)
@@ -1382,19 +1380,103 @@ func (s *Server) refreshServicesForAppInstance(app models.AppInstance) []models.
 }
 
 func (s *Server) servicesWithImageSizes(c *gin.Context) {
-	var rows []models.Service
-	s.db.Where("app_instance_id = ?", c.Param("appInstanceId")).Order("name ASC").Find(&rows)
+	rows, ok := s.servicesForAppInstanceParam(c, c.Param("appInstanceId"))
+	if !ok {
+		return
+	}
 	out := make([]gin.H, 0, len(rows))
 	for _, row := range rows {
-		out = append(out, gin.H{"service": row, "imageSize": nil})
+		out = append(out, s.serviceWithImageSize(row))
 	}
 	c.JSON(http.StatusOK, out)
 }
 
+func (s *Server) serviceWithImageSize(service models.Service) gin.H {
+	item := gin.H{}
+	if payload, err := json.Marshal(service); err == nil {
+		_ = json.Unmarshal(payload, &item)
+	}
+	item["imageSize"] = nil
+	item["imageSizeFormatted"] = nil
+	item["compressedImageSize"] = nil
+	item["compressedImageSizeFormatted"] = nil
+	item["imageSource"] = nil
+	if service.ImageTag == nil || *service.ImageTag == "" {
+		return item
+	}
+	image := *service.ImageTag
+	if isHarborImage(image) {
+		site, err := s.harborSiteForImage(image)
+		if err != nil {
+			return item
+		}
+		size, err := harborImageSize(site, image)
+		if err != nil || size == nil {
+			return item
+		}
+		item["imageSize"] = size["size"]
+		item["imageSizeFormatted"] = size["sizeFormatted"]
+		item["compressedImageSize"] = size["compressedSize"]
+		item["compressedImageSizeFormatted"] = size["compressedSizeFormatted"]
+		item["imageSource"] = "Harbor"
+		return item
+	}
+	namespace, repository, tag := parseDockerHubImageTag(image)
+	tags, err := dockerHubTags(namespace, repository)
+	if err != nil {
+		return item
+	}
+	for _, entry := range tags {
+		if valueString(entry["name"]) != tag {
+			continue
+		}
+		item["imageSize"] = entry["size"]
+		item["imageSizeFormatted"] = entry["sizeFormatted"]
+		item["imageSource"] = "DockerHub"
+		break
+	}
+	return item
+}
+
 func (s *Server) appInstanceTree(c *gin.Context) {
-	envs := make([]models.Environment, 0)
-	s.db.Preload("AppInstances").Preload("AppInstances.Services").Order("createdAt ASC").Find(&envs)
-	c.JSON(http.StatusOK, envs)
+	type treeAppInstance struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Cluster     string `json:"cluster"`
+		Namespace   string `json:"namespace"`
+		RancherSite gin.H  `json:"rancherSite"`
+	}
+	var rows []models.AppInstance
+	s.db.Preload("Environment").Preload("RancherSite").Order("environment_id ASC").Find(&rows)
+	index := map[string]int{}
+	out := make([]gin.H, 0)
+	for _, app := range rows {
+		envID := app.EnvironmentID
+		envName := "Unknown Environment"
+		if app.Environment != nil {
+			envName = app.Environment.Name
+		}
+		position, ok := index[envID]
+		if !ok {
+			out = append(out, gin.H{"id": envID, "name": envName, "appInstances": []treeAppInstance{}})
+			position = len(out) - 1
+			index[envID] = position
+		}
+		rancherSite := gin.H{}
+		if app.RancherSite != nil {
+			rancherSite = gin.H{"id": app.RancherSite.ID, "name": app.RancherSite.Name}
+		}
+		group := out[position]["appInstances"].([]treeAppInstance)
+		group = append(group, treeAppInstance{
+			ID:          app.ID,
+			Name:        app.Name,
+			Cluster:     app.Cluster,
+			Namespace:   app.Namespace,
+			RancherSite: rancherSite,
+		})
+		out[position]["appInstances"] = group
+	}
+	c.JSON(http.StatusOK, out)
 }
 
 func (s *Server) testRancherAPIEndpoint(c *gin.Context) {
@@ -1916,11 +1998,21 @@ func (s *Server) updateServiceImage(c *gin.Context) {
 }
 
 func (s *Server) syncHistory(c *gin.Context) {
-	q := s.db.Order("createdAt DESC")
+	q := s.db.Preload("SyncHistory").Order("start_time DESC")
 	if env := c.Query("env"); env != "" {
 		q = q.Where("source_environment_id = ? OR target_environment_id = ?", env, env)
 	}
 	rows := make([]models.SyncOperation, 0)
+	q.Find(&rows)
+	c.JSON(http.StatusOK, rows)
+}
+
+func (s *Server) detailedSyncHistory(c *gin.Context) {
+	q := s.db.Preload("SyncOperation").Order("timestamp DESC")
+	if env := c.Query("env"); env != "" {
+		q = q.Joins("SyncOperation").Where("SyncOperation.source_environment_id = ? OR SyncOperation.target_environment_id = ?", env, env)
+	}
+	rows := make([]models.SyncHistory, 0)
 	q.Find(&rows)
 	c.JSON(http.StatusOK, rows)
 }

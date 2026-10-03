@@ -104,7 +104,7 @@ export const AlertDetailPage: React.FC<AlertDetailPageProps> = ({ onBack }) => {
 
   const handleViewDetails = async (alert: Alert) => {
     setSelectedAlert(alert);
-    await loadMonitoringHistory(alert.monitoredInstance.id);
+    await loadMonitoringHistory(alert.monitoredInstance?.id);
     setDetailDrawerVisible(true);
   };
 
@@ -152,7 +152,7 @@ export const AlertDetailPage: React.FC<AlertDetailPageProps> = ({ onBack }) => {
       key: 'severity',
       render: (severity: string) => (
         <Tag color={getSeverityColor(severity)}>
-          {severity.toUpperCase()}
+          {(severity || '').toUpperCase()}
         </Tag>
       ),
       filters: [
@@ -346,7 +346,7 @@ export const AlertDetailPage: React.FC<AlertDetailPageProps> = ({ onBack }) => {
                           <span style={{ color: '#ff4d4f' }}> ({history.failedServices} failed)</span>
                         )}
                       </div>
-                      <div>Response time: {(history.responseTimeMs / 1000).toFixed(1)}s</div>
+                      <div>Response time: {((history.responseTimeMs ?? 0) / 1000).toFixed(1)}s</div>
                       
                       {history.details?.workloads && history.failedServices > 0 && (
                         <div style={{ marginTop: 8 }}>

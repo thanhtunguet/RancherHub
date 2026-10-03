@@ -70,7 +70,7 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
         harborSite.id,
         project.name,
       );
-      setRepositories(data);
+      setRepositories(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
@@ -180,15 +180,15 @@ export const HarborRepositoriesList: React.FC<HarborRepositoriesListProps> = ({
   ];
 
   const totalPulls = filteredRepositories.reduce(
-    (sum, repo) => sum + repo.pull_count,
+    (sum, repo) => sum + (repo.pull_count ?? 0),
     0,
   );
   const totalTags = filteredRepositories.reduce(
-    (sum, repo) => sum + repo.tags_count,
+    (sum, repo) => sum + (repo.tags_count ?? 0),
     0,
   );
   const totalStars = filteredRepositories.reduce(
-    (sum, repo) => sum + repo.star_count,
+    (sum, repo) => sum + (repo.star_count ?? 0),
     0,
   );
 

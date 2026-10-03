@@ -15,7 +15,7 @@ type RancherSite struct {
 	Active    bool          `gorm:"default:true;not null" json:"active"`
 	CreatedAt time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	Instances []AppInstance `gorm:"foreignKey:RancherSiteID" json:"appInstances,omitempty"`
+	Instances []AppInstance `gorm:"foreignKey:RancherSiteID" json:"appInstances"`
 }
 
 func (m *RancherSite) BeforeCreate(*gorm.DB) error {
@@ -32,7 +32,7 @@ type GenericClusterSite struct {
 	Active       bool          `gorm:"default:true;not null" json:"active"`
 	CreatedAt    time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt    time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	AppInstances []AppInstance `gorm:"foreignKey:GenericClusterSiteID" json:"appInstances,omitempty"`
+	AppInstances []AppInstance `gorm:"foreignKey:GenericClusterSiteID" json:"appInstances"`
 }
 
 func (m *GenericClusterSite) BeforeCreate(*gorm.DB) error {
@@ -63,7 +63,7 @@ type Environment struct {
 	Color        string        `gorm:"size:7;default:#1890ff;not null" json:"color"`
 	CreatedAt    time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt    time.Time     `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	AppInstances []AppInstance `gorm:"foreignKey:EnvironmentID" json:"appInstances,omitempty"`
+	AppInstances []AppInstance `gorm:"foreignKey:EnvironmentID" json:"appInstances"`
 }
 
 func (m *Environment) BeforeCreate(*gorm.DB) error {
@@ -85,11 +85,11 @@ type AppInstance struct {
 	EnvironmentID        string              `gorm:"column:environment_id;not null" json:"environmentId"`
 	CreatedAt            time.Time           `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt            time.Time           `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	RancherSite          *RancherSite        `gorm:"foreignKey:RancherSiteID" json:"rancherSite,omitempty"`
-	GenericClusterSite   *GenericClusterSite `gorm:"foreignKey:GenericClusterSiteID" json:"genericClusterSite,omitempty"`
-	Environment          *Environment        `gorm:"foreignKey:EnvironmentID" json:"environment,omitempty"`
-	Services             []Service           `gorm:"foreignKey:AppInstanceID" json:"services,omitempty"`
-	MonitoredInstances   []MonitoredInstance `gorm:"foreignKey:AppInstanceID" json:"monitoredInstances,omitempty"`
+	RancherSite          *RancherSite        `gorm:"foreignKey:RancherSiteID" json:"rancherSite"`
+	GenericClusterSite   *GenericClusterSite `gorm:"foreignKey:GenericClusterSiteID" json:"genericClusterSite"`
+	Environment          *Environment        `gorm:"foreignKey:EnvironmentID" json:"environment"`
+	Services             []Service           `gorm:"foreignKey:AppInstanceID" json:"services"`
+	MonitoredInstances   []MonitoredInstance `gorm:"foreignKey:AppInstanceID" json:"monitoredInstances"`
 }
 
 func (m *AppInstance) BeforeCreate(*gorm.DB) error {
@@ -112,7 +112,7 @@ type Service struct {
 	LastSynced        *time.Time   `gorm:"column:last_synced" json:"lastSynced"`
 	CreatedAt         time.Time    `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt         time.Time    `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	AppInstance       *AppInstance `gorm:"foreignKey:AppInstanceID" json:"appInstance,omitempty"`
+	AppInstance       *AppInstance `gorm:"foreignKey:AppInstanceID" json:"appInstance"`
 }
 
 func (m *Service) BeforeCreate(*gorm.DB) error {
@@ -139,7 +139,7 @@ type SyncOperation struct {
 	EndTime             *time.Time    `gorm:"column:end_time" json:"endTime"`
 	InitiatedBy         string        `gorm:"column:initiated_by;size:255;not null" json:"initiatedBy"`
 	CreatedAt           time.Time     `gorm:"column:createdAt;not null" json:"createdAt"`
-	SyncHistory         []SyncHistory `gorm:"foreignKey:SyncOperationID" json:"syncHistory,omitempty"`
+	SyncHistory         []SyncHistory `gorm:"foreignKey:SyncOperationID" json:"syncHistory"`
 }
 
 func (m *SyncOperation) BeforeCreate(*gorm.DB) error {
@@ -174,7 +174,7 @@ type SyncHistory struct {
 	InitiatedBy           *string        `gorm:"column:initiated_by;size:255" json:"initiatedBy"`
 	Timestamp             time.Time      `gorm:"not null" json:"timestamp"`
 	CreatedAt             time.Time      `gorm:"column:createdAt;not null" json:"createdAt"`
-	SyncOperation         *SyncOperation `gorm:"foreignKey:SyncOperationID" json:"syncOperation,omitempty"`
+	SyncOperation         *SyncOperation `gorm:"foreignKey:SyncOperationID" json:"syncOperation"`
 }
 
 func (m *SyncHistory) BeforeCreate(*gorm.DB) error {
@@ -224,9 +224,9 @@ type MonitoredInstance struct {
 	AlertSent            bool                `gorm:"column:alert_sent;default:false;not null" json:"alertSent"`
 	CreatedAt            time.Time           `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt            time.Time           `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	AppInstance          *AppInstance        `gorm:"foreignKey:AppInstanceID" json:"appInstance,omitempty"`
-	MonitoringHistory    []MonitoringHistory `gorm:"foreignKey:MonitoredInstanceID" json:"monitoringHistory,omitempty"`
-	AlertHistory         []AlertHistory      `gorm:"foreignKey:MonitoredInstanceID" json:"alertHistory,omitempty"`
+	AppInstance          *AppInstance        `gorm:"foreignKey:AppInstanceID" json:"appInstance"`
+	MonitoringHistory    []MonitoringHistory `gorm:"foreignKey:MonitoredInstanceID" json:"monitoringHistory"`
+	AlertHistory         []AlertHistory      `gorm:"foreignKey:MonitoredInstanceID" json:"alertHistory"`
 }
 
 func (m *MonitoredInstance) BeforeCreate(*gorm.DB) error {
@@ -250,7 +250,7 @@ type MonitoringHistory struct {
 	Details             *string            `gorm:"type:text" json:"details"`
 	Error               *string            `gorm:"type:text" json:"error"`
 	CreatedAt           time.Time          `gorm:"column:createdAt;not null" json:"createdAt"`
-	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance,omitempty"`
+	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance"`
 }
 
 func (m *MonitoringHistory) BeforeCreate(*gorm.DB) error {
@@ -273,7 +273,7 @@ type AlertHistory struct {
 	Resolved            bool               `gorm:"default:false;not null" json:"resolved"`
 	ResolvedAt          *time.Time         `gorm:"column:resolved_at" json:"resolvedAt"`
 	CreatedAt           time.Time          `gorm:"column:createdAt;not null" json:"createdAt"`
-	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance,omitempty"`
+	MonitoredInstance   *MonitoredInstance `gorm:"foreignKey:MonitoredInstanceID" json:"monitoredInstance"`
 }
 
 func (m *AlertHistory) BeforeCreate(*gorm.DB) error {
@@ -295,7 +295,7 @@ type User struct {
 	Active           bool            `gorm:"default:true;not null" json:"active"`
 	IsFirstLogin     bool            `gorm:"column:isFirstLogin;default:false;not null" json:"isFirstLogin"`
 	LastLoginAt      *time.Time      `gorm:"column:lastLoginAt" json:"lastLoginAt"`
-	TrustedDevices   []TrustedDevice `gorm:"foreignKey:UserID" json:"trustedDevices,omitempty"`
+	TrustedDevices   []TrustedDevice `gorm:"foreignKey:UserID" json:"trustedDevices"`
 	CreatedAt        time.Time       `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt        time.Time       `gorm:"column:updatedAt;not null" json:"updatedAt"`
 }
@@ -334,7 +334,7 @@ type TrustedDevice struct {
 	ExpiresAt         time.Time `gorm:"column:expires_at;index;not null" json:"expiresAt"`
 	CreatedAt         time.Time `gorm:"column:createdAt;not null" json:"createdAt"`
 	UpdatedAt         time.Time `gorm:"column:updatedAt;not null" json:"updatedAt"`
-	User              *User     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+	User              *User     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user"`
 }
 
 func (m *TrustedDevice) BeforeCreate(*gorm.DB) error {

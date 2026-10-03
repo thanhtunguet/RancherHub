@@ -1650,3 +1650,172 @@ func createMonitoredInstanceWithServices(t *testing.T, app *testApp, services []
 	instance.AppInstance.RancherSite = &site
 	return instance
 }
+
+func TestAppInstanceTreeGroupsByEnvironmentWithEmptyArray(t *testing.T) {
+	app := newTestApp(t)
+
+	emptyEnv := models.Environment{Name: "Empty"}
+	filledEnv := models.Environment{Name: "Filled"}
+	if err := app.db.Create(&emptyEnv).Error; err != nil {
+		t.Fatalf("create empty env: %v", err)
+	}
+	if err := app.db.Create(&filledEnv).Error; err != nil {
+		t.Fatalf("create filled env: %v", err)
+	}
+	site := models.RancherSite{Name: "Rancher", URL: "https://rancher.example.com", Token: "token-abc", Active: true}
+	if err := app.db.Create(&site).Error; err != nil {
+		t.Fatalf("create site: %v", err)
+	}
+	envID := filledEnv.ID
+	siteID := site.ID
+	groupedApp := models.AppInstance{Name: "App", Cluster: "c-1", Namespace: "default", ClusterType: "rancher", RancherSiteID: &siteID, EnvironmentID: envID}
+	if err := app.db.Create(&groupedApp).Error; err != nil {
+		t.Fatalf("create app instance: %v", err)
+	}
+
+	resp := app.request(http.MethodGet, "/api/services/app-instances/tree", app.token, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("tree status = %d body = %s", resp.Code, resp.Body.String())
+	}
+	payload := decodeJSON[[]map[string]any](t, resp)
+
+	byName := map[string]map[string]any{}
+	for _, group := range payload {
+		byName[group["name"].(string)] = group
+	}
+	// NestJS builds the tree by reducing over app instances, so an environment
+	// with no app instances is not part of the response at all.
+	if len(byName) != 1 {
+		t.Fatalf("tree groups = %#v, want only the populated environment", payload)
+	}
+	if _, ok := byName["Empty"]; ok {
+		t.Fatalf("empty environment should not appear in the tree: %#v", payload)
+	}
+
+	filled, ok := byName["Filled"]
+	if !ok {
+		t.Fatalf("populated environment missing from tree: %#v", payload)
+	}
+	// Regression: the group's appInstances key used to be dropped when empty,
+	// so a frontend reading env.appInstances.find(...) crashed on undefined.
+	filledInstances, ok := filled["appInstances"].([]any)
+	if !ok || len(filledInstances) != 1 {
+		t.Fatalf("filled environment appInstances = %#v", filled["appInstances"])
+	}
+	instance := filledInstances[0].(map[string]any)
+	if instance["id"] != groupedApp.ID || instance["name"] != "App" || instance["cluster"] != "c-1" || instance["namespace"] != "default" {
+		t.Fatalf("tree instance = %#v", instance)
+	}
+	// NestJS always serializes rancherSite as an object ({id, name}), even when
+	// the relation is null, so the key must never be absent or nil.
+	rancherSite, ok := instance["rancherSite"].(map[string]any)
+	if !ok {
+		t.Fatalf("tree instance rancherSite = %#v, want object", instance["rancherSite"])
+	}
+	if rancherSite["id"] != site.ID || rancherSite["name"] != "Rancher" {
+		t.Fatalf("tree instance rancherSite = %#v", rancherSite)
+	}
+}
+
+func TestAppInstanceTreeWithoutRancherSiteStillEmitsObject(t *testing.T) {
+	app := newTestApp(t)
+	env := models.Environment{Name: "Generic"}
+	if err := app.db.Create(&env).Error; err != nil {
+		t.Fatalf("create env: %v", err)
+	}
+	appInstance := models.AppInstance{Name: "Generic App", Cluster: "gen-1", Namespace: "default", ClusterType: "generic", EnvironmentID: env.ID}
+	if err := app.db.Create(&appInstance).Error; err != nil {
+		t.Fatalf("create app instance: %v", err)
+	}
+
+	resp := app.request(http.MethodGet, "/api/services/app-instances/tree", app.token, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("tree status = %d body = %s", resp.Code, resp.Body.String())
+	}
+	payload := decodeJSON[[]map[string]any](t, resp)
+	if len(payload) != 1 {
+		t.Fatalf("tree payload = %#v", payload)
+	}
+	instances := payload[0]["appInstances"].([]any)
+	instance := instances[0].(map[string]any)
+	rancherSite, ok := instance["rancherSite"].(map[string]any)
+	if !ok {
+		t.Fatalf("rancherSite = %#v, want object with null members (NestJS parity)", instance["rancherSite"])
+	}
+	if rancherSite["id"] != nil || rancherSite["name"] != nil {
+		t.Fatalf("rancherSite = %#v, want {id:null, name:null}", rancherSite)
+	}
+}
+
+func TestServicesWithImageSizesReturnsFlattenedShapeWithHarborSize(t *testing.T) {
+	app := newTestApp(t)
+
+	mock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v2.0/projects/library/repositories/app/artifacts/v1" {
+			t.Fatalf("harbor request path = %q", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"size":1048576}`))
+	}))
+	t.Cleanup(mock.Close)
+
+	env := models.Environment{Name: "Images"}
+	if err := app.db.Create(&env).Error; err != nil {
+		t.Fatalf("create env: %v", err)
+	}
+	site := models.HarborSite{Name: "Harbor", URL: mock.URL, Username: "admin", Password: "secret", Active: true}
+	if err := app.db.Create(&site).Error; err != nil {
+		t.Fatalf("create harbor site: %v", err)
+	}
+	harborHost := strings.TrimPrefix(mock.URL, "http://")
+	appInstance := models.AppInstance{Name: "App", Cluster: "c-1", Namespace: "default", ClusterType: "rancher", EnvironmentID: env.ID}
+	if err := app.db.Create(&appInstance).Error; err != nil {
+		t.Fatalf("create app instance: %v", err)
+	}
+	image := harborHost + "/library/app:v1"
+	service := models.Service{Name: "app", AppInstanceID: appInstance.ID, Status: "active", Replicas: 1, AvailableReplicas: 1, ImageTag: &image, WorkloadType: "Deployment"}
+	if err := app.db.Create(&service).Error; err != nil {
+		t.Fatalf("create service: %v", err)
+	}
+
+	resp := app.request(http.MethodGet, "/api/services/with-image-sizes/"+appInstance.ID, app.token, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("with-image-sizes status = %d body = %s", resp.Code, resp.Body.String())
+	}
+	payload := decodeJSON[[]map[string]any](t, resp)
+	if len(payload) != 1 {
+		t.Fatalf("with-image-sizes payload = %#v", payload)
+	}
+	item := payload[0]
+	// Parity with NestJS: the service fields are spread at the top level, not
+	// nested under a "service" key, and the image size keys are always present.
+	for _, key := range []string{"id", "name", "imageTag", "imageSize", "imageSizeFormatted", "compressedImageSize", "compressedImageSizeFormatted", "imageSource"} {
+		if _, ok := item[key]; !ok {
+			t.Fatalf("with-image-sizes item missing key %q: %#v", key, item)
+		}
+	}
+	if item["id"] != service.ID || item["name"] != "app" || item["imageTag"] != image {
+		t.Fatalf("with-image-sizes item = %#v", item)
+	}
+	if item["imageSource"] != "Harbor" {
+		t.Fatalf("imageSource = %#v, want Harbor", item["imageSource"])
+	}
+	if item["compressedImageSize"] != float64(1048576) {
+		t.Fatalf("compressedImageSize = %#v, want 1048576", item["compressedImageSize"])
+	}
+	if item["imageSize"] != float64(2621440) {
+		t.Fatalf("imageSize = %#v, want 2.5x compressed", item["imageSize"])
+	}
+}
+
+func TestListServicesWithoutEnvironmentReturnsEmptyArray(t *testing.T) {
+	app := newTestApp(t)
+	resp := app.request(http.MethodGet, "/api/services", app.token, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("services status = %d body = %s", resp.Code, resp.Body.String())
+	}
+	payload := decodeJSON[[]map[string]any](t, resp)
+	if payload == nil || len(payload) != 0 {
+		t.Fatalf("services without env = %#v, want [] (NestJS parity)", payload)
+	}
+}

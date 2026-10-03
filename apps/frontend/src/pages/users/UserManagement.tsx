@@ -68,11 +68,11 @@ const UserManagement: React.FC = () => {
       };
 
       const response = await usersApi.getAll(queryParams);
-      setUsers(response.data);
+      setUsers(Array.isArray(response?.data) ? response.data : []);
       setPagination({
-        current: response.page,
-        pageSize: response.limit,
-        total: response.total,
+        current: response?.page ?? 1,
+        pageSize: response?.limit ?? 10,
+        total: response?.total ?? 0,
       });
     } catch (error: any) {
       message.error('Failed to fetch users');

@@ -79,7 +79,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
         project.name,
         repository.name,
       );
-      setArtifacts(data);
+      setArtifacts(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
@@ -122,11 +122,11 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
     return artifacts.filter((artifact) => {
       // Search by tag names
       const tagMatch = artifact.tags?.some((tag) =>
-        tag.name.toLowerCase().includes(searchLower),
+        tag.name?.toLowerCase().includes(searchLower),
       );
 
       // Search by artifact type
-      const typeMatch = artifact.type.toLowerCase().includes(searchLower);
+      const typeMatch = artifact.type?.toLowerCase().includes(searchLower);
 
       // Search by architecture or OS
       const archMatch = artifact.extra_attrs?.architecture
@@ -248,7 +248,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
             <Descriptions size="small" column={2}>
               <Descriptions.Item label="Digest">
                 <Text code style={{ fontSize: "11px" }}>
-                  {artifact.digest.substring(0, 32)}...
+                  {(artifact.digest || '').substring(0, 32)}...
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Media Type">
@@ -347,7 +347,7 @@ export const HarborArtifactsList: React.FC<HarborArtifactsListProps> = ({
   };
 
   const totalSize = filteredArtifacts.reduce(
-    (sum, artifact) => sum + artifact.size,
+    (sum, artifact) => sum + (artifact.size ?? 0),
     0,
   );
   const totalTags = filteredArtifacts.reduce(

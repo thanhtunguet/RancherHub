@@ -45,7 +45,7 @@ type secretData struct {
 	Name              string            `json:"name"`
 	Namespace         string            `json:"namespace"`
 	Type              string            `json:"type"`
-	Data              map[string]string `json:"data,omitempty"`
+	Data              map[string]string `json:"data"`
 	DataKeys          []string          `json:"dataKeys"`
 	DataSize          int               `json:"dataSize"`
 	Labels            map[string]string `json:"labels"`

@@ -179,9 +179,9 @@ export const MonitoredInstancesPage: React.FC = () => {
       key: 'name',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{record.appInstance.name}</div>
+          <div style={{ fontWeight: 500 }}>{record.appInstance?.name}</div>
           <div style={{ fontSize: '12px', color: '#999' }}>
-            {record.appInstance.cluster} / {record.appInstance.namespace}
+            {record.appInstance?.cluster} / {record.appInstance?.namespace}
           </div>
         </div>
       ),
@@ -191,8 +191,8 @@ export const MonitoredInstancesPage: React.FC = () => {
       dataIndex: ['appInstance', 'environment'],
       key: 'environment',
       render: (_, record) => (
-        <Tag color={record.appInstance.environment.color}>
-          {record.appInstance.environment.name}
+        <Tag color={record.appInstance?.environment?.color}>
+          {record.appInstance?.environment?.name}
         </Tag>
       ),
     },

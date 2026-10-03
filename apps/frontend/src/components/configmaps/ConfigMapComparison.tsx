@@ -444,31 +444,31 @@ const ConfigMapComparison: React.FC = () => {
               <Card size="small" className="text-center">
                 <Text type="secondary">Total ConfigMaps</Text>
                 <div className="text-2xl font-bold text-blue-600">
-                  {comparison.summary.totalConfigMaps}
+                  {comparison.summary?.totalConfigMaps ?? 0}
                 </div>
               </Card>
               <Card size="small" className="text-center">
                 <Text type="secondary">Identical</Text>
                 <div className="text-2xl font-bold text-green-600">
-                  {comparison.summary.identical}
+                  {comparison.summary?.identical ?? 0}
                 </div>
               </Card>
               <Card size="small" className="text-center">
                 <Text type="secondary">Different</Text>
                 <div className="text-2xl font-bold text-blue-600">
-                  {comparison.summary.different}
+                  {comparison.summary?.different ?? 0}
                 </div>
               </Card>
               <Card size="small" className="text-center">
                 <Text type="secondary">Missing in Source</Text>
                 <div className="text-2xl font-bold text-red-600">
-                  {comparison.summary.missingInSource || 0}
+                  {comparison.summary?.missingInSource ?? 0}
                 </div>
               </Card>
               <Card size="small" className="text-center">
                 <Text type="secondary">Missing in Target</Text>
                 <div className="text-2xl font-bold text-orange-600">
-                  {comparison.summary.missingInTarget || 0}
+                  {comparison.summary?.missingInTarget ?? 0}
                 </div>
               </Card>
             </div>
@@ -488,7 +488,7 @@ const ConfigMapComparison: React.FC = () => {
 
             <Table
               columns={columns}
-              dataSource={comparison.comparisons}
+              dataSource={comparison.comparisons ?? []}
               rowKey="configMapName"
               pagination={false}
               size="middle"

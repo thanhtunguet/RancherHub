@@ -430,31 +430,31 @@ const ConfigMapDetailModal: React.FC<ConfigMapDetailModalProps> = ({
               <Card size="small" style={{ textAlign: 'center' }}>
                 <Text type="secondary">Total Keys</Text>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                  {details.summary.totalKeys}
+                  {details.summary?.totalKeys ?? 0}
                 </div>
               </Card>
               <Card size="small" style={{ textAlign: 'center' }}>
                 <Text type="secondary">Identical</Text>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                  {details.summary.identical}
+                  {details.summary?.identical ?? 0}
                 </div>
               </Card>
               <Card size="small" style={{ textAlign: 'center' }}>
                 <Text type="secondary">Different</Text>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                  {details.summary.different}
+                  {details.summary?.different ?? 0}
                 </div>
               </Card>
               <Card size="small" style={{ textAlign: 'center' }}>
                 <Text type="secondary">Missing in Source</Text>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                  {details.summary.missingInSource}
+                  {details.summary?.missingInSource ?? 0}
                 </div>
               </Card>
               <Card size="small" style={{ textAlign: 'center' }}>
                 <Text type="secondary">Missing in Target</Text>
                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fa8c16' }}>
-                  {details.summary.missingInTarget}
+                  {details.summary?.missingInTarget ?? 0}
                 </div>
               </Card>
             </div>

@@ -44,7 +44,7 @@ export const MessageTemplatesTab: React.FC = () => {
     try {
       setLoading(true);
       const data = await messageTemplatesApi.getAll();
-      setTemplates(data);
+      setTemplates(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to load templates:', error);
       message.error('Failed to load message templates');

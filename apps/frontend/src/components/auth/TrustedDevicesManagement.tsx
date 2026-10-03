@@ -36,7 +36,7 @@ export const TrustedDevicesManagement: React.FC = () => {
     setLoading(true);
     try {
       const data = await trustedDevicesService.getTrustedDevices();
-      setDevices(data);
+      setDevices(Array.isArray(data) ? data : []);
     } catch (error) {
       message.error('Failed to load trusted devices');
     } finally {

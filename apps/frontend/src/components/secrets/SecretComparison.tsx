@@ -81,17 +81,20 @@ const SecretComparison: React.FC = () => {
       return 'Secret does not exist in one instance';
     }
 
-    const { keys } = comparison.differences;
-    const parts = [];
-    
-    if (keys.onlyInSource.length > 0) {
-      parts.push(`${keys.onlyInSource.length} keys only in source`);
+    const keys = comparison.differences?.keys;
+    const onlyInSource = keys?.onlyInSource?.length ?? 0;
+    const onlyInTarget = keys?.onlyInTarget?.length ?? 0;
+    const differentKeys = keys?.different?.length ?? 0;
+    const parts: string[] = [];
+
+    if (onlyInSource > 0) {
+      parts.push(`${onlyInSource} keys only in source`);
     }
-    if (keys.onlyInTarget.length > 0) {
-      parts.push(`${keys.onlyInTarget.length} keys only in target`);
+    if (onlyInTarget > 0) {
+      parts.push(`${onlyInTarget} keys only in target`);
     }
-    if (keys.different.length > 0) {
-      parts.push(`${keys.different.length} keys with different values`);
+    if (differentKeys > 0) {
+      parts.push(`${differentKeys} keys with different values`);
     }
     
     return parts.join(', ') || 'No key differences';
@@ -278,23 +281,23 @@ const SecretComparison: React.FC = () => {
                 <Title level={4}>Comparison Summary</Title>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-700">{comparison.summary.totalSecrets}</div>
+                    <div className="text-2xl font-bold text-gray-700">{comparison.summary?.totalSecrets ?? 0}</div>
                     <div className="text-sm text-gray-500">Total Secrets</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{comparison.summary.identical}</div>
+                    <div className="text-2xl font-bold text-green-600">{comparison.summary?.identical ?? 0}</div>
                     <div className="text-sm text-gray-500">Identical</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{comparison.summary.different}</div>
+                    <div className="text-2xl font-bold text-blue-600">{comparison.summary?.different ?? 0}</div>
                     <div className="text-sm text-gray-500">Different</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{comparison.summary.missingInSource}</div>
+                    <div className="text-2xl font-bold text-orange-600">{comparison.summary?.missingInSource ?? 0}</div>
                     <div className="text-sm text-gray-500">Missing in Source</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">{comparison.summary.missingInTarget}</div>
+                    <div className="text-2xl font-bold text-red-600">{comparison.summary?.missingInTarget ?? 0}</div>
                     <div className="text-sm text-gray-500">Missing in Target</div>
                   </div>
                 </div>
@@ -302,7 +305,7 @@ const SecretComparison: React.FC = () => {
 
               <Table
                 columns={columns}
-                dataSource={comparison.comparisons}
+                dataSource={comparison.comparisons ?? []}
                 rowKey="secretName"
                 pagination={{
                   pageSize: 10,

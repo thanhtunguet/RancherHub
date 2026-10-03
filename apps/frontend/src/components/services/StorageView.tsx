@@ -55,7 +55,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
     try {
       setTreeLoading(true);
       const data = await servicesApi.getAppInstanceTree();
-      setAppInstanceTree(data);
+      setAppInstanceTree(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
@@ -77,7 +77,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
       const data = await servicesApi.getServicesWithImageSizes(
         selectedAppInstance
       );
-      setServices(data);
+      setServices(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const message =
         err?.response?.data?.message || err?.message || "An error occurred";
@@ -147,7 +147,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
 
   const getSelectedAppInstanceInfo = () => {
     for (const env of appInstanceTree) {
-      const instance = env.appInstances.find(
+      const instance = (env.appInstances ?? []).find(
         (ai) => ai.id === selectedAppInstance
       );
       if (instance) {
@@ -311,7 +311,7 @@ export const StorageView: React.FC<StorageViewProps> = ({ style }) => {
               >
                 {appInstanceTree.map((env) => (
                   <Select.OptGroup key={env.id} label={env.name}>
-                    {env.appInstances.map((instance) => (
+                    {(env.appInstances ?? []).map((instance) => (
                       <Option key={instance.id} value={instance.id}>
                         <Space>
                           <CloudServerOutlined />

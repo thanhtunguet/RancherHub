@@ -119,14 +119,14 @@ export const MonitoredInstanceCard: React.FC<MonitoredInstanceCardProps> = ({
       title={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <Text strong>{instance.appInstance.name}</Text>
+            <Text strong>{instance.appInstance?.name}</Text>
             <br />
             <Text type="secondary" style={{ fontSize: '12px' }}>
-              {instance.appInstance.cluster} / {instance.appInstance.namespace}
+              {instance.appInstance?.cluster} / {instance.appInstance?.namespace}
             </Text>
           </div>
-          <Tag color={instance.appInstance.environment.color}>
-            {instance.appInstance.environment.name}
+          <Tag color={instance.appInstance?.environment?.color}>
+            {instance.appInstance?.environment?.name}
           </Tag>
         </div>
       }

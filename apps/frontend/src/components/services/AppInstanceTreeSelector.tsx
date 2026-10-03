@@ -45,7 +45,7 @@ export const AppInstanceTreeSelector: React.FC<AppInstanceTreeSelectorProps> = (
       }
 
       const data: AppInstanceTreeNode[] = await response.json();
-      const formattedTreeData = formatTreeData(data);
+      const formattedTreeData = formatTreeData(Array.isArray(data) ? data : []);
       setTreeData(formattedTreeData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -58,12 +58,12 @@ export const AppInstanceTreeSelector: React.FC<AppInstanceTreeSelectorProps> = (
     return data.map((environment) => ({
       title: (
         <span style={{ fontWeight: 'bold', color: '#1890ff' }}>
-          {environment.name} ({environment.appInstances.length} instances)
+          {environment.name} ({(environment.appInstances ?? []).length} instances)
         </span>
       ),
       key: `env-${environment.id}`,
       selectable: false,
-      children: environment.appInstances.map((instance) => ({
+      children: (environment.appInstances ?? []).map((instance) => ({
         title: (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>

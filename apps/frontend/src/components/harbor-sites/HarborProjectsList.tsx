@@ -69,16 +69,17 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
   const fetchHarborSites = async () => {
     try {
       const sites = await harborSitesApi.getAll();
-      setHarborSites(sites);
+      const siteList = Array.isArray(sites) ? sites : [];
+      setHarborSites(siteList);
 
       // Only auto-select if harborSiteId is not provided via props
       if (!harborSiteId) {
         // Auto-select active site if available
-        const activeSite = sites.find((site) => site.active);
+        const activeSite = siteList.find((site) => site.active);
         if (activeSite) {
           setSelectedSiteId(activeSite.id);
-        } else if (sites.length > 0) {
-          setSelectedSiteId(sites[0].id);
+        } else if (siteList.length > 0) {
+          setSelectedSiteId(siteList[0].id);
         }
       }
     } catch (err: any) {
@@ -96,7 +97,7 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
       setError(null);
 
       const data = await harborSitesApi.getProjects(siteId);
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
@@ -131,8 +132,8 @@ export const HarborProjectsList: React.FC<HarborProjectsListProps> = ({
     const searchLower = searchText.toLowerCase().trim();
     return projects.filter(
       (project) =>
-        project.name.toLowerCase().includes(searchLower) ||
-        project.owner_name.toLowerCase().includes(searchLower),
+        project.name?.toLowerCase().includes(searchLower) ||
+        project.owner_name?.toLowerCase().includes(searchLower),
     );
   }, [projects, searchText]);
 

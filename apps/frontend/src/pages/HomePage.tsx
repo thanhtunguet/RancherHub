@@ -210,9 +210,9 @@ export function HomePage() {
       key: 'instance',
       render: (record: MonitoredInstance) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{record.appInstance.name}</div>
+          <div style={{ fontWeight: 500 }}>{record.appInstance?.name}</div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            {record.appInstance.cluster} / {record.appInstance.namespace}
+            {record.appInstance?.cluster} / {record.appInstance?.namespace}
           </Text>
         </div>
       ),
@@ -221,8 +221,8 @@ export function HomePage() {
       title: 'Environment',
       key: 'environment',
       render: (record: MonitoredInstance) => (
-        <Tag color={record.appInstance.environment.color}>
-          {record.appInstance.environment.name}
+        <Tag color={record.appInstance?.environment?.color}>
+          {record.appInstance?.environment?.name}
         </Tag>
       ),
     },
@@ -252,7 +252,7 @@ export function HomePage() {
       key: 'severity',
       render: (severity: string) => (
         <Tag color={getSeverityColor(severity)}>
-          {severity.toUpperCase()}
+          {(severity || '').toUpperCase()}
         </Tag>
       ),
     },
