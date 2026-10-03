@@ -51,7 +51,7 @@ export default function ServicesPage() {
     if (!source || !target || !compareResult) return;
     setDetailOpen(true);
     setDetailItems(names.map(n => {
-      const match = compareResult.comparisons.find(c => c.serviceName === n.name);
+      const match = (compareResult.comparisons ?? []).find(c => c.serviceName === n.name);
       return {
         title: n.name,
         status: n.status,
@@ -64,7 +64,7 @@ export default function ServicesPage() {
 
   const openMultiDetail = () => {
     if (!compareResult) return;
-    const items = compareResult.comparisons
+    const items = (compareResult.comparisons ?? [])
       .filter(c => selectedServiceNames.includes(c.serviceName))
       .map(c => ({ name: c.serviceName, status: c.status }));
     if (items.length > 0) openDetails(items);
@@ -86,7 +86,8 @@ export default function ServicesPage() {
     if (!source || target) return;
     setLoading(true);
     try {
-      setServices(await ServicesRepository.getByAppInstance(source.id, undefined, search || undefined));
+      const data = await ServicesRepository.getByAppInstance(source.id, undefined, search || undefined);
+      setServices(Array.isArray(data) ? data : []);
     } catch { toast({ title: 'Error loading services', variant: 'destructive' }); }
     finally { setLoading(false); }
   }, [source, target, search]);
@@ -104,7 +105,8 @@ export default function ServicesPage() {
       ]);
 
       const idByName: Record<string, string> = {};
-      sourceServices.forEach((svc) => {
+      const sourceList = Array.isArray(sourceServices) ? sourceServices : [];
+      sourceList.forEach((svc) => {
         idByName[svc.name] = svc.id;
       });
 
@@ -211,7 +213,8 @@ export default function ServicesPage() {
         setTags(harborTags);
       } else {
         // DockerHub or fallback
-        setTags(await ServicesRepository.getImageTags(service.id));
+        const imageTags = await ServicesRepository.getImageTags(service.id);
+        setTags(Array.isArray(imageTags) ? imageTags : []);
       }
     } catch { toast({ title: 'Failed to load tags', variant: 'destructive' }); }
     finally { setTagsLoading(false); }
@@ -358,7 +361,7 @@ export default function ServicesPage() {
                 <th className="text-left p-3 font-medium">Differences</th>
               </tr></thead>
               <tbody>
-                {compareResult.comparisons.map(c => (
+                {(compareResult.comparisons ?? []).map(c => (
                   <tr key={c.serviceName} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => openDetail(c.serviceName, c.status)}>
                     <td className="p-3" onClick={e => e.stopPropagation()}>
                       {c.status !== 'identical' && sourceServiceIdByName[c.serviceName] && (

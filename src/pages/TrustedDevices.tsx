@@ -26,7 +26,7 @@ export default function TrustedDevicesPage() {
     setLoading(true);
     try {
       const data = await TrustedDevicesRepository.getAll();
-      setDevices(data);
+      setDevices(Array.isArray(data) ? data : []);
     } catch {
       toast({ title: 'Failed to load trusted devices', variant: 'destructive' });
     } finally {

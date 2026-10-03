@@ -55,7 +55,7 @@ export default function MessageTemplatesPage() {
   const fetchTemplates = () => {
     setLoading(true);
     MessageTemplatesRepository.findAll()
-      .then(setTemplates)
+      .then((data) => setTemplates(Array.isArray(data) ? data : []))
       .catch(() => toast({ title: 'Failed to load templates', variant: 'destructive' }))
       .finally(() => setLoading(false));
   };

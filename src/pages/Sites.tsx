@@ -74,7 +74,7 @@ export default function SitesPage() {
   const fetchSites = async () => {
     try {
       const data = await SitesRepository.findAll();
-      setSites(data);
+      setSites(Array.isArray(data) ? data : []);
     } catch { toast({ title: 'Error', description: 'Failed to load sites', variant: 'destructive' }); }
     finally { setLoading(false); }
   };

@@ -44,8 +44,8 @@ export default function MonitoringPage() {
       MonitoringRepository.getAlerts(),
     ]).then(([configRes, instRes, alertRes]) => {
       if (configRes.status === 'fulfilled') setConfig(configRes.value);
-      if (instRes.status === 'fulfilled') setInstances(instRes.value);
-      if (alertRes.status === 'fulfilled') setAlerts(alertRes.value);
+      if (instRes.status === 'fulfilled') setInstances(Array.isArray(instRes.value) ? instRes.value : []);
+      if (alertRes.status === 'fulfilled') setAlerts(Array.isArray(alertRes.value) ? alertRes.value : []);
       setLoading(false);
     });
   };
@@ -69,9 +69,10 @@ export default function MonitoringPage() {
     setLoadingApps(true);
     try {
       const apps = await AppInstancesRepository.findAll();
+      const list = Array.isArray(apps) ? apps : [];
       const monitoredIds = new Set(instances.map(i => i.appInstanceId));
       setAppInstances(
-        apps.filter(a => a.id === instance?.appInstanceId || !monitoredIds.has(a.id)),
+        list.filter(a => a.id === instance?.appInstanceId || !monitoredIds.has(a.id)),
       );
     } catch {
       toast({ title: 'Failed to load app instances', variant: 'destructive' });

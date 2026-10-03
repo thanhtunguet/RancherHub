@@ -54,7 +54,7 @@ export default function ConfigMapsPage() {
 
   const openMultiDetail = () => {
     if (!compareResult) return;
-    const items = compareResult.comparisons
+    const items = (compareResult.comparisons ?? [])
       .filter(c => selectedNames.includes(c.configMapName))
       .map(c => ({ name: c.configMapName, status: c.status }));
     if (items.length > 0) fetchDetails(items);
@@ -84,7 +84,7 @@ export default function ConfigMapsPage() {
     const details = await ConfigMapsRepository.getDetails(configMapName, source.id, target.id);
     const keysToSync: Record<string, string> = {};
 
-    for (const keyComparison of details.keyComparisons) {
+    for (const keyComparison of details.keyComparisons ?? []) {
       if (typeof keyComparison.sourceValue === 'string' && !keyComparison.identical) {
         keysToSync[keyComparison.key] = keyComparison.sourceValue;
       }
@@ -161,7 +161,7 @@ export default function ConfigMapsPage() {
     if (!source || target) return;
     setLoading(true);
     ConfigMapsRepository.getByAppInstance(source.id)
-      .then(setConfigMaps)
+      .then((data) => setConfigMaps(Array.isArray(data) ? data : []))
       .catch(() => toast({ title: 'Error loading configmaps', variant: 'destructive' }))
       .finally(() => setLoading(false));
   }, [source, target]);
@@ -261,7 +261,7 @@ export default function ConfigMapsPage() {
                 <th className="text-left p-3 font-medium">Differences</th>
               </tr></thead>
               <tbody>
-                {compareResult.comparisons.map(c => (
+                {(compareResult.comparisons ?? []).map(c => (
                   <tr key={c.configMapName} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => openDetail(c.configMapName, c.status)}>
                     <td className="p-3" onClick={e => e.stopPropagation()}>
                       <Checkbox

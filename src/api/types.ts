@@ -281,7 +281,7 @@ export interface AppInstanceTreeItem {
     name: string;
     cluster: string;
     namespace: string;
-    rancherSite?: { id: string; name: string };
+    rancherSite: { id: string | null; name: string | null };
   }[];
 }
 

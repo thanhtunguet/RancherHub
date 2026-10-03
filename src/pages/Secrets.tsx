@@ -54,7 +54,7 @@ export default function SecretsPage() {
 
   const openMultiDetail = () => {
     if (!compareResult) return;
-    const items = compareResult.comparisons
+    const items = (compareResult.comparisons ?? [])
       .filter(c => selectedNames.includes(c.secretName))
       .map(c => ({ name: c.secretName, status: c.status }));
     if (items.length > 0) fetchDetails(items);
@@ -85,7 +85,7 @@ export default function SecretsPage() {
     const sourceData = details.source?.data ?? {};
     const keysToSync: Record<string, string> = {};
 
-    for (const keyComparison of details.keyComparisons) {
+    for (const keyComparison of details.keyComparisons ?? []) {
       if (!keyComparison.identical && keyComparison.sourceExists) {
         const sourceValue = sourceData[keyComparison.key];
         if (typeof sourceValue === 'string') {
@@ -165,7 +165,7 @@ export default function SecretsPage() {
     if (!source || target) return;
     setLoading(true);
     SecretsRepository.getByAppInstance(source.id)
-      .then(setSecrets)
+      .then((data) => setSecrets(Array.isArray(data) ? data : []))
       .catch(() => toast({ title: 'Error loading secrets', variant: 'destructive' }))
       .finally(() => setLoading(false));
   }, [source, target]);
@@ -267,7 +267,7 @@ export default function SecretsPage() {
                 <th className="text-left p-3 font-medium">Keys</th>
               </tr></thead>
               <tbody>
-                {compareResult.comparisons.map(c => (
+                {(compareResult.comparisons ?? []).map(c => (
                   <tr key={c.secretName} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => openDetail(c.secretName, c.status)}>
                     <td className="p-3" onClick={e => e.stopPropagation()}>
                       <Checkbox
