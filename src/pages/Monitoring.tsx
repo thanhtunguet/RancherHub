@@ -297,16 +297,12 @@ export default function MonitoringPage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select an instance..." />
                   </SelectTrigger>
-                  <SelectContent>
-                    {appInstances.length === 0 ? (
-                      <SelectItem value="_none" disabled>No available instances</SelectItem>
-                    ) : (
-                      appInstances.map(app => (
-                        <SelectItem key={app.id} value={app.id}>
-                          {app.name} — {app.namespace}
-                        </SelectItem>
-                      ))
-                    )}
+                  <SelectContent emptyMessage={appInstances.length === 0 ? 'No available app instances' : undefined}>
+                    {appInstances.map(app => (
+                      <SelectItem key={app.id} value={app.id}>
+                        {app.name} — {app.namespace}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

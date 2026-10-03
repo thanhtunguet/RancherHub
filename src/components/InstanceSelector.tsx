@@ -69,7 +69,7 @@ export function InstanceSelector({ onSelectionChange }: InstanceSelectorProps) {
           <SelectTrigger className="w-60">
             <SelectValue placeholder="Select instance" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent emptyMessage={filteredInstances.length === 0 ? 'No app instances available' : undefined}>
             {filteredInstances.map(i => (
               <SelectItem key={i.id} value={i.id}>{i.name} ({i.namespace})</SelectItem>
             ))}
@@ -82,7 +82,7 @@ export function InstanceSelector({ onSelectionChange }: InstanceSelectorProps) {
           <SelectTrigger className="w-60">
             <SelectValue placeholder="Compare with... (optional)" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent emptyMessage={filteredInstances.filter(i => i.id !== sourceId).length === 0 ? 'No other instances available' : undefined}>
             {filteredInstances.filter(i => i.id !== sourceId).map(i => (
               <SelectItem key={i.id} value={i.id}>{i.name} ({i.namespace})</SelectItem>
             ))}

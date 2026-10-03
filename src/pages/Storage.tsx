@@ -211,21 +211,19 @@ export default function StoragePage() {
               <SelectTrigger>
                 <SelectValue placeholder={treeLoading ? 'Loading app instances...' : 'Select an app instance'} />
               </SelectTrigger>
-              <SelectContent>
-                {appInstanceTree.length === 0 ? (
-                  <SelectItem value="_none" disabled>No app instances available</SelectItem>
-                ) : (
-                  appInstanceTree.map((env) => (
-                    <SelectGroup key={env.id}>
-                      <SelectLabel>{env.name}</SelectLabel>
-                      {(env.appInstances ?? []).map((instance) => (
-                        <SelectItem key={instance.id} value={instance.id}>
-                          {instance.name} ({instance.cluster}/{instance.namespace})
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))
-                )}
+              <SelectContent
+                emptyMessage={appInstanceTree.some((env) => (env.appInstances ?? []).length > 0) ? undefined : 'No app instances available'}
+              >
+                {appInstanceTree.map((env) => (
+                  <SelectGroup key={env.id}>
+                    <SelectLabel>{env.name}</SelectLabel>
+                    {(env.appInstances ?? []).map((instance) => (
+                      <SelectItem key={instance.id} value={instance.id}>
+                        {instance.name} ({instance.cluster}/{instance.namespace})
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
           </div>

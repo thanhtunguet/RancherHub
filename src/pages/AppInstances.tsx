@@ -147,7 +147,9 @@ export default function AppInstancesPage() {
               <Label>Environment</Label>
               <Select value={form.environmentId} onValueChange={(v) => setForm({ ...form, environmentId: v })}>
                 <SelectTrigger><SelectValue placeholder="Select environment" /></SelectTrigger>
-                <SelectContent>{environments.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                <SelectContent emptyMessage={environments.length === 0 ? 'No environments available' : undefined}>
+                  {environments.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -165,7 +167,9 @@ export default function AppInstancesPage() {
                 <Label>Rancher Site</Label>
                 <Select value={form.rancherSiteId || ''} onValueChange={(v) => setForm({ ...form, rancherSiteId: v })}>
                   <SelectTrigger><SelectValue placeholder="Select site" /></SelectTrigger>
-                  <SelectContent>{activeSites.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                  <SelectContent emptyMessage={activeSites.length === 0 ? 'No active Rancher sites available' : undefined}>
+                    {activeSites.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
             )}
@@ -174,7 +178,9 @@ export default function AppInstancesPage() {
                 <Label>Generic Cluster</Label>
                 <Select value={form.genericClusterSiteId || ''} onValueChange={(v) => setForm({ ...form, genericClusterSiteId: v })}>
                   <SelectTrigger><SelectValue placeholder="Select cluster" /></SelectTrigger>
-                  <SelectContent>{activeClusters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectContent emptyMessage={activeClusters.length === 0 ? 'No active generic clusters available' : undefined}>
+                    {activeClusters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
             )}

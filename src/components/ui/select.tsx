@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ListX } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -60,8 +60,8 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = "popper", ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & { emptyMessage?: React.ReactNode }
+>(({ className, children, emptyMessage, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -79,10 +79,20 @@ const SelectContent = React.forwardRef<
         className={cn(
           "p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+            cn(
+              "w-full min-w-[var(--radix-select-trigger-width)]",
+              emptyMessage ? "h-auto min-h-[3.5rem]" : "h-[var(--radix-select-trigger-height)]",
+            ),
         )}
       >
-        {children}
+        {emptyMessage ? (
+          <SelectItem value="__select_empty__" disabled className="h-12 justify-center px-3 text-muted-foreground data-[disabled]:opacity-100">
+            <span className="flex items-center gap-2">
+              <ListX className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {emptyMessage}
+            </span>
+          </SelectItem>
+        ) : children}
       </SelectPrimitive.Viewport>
       <SelectScrollDownButton />
     </SelectPrimitive.Content>
