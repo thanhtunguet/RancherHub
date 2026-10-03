@@ -53,8 +53,8 @@ export default function MonitoringInstanceDetailPage() {
       } else {
         setNotFound(true);
       }
-      if (histRes.status === 'fulfilled') setHistory(histRes.value as MonitoringHistoryEntry[]);
-      if (alertRes.status === 'fulfilled') setAlerts(alertRes.value);
+      if (histRes.status === 'fulfilled') setHistory(Array.isArray(histRes.value) ? histRes.value : []);
+      if (alertRes.status === 'fulfilled') setAlerts(Array.isArray(alertRes.value) ? alertRes.value : []);
       setLoading(false);
     });
   }, [id, days]);

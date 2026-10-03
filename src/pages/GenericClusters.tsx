@@ -24,7 +24,10 @@ export default function GenericClustersPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchData = async () => {
-    try { setClusters(await GenericClustersRepository.findAll()); }
+    try {
+      const data = await GenericClustersRepository.findAll();
+      setClusters(Array.isArray(data) ? data : []);
+    }
     catch { toast({ title: 'Error', variant: 'destructive' }); }
     finally { setLoading(false); }
   };

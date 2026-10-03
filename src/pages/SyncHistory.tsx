@@ -11,7 +11,7 @@ export default function SyncHistoryPage() {
 
   useEffect(() => {
     ServicesRepository.getDetailedSyncHistory()
-      .then(setHistory)
+      .then((data) => setHistory(Array.isArray(data) ? data : []))
       .catch(() => toast({ title: 'Error loading history', variant: 'destructive' }))
       .finally(() => setLoading(false));
   }, []);

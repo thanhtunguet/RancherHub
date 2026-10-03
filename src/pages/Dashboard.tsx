@@ -26,8 +26,8 @@ export default function DashboardPage() {
       SitesRepository.findAll(),
       AppInstancesRepository.findAll(),
     ]).then(([envRes, sitesRes, instancesRes]) => {
-      if (envRes.status === 'fulfilled') setEnvironments(envRes.value);
-      if (sitesRes.status === 'fulfilled') setSites(sitesRes.value);
+      if (envRes.status === 'fulfilled') setEnvironments(Array.isArray(envRes.value) ? envRes.value : []);
+      if (sitesRes.status === 'fulfilled') setSites(Array.isArray(sitesRes.value) ? sitesRes.value : []);
       if (instancesRes.status === 'fulfilled') setInstanceCount(Array.isArray(instancesRes.value) ? instancesRes.value.length : 0);
       setLoading(false);
     });

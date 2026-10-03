@@ -83,7 +83,7 @@ export default function StoragePage() {
       setTreeLoading(true);
       setError(null);
       const tree = await ServicesRepository.getAppInstancesTree();
-      setAppInstanceTree(tree);
+      setAppInstanceTree(Array.isArray(tree) ? tree : []);
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Failed to load app instances'));
     } finally {
@@ -98,7 +98,7 @@ export default function StoragePage() {
       setLoading(true);
       setError(null);
       const data = await ServicesRepository.getWithImageSizes(appInstanceId);
-      setServices(data);
+      setServices(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'Failed to load services with image sizes'));
     } finally {
@@ -122,7 +122,7 @@ export default function StoragePage() {
 
   const selectedInfo = useMemo(() => {
     for (const env of appInstanceTree) {
-      const instance = env.appInstances.find((ai) => ai.id === selectedAppInstanceId);
+      const instance = (env.appInstances ?? []).find((ai) => ai.id === selectedAppInstanceId);
       if (instance) {
         return { environment: env.name, instance };
       }
@@ -218,7 +218,7 @@ export default function StoragePage() {
                   appInstanceTree.map((env) => (
                     <SelectGroup key={env.id}>
                       <SelectLabel>{env.name}</SelectLabel>
-                      {env.appInstances.map((instance) => (
+                      {(env.appInstances ?? []).map((instance) => (
                         <SelectItem key={instance.id} value={instance.id}>
                           {instance.name} ({instance.cluster}/{instance.namespace})
                         </SelectItem>

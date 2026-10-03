@@ -25,7 +25,10 @@ export default function HarborSitesPage() {
   const [saving, setSaving] = useState(false);
 
   const fetchData = async () => {
-    try { setSites(await HarborSitesRepository.findAll()); }
+    try {
+      const data = await HarborSitesRepository.findAll();
+      setSites(Array.isArray(data) ? data : []);
+    }
     catch { toast({ title: 'Error', description: 'Failed to load harbor sites', variant: 'destructive' }); }
     finally { setLoading(false); }
   };

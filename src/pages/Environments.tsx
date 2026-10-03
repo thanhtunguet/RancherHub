@@ -22,7 +22,10 @@ export default function EnvironmentsPage() {
   const [saving, setSaving] = useState(false);
 
   const fetch = async () => {
-    try { setEnvironments(await EnvironmentsRepository.findAll()); }
+    try {
+      const data = await EnvironmentsRepository.findAll();
+      setEnvironments(Array.isArray(data) ? data : []);
+    }
     catch { toast({ title: 'Error', description: 'Failed to load environments', variant: 'destructive' }); }
     finally { setLoading(false); }
   };

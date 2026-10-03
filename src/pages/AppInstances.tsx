@@ -42,10 +42,10 @@ export default function AppInstancesPage() {
         SitesRepository.findAll(),
         GenericClustersRepository.findAll(),
       ]);
-      setInstances(inst);
-      setEnvironments(envs);
-      setSites(ss);
-      setClusters(cls);
+      setInstances(Array.isArray(inst) ? inst : []);
+      setEnvironments(Array.isArray(envs) ? envs : []);
+      setSites(Array.isArray(ss) ? ss : []);
+      setClusters(Array.isArray(cls) ? cls : []);
     } catch { toast({ title: 'Error', variant: 'destructive' }); }
     finally { setLoading(false); }
   };
