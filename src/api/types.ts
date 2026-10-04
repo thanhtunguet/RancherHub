@@ -42,6 +42,7 @@ export interface UserProfile {
   username: string;
   email: string;
   twoFactorEnabled?: boolean;
+  isFirstLogin?: boolean;
   active?: boolean;
   createdAt?: string;
 }

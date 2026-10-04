@@ -10,6 +10,7 @@ import { User, Shield, Lock, Loader2 } from 'lucide-react';
 export default function ProfilePage() {
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
+  const requires2FASetup = !user?.twoFactorEnabled;
 
   // Change password
   const [currentPassword, setCurrentPassword] = useState('');
@@ -64,6 +65,13 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div><h1 className="text-2xl font-bold">Profile</h1><p className="text-sm text-muted-foreground">Manage your account settings</p></div>
+
+      {requires2FASetup && (
+        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm text-amber-100">
+          <p className="font-medium">Two-factor authentication is required before continuing.</p>
+          <p className="mt-1 text-amber-100/80">Set up 2FA below to secure your account and unlock the full dashboard.</p>
+        </div>
+      )}
 
       {/* User info */}
       <div className="surface-elevated rounded-lg p-5">

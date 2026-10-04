@@ -12,6 +12,7 @@
 import React from "react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 // ---------------------------------------------------------------------------
 // Use vi.hoisted() so the mock factory closures can reference the spy fns
@@ -41,6 +42,7 @@ vi.mock("../api/client", () => ({
 
 // Import AFTER mocks are set up.
 import { AuthProvider, useAuth } from "./auth-context";
+import { ProtectedRoute } from "../components/ProtectedRoute";
 import type { UserProfile, AuthResponse } from "../api/types";
 
 // ---------------------------------------------------------------------------
@@ -332,7 +334,45 @@ describe("AuthProvider / useAuth", () => {
   });
 
   // -------------------------------------------------------------------------
-  // 6. useAuth() guard
+  // 6. first-login 2FA enforcement
+  // -------------------------------------------------------------------------
+  describe("ProtectedRoute – first-login 2FA enforcement", () => {
+    it("redirects authenticated users without 2FA to the profile page", async () => {
+      mockGetToken.mockReturnValue("saved-token");
+      mockGetProfile.mockResolvedValue({
+        ...MOCK_USER,
+        twoFactorEnabled: false,
+        isFirstLogin: true,
+      });
+
+      render(
+        <MemoryRouter initialEntries={["/"]}>
+          <AuthProvider>
+            <Routes>
+              <Route path="/profile" element={<div>Profile page</div>} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <div>Dashboard</div>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText("Profile page")).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // 7. useAuth() guard
   // -------------------------------------------------------------------------
   describe("useAuth() outside AuthProvider", () => {
     it("throws when called outside AuthProvider", () => {
