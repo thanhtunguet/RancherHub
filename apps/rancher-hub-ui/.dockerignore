@@ -1,0 +1,6 @@
+.github/
+.serena/
+dist/
+.env
+.gitignore
+README.md
