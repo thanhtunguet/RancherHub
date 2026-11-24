@@ -8,7 +8,6 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 | --------------------- | ---------------------------------------------- |
 | `apps/backend`        | Go backend API (`cmd/`, `internal/`). Also holds the legacy NestJS source in `src/` (history only, see below) |
 | `apps/frontend`       | React + Vite SPA                               |
-| `apps/rancher-hub-ui` | Git submodule — frontend rewritten with new UI |
 
 ## Tech Stack
 
@@ -45,7 +44,7 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 ### DevOps & Tooling
 - **Package Manager**: pnpm (`pnpm-workspace.yaml`, `pnpm-lock.yaml`) for the frontend and in the Docker build; root scripts are invoked with `npm run`; Go modules in backend
 - **Containerization**: Docker (`Dockerfile.backend`, `Dockerfile.frontend`)
-- **CI/CD**: GitHub Actions — `docker-builds.yml` (push/PR on `main` only; builds/pushes the Go backend `rancher-hub-go` and the frontend images), `docker-build-legacy-nestjs.yml` (manual only; rebuilds the legacy NestJS image `rancher-hub-backend:legacy` from a historical ref) and `jekyll-docs.yml` (publishes `docs/`). There is currently no test/lint workflow. `apps/rancher-hub-ui` is intentionally not built by CI for now.
+- **CI/CD**: GitHub Actions — `docker-builds.yml` (push/PR on `main` only; builds/pushes the Go backend `rancher-hub-go` and the frontend images), `docker-build-legacy-nestjs.yml` (manual only; rebuilds the legacy NestJS image `rancher-hub-backend:legacy` from a historical ref) and `jekyll-docs.yml` (publishes `docs/`). There is currently no test/lint workflow.
 - **Docker Compose profiles**: `docker compose --profile current up` (Go) or `--profile legacy up` (NestJS); without a profile no backend starts.
 - **Monorepo Orchestration**: Nx (`nx` 22.2.3), `concurrently` for local dev
 
@@ -63,7 +62,6 @@ npm run lint         # `gofmt` + ESLint
 ## Architecture Notes
 - The backend exposes a REST API consumed by the React SPA.
 - Real-time data updates are handled via React Query caching and polling.
-- The `rancher-hub-ui` submodule is a Git submodule (commit `082eac7`) containing a frontend rewrite with a new UI.
 - SQLite is used for local development; PostgreSQL is targeted for production deployments.
 
 <!-- gitnexus:start -->

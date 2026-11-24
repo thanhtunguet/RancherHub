@@ -229,7 +229,6 @@ rancher-hub/
 ├── apps/
 │   ├── backend/        # Go backend (cmd/, internal/); legacy NestJS source in src/ (history only)
 │   ├── frontend/       # React frontend application
-│   └── rancher-hub-ui/ # Git submodule: frontend rewrite with new UI
 ├── docs/               # Documentation (Jekyll site + planning notes)
 ├── helm/, k8s/         # Deployment manifests
 └── docker-compose.yml  # Docker environment
