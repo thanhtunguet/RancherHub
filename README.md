@@ -166,8 +166,8 @@ Powerful ConfigMap management across environments:
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Go >= 1.26 (backend)
+- Node.js >= 18.0.0 and npm >= 8.0.0 (frontend and root scripts)
 - Docker (for development environment)
 
 ### Development Setup
@@ -181,8 +181,8 @@ npm install
 
 2. Copy environment files:
 ```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+cp apps/backend/.env.example apps/backend/.env
+cp apps/frontend/.env.example apps/frontend/.env
 ```
 
 3. Start development servers:
@@ -190,7 +190,7 @@ cp frontend/.env.example frontend/.env
 npm run dev
 ```
 
-This will start both the backend (NestJS) and frontend (React + Vite) servers concurrently.
+This will start both the backend (Go) and frontend (React + Vite) servers concurrently.
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
@@ -208,12 +208,13 @@ On first run, a default admin user is automatically created:
 
 #### Option 2: Docker Development
 
-1. Start with Docker Compose:
+1. Start with Docker Compose. Pick one backend with a profile:
 ```bash
-docker-compose up --build
+docker compose --profile current up -d   # Go backend (image: rancher-hub-go)
+docker compose --profile legacy up -d    # legacy NestJS backend (image: rancher-hub-backend), history/rollback only
 ```
 
-This will start all services including PostgreSQL database.
+This will start PostgreSQL, the frontend, nginx and the selected backend. Without a profile, no backend starts.
 
 - Frontend: http://localhost:5173  
 - Backend API: http://localhost:3000
@@ -225,17 +226,27 @@ The default admin credentials (admin/admin123) will work for Docker setup as wel
 
 ```
 rancher-hub/
-├── backend/          # NestJS backend application
-├── frontend/         # React frontend application
-├── docs/            # Documentation
-├── docker-compose.yml # Development environment
-└── PROJECT_PLAN.md  # Detailed project plan
+├── apps/
+│   ├── backend/        # Go backend (cmd/, internal/); legacy NestJS source in src/ (history only)
+│   ├── frontend/       # React frontend application
+│   └── rancher-hub-ui/ # Git submodule: frontend rewrite with new UI
+├── docs/               # Documentation (Jekyll site + planning notes)
+├── helm/, k8s/         # Deployment manifests
+└── docker-compose.yml  # Docker environment
 ```
+
+### Backend history: NestJS → Go
+
+The backend was originally written in **NestJS + TypeORM** and was rewritten in **Go (Gin + GORM)** on **2026-05-20** (commit `db350f2`, merged to `main` in PR #1).
+
+- **Go is the only supported backend.** It lives in `apps/backend/cmd/` and `apps/backend/internal/`.
+- The old NestJS source is **kept in `apps/backend/src/` for historical reference only**. It is not built, tested, or deployed from `main`, and `apps/backend/package.json` no longer lists its dependencies.
+- To run the last NestJS version, check out commit `ab3dd47` (2026-04-14) or the `nodejs` branch.
 
 ## Architecture
 
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS + Ant Design
-- **Backend**: NestJS + TypeScript + TypeORM + SQLite/PostgreSQL
+- **Backend**: Go + Gin + GORM + SQLite/PostgreSQL (NestJS + TypeORM until 2026-05-20, see [Backend history](#backend-history-nestjs--go))
 - **State Management**: Zustand + React Query
 - **Authentication**: 
   - JWT-based user authentication
@@ -257,7 +268,7 @@ rancher-hub/
 
 ### Environment Variables
 
-Create `.env` files in both `backend/` and `frontend/` directories based on the `.env.example` files.
+Create `.env` files in both `apps/backend/` and `apps/frontend/` directories based on the `.env.example` files.
 
 ## Usage Guide
 

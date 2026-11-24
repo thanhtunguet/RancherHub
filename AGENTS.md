@@ -6,7 +6,7 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 
 | Path                  | Description                                    |
 | --------------------- | ---------------------------------------------- |
-| `apps/backend`        | Go backend API (migrated from NestJS)          |
+| `apps/backend`        | Go backend API (`cmd/`, `internal/`). Also holds the legacy NestJS source in `src/` (history only, see below) |
 | `apps/frontend`       | React + Vite SPA                               |
 | `apps/rancher-hub-ui` | Git submodule — frontend rewritten with new UI |
 
@@ -21,7 +21,17 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 - **Kubernetes**: Official `k8s.io/client-go` for cluster operations
 - **Entry point**: `cmd/server/main.go`
 
-> **Note**: The backend was originally built with NestJS + TypeORM and has been fully migrated to Go. Legacy NestJS code is no longer present.
+### Backend history: NestJS → Go
+
+| Period | Backend | Where |
+| --- | --- | --- |
+| up to 2026-05-20 | NestJS + TypeORM (TypeScript) | last NestJS-only commit `ab3dd47` (2026-04-14); branch `origin/nodejs` forks from it |
+| from 2026-05-20 | Go + Gin + GORM | commit `db350f2` "convert to go lang", merged to `main` via PR #1 (`6c8a919`) the same day |
+
+- **Go is the only supported backend.** All new work goes in `cmd/` and `internal/`.
+- The NestJS source is **kept in `apps/backend/src/` (plus `test/`, `nest-cli.json`, `tsconfig.json`, `.eslintrc.js`, `healthcheck.js`, `reset-admin-password.js`) as historical reference only**. It is not built, tested, or deployed from `main`.
+- It cannot be built from `main`: `apps/backend/package.json` now contains only Go scripts (no NestJS dependencies). To run the old backend, check out `ab3dd47` or branch `origin/nodejs`.
+- Do not "fix" or extend files under `apps/backend/src/`; port behavior to Go instead. The Go API is intended to stay route-compatible with the old NestJS API.
 
 ### Frontend (`apps/frontend`)
 - **Framework**: React 18 + TypeScript
@@ -33,9 +43,10 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 - **SSG**: `vite-react-ssg` for static site generation
 
 ### DevOps & Tooling
-- **Package Manager**: npm (workspaces) at root; Go modules in backend
+- **Package Manager**: pnpm (`pnpm-workspace.yaml`, `pnpm-lock.yaml`) for the frontend and in the Docker build; root scripts are invoked with `npm run`; Go modules in backend
 - **Containerization**: Docker (`Dockerfile.backend`, `Dockerfile.frontend`)
-- **CI/CD**: GitHub Actions
+- **CI/CD**: GitHub Actions — `docker-builds.yml` (push/PR on `main` only; builds/pushes the Go backend `rancher-hub-go` and the frontend images), `docker-build-legacy-nestjs.yml` (manual only; rebuilds the legacy NestJS image `rancher-hub-backend:legacy` from a historical ref) and `jekyll-docs.yml` (publishes `docs/`). There is currently no test/lint workflow. `apps/rancher-hub-ui` is intentionally not built by CI for now.
+- **Docker Compose profiles**: `docker compose --profile current up` (Go) or `--profile legacy up` (NestJS); without a profile no backend starts.
 - **Monorepo Orchestration**: Nx (`nx` 22.2.3), `concurrently` for local dev
 
 ## Key Scripts (root `package.json`)

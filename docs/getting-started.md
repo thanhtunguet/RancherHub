@@ -43,7 +43,7 @@ Before you begin, ensure you have the following:
    npm run dev
    ```
 
-   This will start both the backend (NestJS) and frontend (React + Vite) servers concurrently.
+   This will start both the backend (Go) and frontend (React + Vite) servers concurrently.
 
    - **Frontend**: http://localhost:5173
    - **Backend API**: http://localhost:3000
@@ -74,11 +74,10 @@ Run Rancher Hub using pre-built Docker images with Docker Compose.
 
      # Backend API Service
      backend:
-       image: thanhtunguet/rancher-hub-backend:latest
+       image: thanhtunguet/rancher-hub-go:latest
        container_name: rancher-hub-backend
        restart: unless-stopped
        environment:
-         NODE_ENV: production
          PORT: 3000
          DATABASE_TYPE: postgres
          DATABASE_HOST: postgres

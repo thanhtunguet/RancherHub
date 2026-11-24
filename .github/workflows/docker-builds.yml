@@ -1,14 +1,16 @@
 name: Docker Builds
 
+# Builds the current stack only: Go backend (rancher-hub-go) and frontend.
+# The legacy NestJS backend (rancher-hub-backend) is NOT built here; rebuild it
+# on demand with the manual workflow "Docker Build (legacy NestJS backend)".
+
 on:
   push:
     branches:
       - main
-      - golang
   pull_request:
     branches:
       - main
-      - golang
   workflow_dispatch:
 
 env:

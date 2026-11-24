@@ -1,5 +1,7 @@
 # Rancher Hub - Tech Stack
 
+> **Backend note (updated)**: the backend is Go (Gin + GORM) since 2026-05-20 (commit `db350f2`). The NestJS/TypeORM material below describes the legacy backend, kept in `apps/backend/src/` for history only. Current backend code lives in `apps/backend/cmd/` and `apps/backend/internal/`. See `AGENTS.md`.
+
 ## Frontend (apps/frontend)
 - **Framework**: React 18.2.0 with TypeScript
 - **Build Tool**: Vite 4.4.5

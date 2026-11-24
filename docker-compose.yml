@@ -1,3 +1,7 @@
+# Pick exactly one backend with a profile:
+#   docker compose --profile current up -d   # Go backend (default choice)
+#   docker compose --profile legacy  up -d   # NestJS backend (history / rollback only)
+# Without a profile only postgres, frontend and nginx start.
 services:
   # PostgreSQL Database
   postgres:
@@ -22,10 +26,45 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API Service
+  # Backend API Service — current (Go). Profile: current
   backend:
-    image: thanhtunguet/rancher-hub-backend:latest
+    profiles: ["current"]
+    image: thanhtunguet/rancher-hub-go:latest
     container_name: rancher-hub-backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DATABASE_TYPE: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: rancher_hub
+      DATABASE_USERNAME: rancher_hub
+      DATABASE_PASSWORD: rancher_hub_password
+      DATABASE_SSL: false
+      FRONTEND_URL: http://localhost:8080
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      rancher-hub-network:
+        aliases:
+          - backend
+    healthcheck:
+      test:
+        ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Backend API Service — legacy (NestJS, replaced by Go on 2026-05-20). Profile: legacy
+  # Image is built manually (workflow "Docker Build (legacy NestJS backend)"); pin with
+  # LEGACY_BACKEND_TAG=legacy (default: latest = last NestJS build published before the Go migration).
+  backend-legacy:
+    profiles: ["legacy"]
+    image: thanhtunguet/rancher-hub-backend:${LEGACY_BACKEND_TAG:-latest}
+    container_name: rancher-hub-backend-legacy
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -44,7 +83,9 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - rancher-hub-network
+      rancher-hub-network:
+        aliases:
+          - backend
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
@@ -70,8 +111,14 @@ services:
     volumes:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_started
+        required: false
+      backend-legacy:
+        condition: service_started
+        required: false
+      frontend:
+        condition: service_started
     networks:
       - rancher-hub-network
     healthcheck:

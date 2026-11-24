@@ -25,7 +25,7 @@
 ## Architecture
 - **Monorepo structure** with separate frontend and backend applications
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS + Ant Design + Zustand + React Query
-- **Backend**: NestJS + TypeScript + TypeORM + SQLite (dev) / PostgreSQL (prod) + Swagger
+- **Backend**: Go + Gin + GORM + SQLite (dev) / PostgreSQL (prod) + OpenAPI docs (NestJS + TypeORM until 2026-05-20; legacy source kept in `apps/backend/src/` for history only)
 - **Database**: SQLite for development, PostgreSQL ready for production
 - **Real-time updates** with React Query caching
 - **API Documentation** with Swagger/OpenAPI

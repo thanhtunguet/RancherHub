@@ -9,7 +9,7 @@ docker run -d \
   --name rancher-hub-backend \
   -p 3000:3000 \
   -v rancher-hub-data:/app/data \
-  thanhtunguet/rancher-hub-backend:latest
+  thanhtunguet/rancher-hub-go:latest
 ```
 
 ## Environment Variables
@@ -60,6 +60,18 @@ http://localhost:3000/api/docs
 - **API**: RESTful API compatible with the previous NestJS routes
 - **Security**: Non-root container execution, input validation
 
+## History: NestJS → Go
+
+This backend was originally written in NestJS + TypeORM. It was rewritten in Go on **2026-05-20** (commit `db350f2`, PR #1). The Go code in `cmd/` and `internal/` is the only supported implementation.
+
+The NestJS source (`src/`, `test/`, `nest-cli.json`, `tsconfig.json`, `.eslintrc.js`, `healthcheck.js`, `reset-admin-password.js`) is **kept for historical reference only**:
+
+- it is not built, tested, or deployed from `main`;
+- `package.json` in this directory now only contains Go scripts, so the NestJS code cannot be built from here;
+- to run the last NestJS version, check out commit `ab3dd47` (2026-04-14) or the `nodejs` branch;
+- to rebuild its Docker image (`thanhtunguet/rancher-hub-backend:legacy`), run the manual GitHub Actions workflow **Docker Build (legacy NestJS backend)**;
+- to run it with Docker Compose, use `docker compose --profile legacy up -d` (the default `latest` tag is the last NestJS build published before the migration).
+
 ## Production Deployment
 
 ### Docker Compose
@@ -68,7 +80,7 @@ http://localhost:3000/api/docs
 version: '3.8'
 services:
   backend:
-    image: thanhtunguet/rancher-hub-backend:latest
+    image: thanhtunguet/rancher-hub-go:latest
     container_name: rancher-hub-backend
     restart: unless-stopped
     environment:
@@ -107,7 +119,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: thanhtunguet/rancher-hub-backend:latest
+        image: thanhtunguet/rancher-hub-go:latest
         ports:
         - containerPort: 3000
         env:
@@ -134,10 +146,13 @@ spec:
 
 ## Tags
 
-- `latest` - Latest build from main branch
-- `stable` - Latest stable release
-- `v1.0.0` - Specific version tags
-- `main` - Development builds from main branch
+Image: `thanhtunguet/rancher-hub-go` (built by `.github/workflows/docker-builds.yml` on every push to `main`).
+
+- `latest` - Multi-arch (amd64 + arm64) build of the latest `main`
+- `sha-<commit>` - Multi-arch build of a specific commit
+- `amd64`, `arm64`, `amd64-sha-<commit>`, `arm64-sha-<commit>` - Per-architecture images
+
+The legacy NestJS image (`thanhtunguet/rancher-hub-backend`) is no longer built automatically; see [History](#history-nestjs--go).
 
 ## Source Code
 
