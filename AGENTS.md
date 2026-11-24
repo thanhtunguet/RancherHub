@@ -8,6 +8,7 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 | --------------------- | ---------------------------------------------- |
 | `apps/backend`        | Go backend API (`cmd/`, `internal/`). Also holds the legacy NestJS source in `src/` (history only, see below) |
 | `apps/frontend`       | React + Vite SPA                               |
+| `apps/rancher-hub-ui` | Frontend rewritten with new UI (git subtree, full history merged in) |
 
 ## Tech Stack
 
@@ -44,7 +45,7 @@ RancherHub is a Service Sync Manager for managing and synchronizing services acr
 ### DevOps & Tooling
 - **Package Manager**: pnpm (`pnpm-workspace.yaml`, `pnpm-lock.yaml`) for the frontend and in the Docker build; root scripts are invoked with `npm run`; Go modules in backend
 - **Containerization**: Docker (`Dockerfile.backend`, `Dockerfile.frontend`)
-- **CI/CD**: GitHub Actions — `docker-builds.yml` (push/PR on `main` only; builds/pushes the Go backend `rancher-hub-go` and the frontend images), `docker-build-legacy-nestjs.yml` (manual only; rebuilds the legacy NestJS image `rancher-hub-backend:legacy` from a historical ref) and `jekyll-docs.yml` (publishes `docs/`). There is currently no test/lint workflow.
+- **CI/CD**: GitHub Actions — `docker-builds.yml` (push/PR on `main` only; builds/pushes the Go backend `rancher-hub-go`, the `rancher-hub-frontend` and the `rancher-hub-ui` images; multi-arch manifests are published for Go and UI), `docker-build-legacy-nestjs.yml` (manual only; rebuilds the legacy NestJS image `rancher-hub-backend:legacy` from a historical ref) and `jekyll-docs.yml` (publishes `docs/`). There is currently no test/lint workflow.
 - **Docker Compose profiles**: `docker compose --profile current up` (Go) or `--profile legacy up` (NestJS); without a profile no backend starts.
 - **Monorepo Orchestration**: Nx (`nx` 22.2.3), `concurrently` for local dev
 
